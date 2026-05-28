@@ -372,6 +372,30 @@
 
   .role-pill .dot { width: 8px; height: 8px; border-radius: 50%; }
 
+
+  /* Discord button picker */
+  .dc-btn-picker { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+  .dc-btn-opt {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 18px; border-radius: 6px; cursor: pointer;
+    border: 2px solid transparent; font-size: 13px; font-weight: 600;
+    transition: all .15s; user-select: none;
+  }
+  .dc-btn-opt.primary   { background: #5865f2; color: #fff; }
+  .dc-btn-opt.success   { background: #57f287; color: #000; }
+  .dc-btn-opt.danger    { background: #ed4245; color: #fff; }
+  .dc-btn-opt.secondary { background: #4e5058; color: #fff; }
+  .dc-btn-opt.selected  { border-color: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,.25); transform: scale(1.04); }
+  .dc-btn-opt:hover:not(.selected) { opacity: .8; }
+
+  /* Embed color presets */
+  .color-presets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+  .color-swatch {
+    width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+    border: 2px solid transparent; transition: all .15s;
+  }
+  .color-swatch:hover, .color-swatch.active { border-color: #fff; transform: scale(1.15); box-shadow: 0 0 0 2px rgba(255,255,255,.3); }
+
   /* Discord-style buttons preview */
   .dc-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
   .dc-btn {
@@ -610,17 +634,7 @@
             <div class="toggle-thumb"></div>
           </label>
         </div>
-        <div class="toggle-row">
-          <div>
-            <div class="toggle-label">แสดงรูป Avatar ของ User</div>
-            <div class="toggle-desc">แสดง Avatar ของสมาชิกใหม่ใน embed thumbnail</div>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" id="w-show-avatar" checked onchange="updateWelcomePreview()">
-            <div class="toggle-track"></div>
-            <div class="toggle-thumb"></div>
-          </label>
-        </div>
+
       </div>
 
       <div class="card">
@@ -709,17 +723,7 @@
             <div class="toggle-thumb"></div>
           </label>
         </div>
-        <div class="toggle-row">
-          <div>
-            <div class="toggle-label">แสดงรูป Avatar ของ User</div>
-            <div class="toggle-desc">แสดง Avatar ของสมาชิกใน embed</div>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" id="gb-show-avatar" checked onchange="updateGoodbyePreview()">
-            <div class="toggle-track"></div>
-            <div class="toggle-thumb"></div>
-          </label>
-        </div>
+
       </div>
 
       <div class="card">
@@ -964,18 +968,19 @@
       <div class="card">
         <div class="card-title"><span>🔘</span> ปุ่ม Verify</div>
         <div class="form-grid">
-          <div class="field">
+          <div class="field" style="grid-column:1/-1">
             <label>ข้อความบนปุ่ม</label>
             <input type="text" id="ve-btn-label" placeholder="✅ ยืนยันตัวตน" oninput="updateVerifyPreview()">
           </div>
-          <div class="field">
+          <div class="field" style="grid-column:1/-1">
             <label>สีปุ่ม</label>
-            <select id="ve-btn-color" onchange="updateVerifyPreview()">
-              <option value="Primary">🔵 Primary (น้ำเงิน)</option>
-              <option value="Success">🟢 Success (เขียว)</option>
-              <option value="Danger">🔴 Danger (แดง)</option>
-              <option value="Secondary">⚪ Secondary (เทา)</option>
-            </select>
+            <input type="hidden" id="ve-btn-color" value="Primary">
+            <div class="dc-btn-picker" id="ve-btn-picker">
+              <div class="dc-btn-opt primary selected" data-val="Primary" onclick="pickBtnColor('Primary',this)">🔵 Primary</div>
+              <div class="dc-btn-opt success" data-val="Success" onclick="pickBtnColor('Success',this)">🟢 Success</div>
+              <div class="dc-btn-opt danger" data-val="Danger" onclick="pickBtnColor('Danger',this)">🔴 Danger</div>
+              <div class="dc-btn-opt secondary" data-val="Secondary" onclick="pickBtnColor('Secondary',this)">⚪ Secondary</div>
+            </div>
           </div>
         </div>
       </div>
@@ -1241,6 +1246,13 @@ function clearVerifyImage() {
   updateVerifyPreview();
 }
 
+
+function pickBtnColor(val, el) {
+  document.getElementById('ve-btn-color').value = val;
+  document.querySelectorAll('#ve-btn-picker .dc-btn-opt').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  updateVerifyPreview();
+}
 
 function updateVerifyPreview() {
   const title = document.getElementById('ve-title')?.value || '🎮 ยืนยันตัวตน';
@@ -1613,7 +1625,11 @@ function applyToUI() {
   document.getElementById('ve-color').value = vc;
   document.getElementById('ve-color-text').value = vc;
   document.getElementById('ve-btn-label').value = cfg.VERIFY_BUTTON_LABEL || '';
-  document.getElementById('ve-btn-color').value = cfg.VERIFY_BUTTON_COLOR || 'Primary';
+  const btnColorVal = cfg.VERIFY_BUTTON_COLOR || 'Primary';
+  document.getElementById('ve-btn-color').value = btnColorVal;
+  document.querySelectorAll('#ve-btn-picker .dc-btn-opt').forEach(b => {
+    b.classList.toggle('selected', b.dataset.val === btnColorVal);
+  });
   document.getElementById('ve-image').value = cfg.VERIFY_IMAGE || '';
   initThumbPreset(cfg.VERIFY_THUMBNAIL || '[user]');
 
