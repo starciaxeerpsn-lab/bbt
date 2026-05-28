@@ -1,361 +1,1462 @@
-const {
-  Client,
-  GatewayIntentBits,
-  Partials,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  ModalBuilder,
-  TextInputBuilder,
-  TextInputStyle,
-  StringSelectMenuBuilder,
-  StringSelectMenuOptionBuilder,
-  EmbedBuilder,
-  PermissionFlagsBits,
-} = require("discord.js");
-
-const express = require("express");
-const fs = require("fs");
-const path = require("path");
-
-require("dotenv").config();
-
-// ============================================================
-// 📁 CONFIG — โหลดจาก config.json (แก้ผ่าน Dashboard ได้เลย)
-// ============================================================
-const CONFIG_PATH = path.join(__dirname, "config.json");
-
-function loadConfig() {
-  return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
-}
-
-function saveConfig(data) {
-  fs.writeFileSync(CONFIG_PATH, JSON.stringify(data, null, 2));
-}
-
-// ============================================================
-// 🌐 EXPRESS — Dashboard Web UI
-// ============================================================
-const app = express();
-app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
-
-// GET /api/config → ส่ง config ให้ Dashboard
-app.get("/api/config", (req, res) => {
-  try {
-    res.json(loadConfig());
-  } catch (e) {
-    res.status(500).json({ error: e.message });
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bot Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --card: #1a1d27;
+    --border: #252836;
+    --accent: #5865f2;
+    --accent2: #57f287;
+    --accent3: #eb459e;
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --warn: #faa61a;
+    --danger: #ed4245;
   }
-});
 
-// POST /api/config → รับค่าจาก Dashboard และบันทึก
-app.post("/api/config", (req, res) => {
-  try {
-    saveConfig(req.body);
-    res.json({ ok: true });
-  } catch (e) {
-    res.json({ ok: false, error: e.message });
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Sarabun', sans-serif;
+    font-size: 15px;
+    min-height: 100vh;
   }
-});
 
-// GET /api/status → สถานะบอทสำหรับ Dashboard
-app.get("/api/status", (req, res) => {
-  res.json({
-    tag: client.user?.tag || "Offline",
-    online: client.isReady(),
-    guilds: client.guilds?.cache?.size || 0,
-  });
-});
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 0;
+  }
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🌐 Dashboard: http://localhost:${PORT}`);
-});
+  body::after {
+    content: '';
+    position: fixed;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(88,101,242,.12) 0%, transparent 70%);
+    top: -200px; left: -200px;
+    pointer-events: none; z-index: 0;
+  }
 
-// ============================================================
-// 🤖 DISCORD BOT
-// ============================================================
-const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-  ],
-  partials: [Partials.GuildMember],
-});
+  .layout {
+    position: relative; z-index: 1;
+    display: flex; min-height: 100vh;
+  }
 
-// เก็บข้อมูลชั่วคราวก่อนเลือกเกม
-const pendingData = new Map();
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 240px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    padding: 0;
+    position: sticky; top: 0; height: 100vh;
+    flex-shrink: 0;
+    overflow-y: auto;
+  }
 
-// ─── Helper: แทน {user} ด้วย mention จริง ───────────────────
-function formatMsg(template, member) {
-  return template.replace(/\{user\}/g, `${member}`);
+  .logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo-text {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 18px; font-weight: 700;
+    background: linear-gradient(135deg, #5865f2, #eb459e);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    letter-spacing: 1px;
+  }
+
+  .logo-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(87,242,135,.1);
+    border: 1px solid rgba(87,242,135,.25);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 11px; color: var(--accent2);
+    margin-top: 10px;
+  }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    background: var(--accent2);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .4; } }
+
+  .nav { padding: 16px 12px; flex: 1; }
+  .nav-section { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; padding: 14px 12px 6px; }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 14px;
+    transition: all .2s;
+    margin-bottom: 2px;
+    border: 1px solid transparent;
+  }
+
+  .nav-item:hover { background: var(--card); color: var(--text); }
+
+  .nav-item.active {
+    background: rgba(88,101,242,.15);
+    border-color: rgba(88,101,242,.3);
+    color: #a5b4fc;
+  }
+
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+  /* ── Main ── */
+  .main { flex: 1; padding: 32px; overflow-y: auto; }
+
+  .page { display: none; }
+  .page.active { display: block; animation: fadeIn .2s; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .page-header { margin-bottom: 28px; }
+  .page-title { font-family: 'Chakra Petch', sans-serif; font-size: 22px; font-weight: 600; }
+  .page-sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  .card-title {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 13px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .card-title span { color: var(--accent); }
+
+  /* ── Form ── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-grid.cols3 { grid-template-columns: 1fr 1fr 1fr; }
+  .form-grid.full { grid-template-columns: 1fr; }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+
+  .field label { font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+
+  .field input, .field select, .field textarea {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    padding: 10px 12px;
+    font-family: 'Sarabun', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .2s;
+  }
+
+  .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--accent); }
+  .field input[type="color"] { padding: 4px 8px; height: 40px; cursor: pointer; }
+
+  .color-row { display: flex; align-items: center; gap: 8px; }
+  .color-row input[type="text"] { flex: 1; }
+  .color-row input[type="color"] { width: 44px; flex-shrink: 0; }
+
+  /* ── Toggle ── */
+  .toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 0; border-bottom: 1px solid var(--border);
+  }
+  .toggle-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .toggle-label { font-size: 14px; }
+  .toggle-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  .toggle { position: relative; width: 44px; height: 24px; cursor: pointer; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-track { position: absolute; inset: 0; background: var(--border); border-radius: 12px; transition: background .2s; }
+  .toggle input:checked + .toggle-track { background: var(--accent2); }
+  .toggle-thumb { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; background: white; border-radius: 50%; transition: transform .2s; }
+  .toggle input:checked ~ .toggle-thumb { transform: translateX(20px); }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-family: 'Sarabun', sans-serif;
+    font-size: 14px; font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all .2s;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: #4752c4; transform: translateY(-1px); }
+  .btn-success { background: rgba(87,242,135,.15); border: 1px solid rgba(87,242,135,.3); color: var(--accent2); }
+  .btn-success:hover { background: rgba(87,242,135,.25); }
+  .btn-ghost { background: var(--surface); border: 1px solid var(--border); color: var(--muted); }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--text); }
+  .btn-danger { background: rgba(237,66,69,.15); border: 1px solid rgba(237,66,69,.3); color: var(--danger); }
+  .btn-danger:hover { background: rgba(237,66,69,.25); }
+  .btn-row { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+
+  .btn-del {
+    background: rgba(237,66,69,.1); border: 1px solid rgba(237,66,69,.25);
+    color: var(--danger); border-radius: 6px; width: 32px; height: 32px;
+    cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: background .2s;
+  }
+  .btn-del:hover { background: rgba(237,66,69,.25); }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 18px; font-size: 14px;
+    z-index: 999; transform: translateY(100px); opacity: 0; transition: all .3s;
+  }
+  #toast.show { transform: translateY(0); opacity: 1; }
+  #toast.ok { border-color: rgba(87,242,135,.4); color: var(--accent2); }
+  #toast.err { border-color: rgba(237,66,69,.4); color: var(--danger); }
+
+  /* ── Stats row ── */
+  .stats-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .stat-val { font-family: 'Chakra Petch', sans-serif; font-size: 28px; font-weight: 700; color: var(--accent); }
+  .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* ── Discord Embed Preview ── */
+  .embed-preview {
+    background: #2b2d31;
+    border-left: 4px solid #57f287;
+    border-radius: 4px;
+    padding: 14px 16px;
+    margin-top: 16px;
+    font-size: 13px;
+  }
+  .embed-title { font-weight: 700; color: #fff; margin-bottom: 6px; font-size: 14px; }
+  .embed-desc { color: #b5bac1; line-height: 1.6; }
+  .embed-image { width: 100%; max-width: 400px; border-radius: 6px; margin-top: 10px; object-fit: cover; }
+  .embed-author { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .embed-avatar { width: 24px; height: 24px; border-radius: 50%; background: #5865f2; overflow: hidden; }
+  .embed-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .embed-author-name { font-size: 12px; color: #fff; font-weight: 600; }
+
+  /* ── Welcome/Goodbye Discord-style full preview ── */
+  .discord-preview {
+    background: #313338;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 16px;
+    font-size: 14px;
+    display: flex;
+    gap: 14px;
+  }
+  .dc-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, #5865f2, #eb459e);
+    flex-shrink: 0; overflow: hidden; display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: white; font-weight: 700;
+  }
+  .dc-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .dc-body { flex: 1; }
+  .dc-name { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .dc-name .dc-tag { font-size: 11px; color: var(--muted); font-weight: 400; margin-left: 6px; }
+  .dc-mention { color: #a5b4fc; background: rgba(88,101,242,.15); border-radius: 4px; padding: 0 2px; cursor: pointer; }
+  .dc-text { color: #dbdee1; line-height: 1.6; margin-bottom: 10px; }
+  .dc-embed {
+    background: #2b2d31;
+    border-left: 4px solid #57f287;
+    border-radius: 4px 8px 8px 4px;
+    padding: 12px 14px;
+    max-width: 480px;
+  }
+  .dc-embed-image { width: 100%; border-radius: 4px; margin-top: 10px; max-height: 200px; object-fit: cover; }
+
+  /* ── Image Upload ── */
+  .img-upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .img-upload-zone:hover { border-color: var(--accent); background: rgba(88,101,242,.05); }
+  .img-upload-zone.has-img { border-style: solid; border-color: var(--accent); }
+  .img-upload-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .img-upload-preview { width: 100%; max-height: 160px; object-fit: contain; border-radius: 6px; display: none; }
+  .img-upload-zone.has-img .img-upload-preview { display: block; }
+  .img-upload-zone.has-img .img-upload-placeholder { display: none; }
+  .img-upload-placeholder { color: var(--muted); font-size: 13px; }
+  .img-upload-placeholder .icon { font-size: 32px; margin-bottom: 8px; }
+
+  /* ── Role Button Builder ── */
+  .role-btn-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .role-btn-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    position: relative;
+  }
+
+  .role-btn-item .rbi-header {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;
+  }
+
+  .role-btn-item .rbi-num {
+    font-family: 'Chakra Petch', sans-serif;
+    font-size: 11px; color: var(--muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+
+  .rbi-grid {
+    display: grid;
+    grid-template-columns: 60px 1fr 1fr 120px 36px;
+    gap: 10px; align-items: center;
+  }
+
+  .rbi-grid input, .rbi-grid select {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 8px 10px;
+    font-family: 'Sarabun', sans-serif;
+    font-size: 13px;
+    outline: none;
+    width: 100%;
+  }
+  .rbi-grid input:focus, .rbi-grid select:focus { border-color: var(--accent); }
+
+  .rbi-grid .emoji-in { text-align: center; font-size: 18px; }
+
+  /* Discord role pill */
+  .role-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(88,101,242,.2);
+    border: 1px solid rgba(88,101,242,.4);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 12px; color: #a5b4fc;
+    cursor: pointer;
+  }
+
+  .role-pill .dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* Discord-style buttons preview */
+  .dc-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .dc-btn {
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-size: 13px; font-weight: 500;
+    cursor: pointer; border: none;
+    transition: opacity .15s;
+  }
+  .dc-btn:hover { opacity: .85; }
+  .dc-btn.primary { background: #5865f2; color: white; }
+  .dc-btn.success { background: #57f287; color: #000; }
+  .dc-btn.danger { background: #ed4245; color: white; }
+  .dc-btn.secondary { background: #4e5058; color: white; }
+
+  /* ── Game Roles ── */
+  .game-list { display: flex; flex-direction: column; gap: 10px; }
+  .game-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px;
+    display: grid; grid-template-columns: 40px 1fr 1fr 50px 36px;
+    gap: 10px; align-items: center;
+  }
+  .game-item input {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text); padding: 7px 10px;
+    font-family: 'Sarabun', sans-serif; font-size: 13px; outline: none;
+  }
+  .game-item input:focus { border-color: var(--accent); }
+  .game-emoji-input { text-align: center; font-size: 18px; }
+
+  .add-row {
+    display: grid; gap: 10px; align-items: center;
+    padding: 12px 0; border-top: 1px dashed var(--border); margin-top: 8px;
+  }
+  .add-row input, .add-row select {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; color: var(--text); padding: 7px 10px;
+    font-family: 'Sarabun', sans-serif; font-size: 13px; outline: none;
+  }
+  .add-row input:focus, .add-row select:focus { border-color: var(--accent2); }
+
+  /* Goodbye tab indicator */
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--border); }
+  .tab-btn {
+    padding: 10px 18px; border-radius: 8px 8px 0 0; border: none;
+    background: transparent; color: var(--muted); cursor: pointer;
+    font-family: 'Sarabun', sans-serif; font-size: 14px; font-weight: 500;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: all .15s;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); background: rgba(88,101,242,.06); }
+
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  /* Hint box */
+  .hint {
+    background: rgba(250,166,26,.06); border: 1px solid rgba(250,166,26,.2);
+    border-radius: 8px; padding: 10px 14px; font-size: 12px; color: var(--warn); margin-top: 12px;
+  }
+  .hint.info { background: rgba(88,101,242,.06); border-color: rgba(88,101,242,.2); color: #a5b4fc; }
+
+  /* Role fetch loading */
+  .loading-spin {
+    display: inline-block; width: 14px; height: 14px;
+    border: 2px solid var(--border); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .roles-fetched { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+</style>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-text">BOT PANEL</div>
+      <div class="logo-sub">Discord Bot Dashboard</div>
+      <div class="status-pill">
+        <div class="status-dot"></div>
+        <span id="bot-tag">กำลังโหลด...</span>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">ภาพรวม</div>
+      <div class="nav-item active" onclick="showPage('overview',this)">
+        <span class="nav-icon">📊</span> ภาพรวม
+      </div>
+
+      <div class="nav-section">ห้อง</div>
+      <div class="nav-item" onclick="showPage('welcome',this)">
+        <span class="nav-icon">👋</span> ข้อความ Welcome
+      </div>
+      <div class="nav-item" onclick="showPage('goodbye',this)">
+        <span class="nav-icon">🚪</span> ข้อความ Goodbye
+      </div>
+
+      <div class="nav-section">ระบบยศ</div>
+      <div class="nav-item" onclick="showPage('rolebtn',this)">
+        <span class="nav-icon">🎛️</span> ปุ่มรับยศ
+      </div>
+      <div class="nav-item" onclick="showPage('roles',this)">
+        <span class="nav-icon">🎮</span> ยศเกม (Dropdown)
+      </div>
+
+      <div class="nav-section">ตั้งค่า</div>
+      <div class="nav-item" onclick="showPage('channels',this)">
+        <span class="nav-icon">📢</span> ห้อง (Channels)
+      </div>
+      <div class="nav-item" onclick="showPage('verify',this)">
+        <span class="nav-icon">🔐</span> Verify Embed
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+
+    <!-- ─── Overview ─────────────────────────────────── -->
+    <div id="page-overview" class="page active">
+      <div class="page-header">
+        <div class="page-title">ภาพรวม</div>
+        <div class="page-sub">สถานะและข้อมูลบอทของคุณ</div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-val" id="stat-online">–</div>
+          <div class="stat-label">สถานะบอท</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="stat-guilds">–</div>
+          <div class="stat-label">เซิร์ฟเวอร์</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="stat-games">–</div>
+          <div class="stat-label">ยศเกมทั้งหมด</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>⚡</span> วิธีใช้งาน</div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--muted)">
+          <div>1. ตั้งค่าข้อความ Welcome / Goodbye พร้อมรูปภาพในเมนูด้านซ้าย</div>
+          <div>2. สร้างปุ่มรับยศใน "ปุ่มรับยศ" — กดปุ่มเพื่อดึงยศจาก Discord แล้วเลือกได้เลย</div>
+          <div>3. แต่ละปุ่มสามารถกำหนดยศ + สีปุ่มได้อิสระ</div>
+          <div>4. บอทจะ @tag user พร้อมรูป Avatar ใน embed อัตโนมัติ</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>👁</span> ตัวอย่าง Welcome</div>
+        <div class="discord-preview" id="overview-preview">
+          <div class="dc-avatar" id="op-avatar">🤖</div>
+          <div class="dc-body">
+            <div class="dc-name">Bot <span class="dc-tag">วันนี้ 23:00</span></div>
+            <div class="dc-text">ยินดีต้อนรับสู่เซิร์ฟเวอร์! <span class="dc-mention">@สมาชิกใหม่</span> 🎉</div>
+            <div class="dc-embed" id="op-embed" style="border-left-color:#57f287">
+              <div class="embed-title" id="op-title">สมาชิกใหม่มาถึงแล้ว!</div>
+              <div class="embed-desc" id="op-desc">ยินดีต้อนรับสู่เซิร์ฟเวอร์!</div>
+              <img class="dc-embed-image" id="op-img" src="" alt="" style="display:none">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Welcome ─────────────────────────────────── -->
+    <div id="page-welcome" class="page">
+      <div class="page-header">
+        <div class="page-title">👋 ข้อความ Welcome</div>
+        <div class="page-sub">ตั้งค่าข้อความ embed และรูปที่แสดงเมื่อสมาชิกใหม่เข้า server</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>✏️</span> ข้อความ</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>หัวข้อ (Title)</label>
+            <input type="text" id="w-title" placeholder="ยินดีต้อนรับ!" oninput="updateWelcomePreview()">
+          </div>
+          <div class="field">
+            <label>สี Embed</label>
+            <div class="color-row">
+              <input type="text" id="w-color-text" placeholder="#57F287" maxlength="7" oninput="syncColorTxt('w-color-text','w-color');updateWelcomePreview()">
+              <input type="color" id="w-color" value="#57F287" oninput="syncColorPick(this,'w-color-text');updateWelcomePreview()">
+            </div>
+          </div>
+          <div class="field" style="grid-column:1/-1">
+            <label>ข้อความ (ใช้ {user} แทนชื่อสมาชิก)</label>
+            <textarea id="w-message" rows="3" placeholder="ยินดีต้อนรับ {user} เข้าสู่เซิร์ฟเวอร์ของเรา! 🎉" style="resize:vertical" oninput="updateWelcomePreview()"></textarea>
+          </div>
+        </div>
+        <div class="hint info" style="margin-top:12px">💡 ใช้ <b>{user}</b> ในข้อความเพื่อให้บอทแทนที่ด้วย @mention ชื่อสมาชิกจริง</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>🖼️</span> รูปภาพใน Embed</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>URL รูปภาพ (ถ้ามี)</label>
+            <input type="text" id="w-img-url" placeholder="https://i.imgur.com/xxx.png" oninput="updateWelcomePreview()">
+          </div>
+          <div class="field">
+            <label>หรืออัพโหลดรูปตรงนี้</label>
+            <div class="img-upload-zone" id="w-upload-zone" onclick="document.getElementById('w-img-file').click()">
+              <input type="file" id="w-img-file" accept="image/*" onchange="handleImgUpload(this,'w-img-url','w-upload-zone','w-upload-preview','welcome')" style="display:none">
+              <div class="img-upload-placeholder">
+                <div class="icon">📁</div>
+                <div>คลิกเพื่อเลือกรูป</div>
+                <div style="font-size:11px;margin-top:4px">PNG, JPG, GIF, WebP</div>
+              </div>
+              <img class="img-upload-preview" id="w-upload-preview" src="" alt="">
+            </div>
+          </div>
+        </div>
+        <div class="hint" style="margin-top:12px">⚠️ รูปจะถูกส่งไปเก็บที่เซิร์ฟเวอร์บอท ให้กดบันทึกหลังเลือกรูป</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>⚙️</span> ตัวเลือก</div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">@mention ชื่อดิส</div>
+            <div class="toggle-desc">บอทจะ @tag ชื่อ Discord จริงๆ ในข้อความ welcome</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="w-mention" checked onchange="updateWelcomePreview()">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">แสดงรูป Avatar ของ User</div>
+            <div class="toggle-desc">แสดง Avatar ของสมาชิกใหม่ใน embed thumbnail</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="w-show-avatar" checked onchange="updateWelcomePreview()">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>👁</span> ตัวอย่าง (Live Preview)</div>
+        <div class="discord-preview" id="welcome-preview">
+          <div class="dc-avatar" id="wp-avatar" style="font-size:13px;background:linear-gradient(135deg,#5865f2,#eb459e)">USER</div>
+          <div class="dc-body">
+            <div class="dc-name">Bot <span class="dc-tag">วันนี้ 23:00</span></div>
+            <div class="dc-text" id="wp-text">ยินดีต้อนรับสู่เซิร์ฟเวอร์! <span class="dc-mention">@ชื่อดิส</span> 🎉</div>
+            <div class="dc-embed" id="wp-embed" style="border-left-color:#57f287">
+              <div class="embed-title" id="wp-title">ยินดีต้อนรับ!</div>
+              <div class="embed-desc" id="wp-desc">ยินดีต้อนรับ <span class="dc-mention">@ชื่อดิส</span> เข้าสู่เซิร์ฟเวอร์ของเรา! 🎉</div>
+              <img class="dc-embed-image" id="wp-img" src="" alt="" style="display:none">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveConfig()">💾 บันทึก</button>
+        <button class="btn btn-ghost" onclick="loadFromServer()">↺ รีเซ็ต</button>
+      </div>
+    </div>
+
+    <!-- ─── Goodbye ─────────────────────────────────── -->
+    <div id="page-goodbye" class="page">
+      <div class="page-header">
+        <div class="page-title">🚪 ข้อความ Goodbye</div>
+        <div class="page-sub">ตั้งค่าข้อความที่แสดงเมื่อสมาชิกออกจาก server</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>✏️</span> ข้อความ Goodbye</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>หัวข้อ (Title)</label>
+            <input type="text" id="gb-title" placeholder="ลาก่อน..." oninput="updateGoodbyePreview()">
+          </div>
+          <div class="field">
+            <label>สี Embed</label>
+            <div class="color-row">
+              <input type="text" id="gb-color-text" placeholder="#ED4245" maxlength="7" oninput="syncColorTxt('gb-color-text','gb-color');updateGoodbyePreview()">
+              <input type="color" id="gb-color" value="#ED4245" oninput="syncColorPick(this,'gb-color-text');updateGoodbyePreview()">
+            </div>
+          </div>
+          <div class="field" style="grid-column:1/-1">
+            <label>ข้อความ (ใช้ {user} แทนชื่อสมาชิก)</label>
+            <textarea id="gb-message" rows="3" placeholder="{user} ได้ออกจากเซิร์ฟเวอร์แล้ว 😢" style="resize:vertical" oninput="updateGoodbyePreview()"></textarea>
+          </div>
+        </div>
+        <div class="hint info" style="margin-top:12px">💡 ใช้ <b>{user}</b> ในข้อความเพื่อให้บอทแทนที่ด้วยชื่อสมาชิกที่ออกไป</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>🖼️</span> รูปภาพใน Embed</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>URL รูปภาพ (ถ้ามี)</label>
+            <input type="text" id="gb-img-url" placeholder="https://i.imgur.com/xxx.png" oninput="updateGoodbyePreview()">
+          </div>
+          <div class="field">
+            <label>หรืออัพโหลดรูปตรงนี้</label>
+            <div class="img-upload-zone" id="gb-upload-zone" onclick="document.getElementById('gb-img-file').click()">
+              <input type="file" id="gb-img-file" accept="image/*" onchange="handleImgUpload(this,'gb-img-url','gb-upload-zone','gb-upload-preview','goodbye')" style="display:none">
+              <div class="img-upload-placeholder">
+                <div class="icon">📁</div>
+                <div>คลิกเพื่อเลือกรูป</div>
+                <div style="font-size:11px;margin-top:4px">PNG, JPG, GIF, WebP</div>
+              </div>
+              <img class="img-upload-preview" id="gb-upload-preview" src="" alt="">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>⚙️</span> ตัวเลือก</div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">เปิดใช้ Goodbye</div>
+            <div class="toggle-desc">ถ้าปิด บอทจะไม่ส่งข้อความเมื่อสมาชิกออก</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="gb-enabled" checked onchange="updateGoodbyePreview()">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">แสดงรูป Avatar ของ User</div>
+            <div class="toggle-desc">แสดง Avatar ของสมาชิกใน embed</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="gb-show-avatar" checked onchange="updateGoodbyePreview()">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>👁</span> ตัวอย่าง (Live Preview)</div>
+        <div class="discord-preview" id="goodbye-preview">
+          <div class="dc-avatar" id="gbp-avatar" style="font-size:13px;background:linear-gradient(135deg,#ed4245,#faa61a)">USER</div>
+          <div class="dc-body">
+            <div class="dc-name">Bot <span class="dc-tag">วันนี้ 23:00</span></div>
+            <div class="dc-text" id="gbp-text">สมาชิกได้ออกจากเซิร์ฟเวอร์แล้ว</div>
+            <div class="dc-embed" id="gbp-embed" style="border-left-color:#ed4245">
+              <div class="embed-title" id="gbp-title">ลาก่อน...</div>
+              <div class="embed-desc" id="gbp-desc"><b>ชื่อดิส</b> ได้ออกจากเซิร์ฟเวอร์แล้ว 😢</div>
+              <img class="dc-embed-image" id="gbp-img" src="" alt="" style="display:none">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveConfig()">💾 บันทึก</button>
+        <button class="btn btn-ghost" onclick="loadFromServer()">↺ รีเซ็ต</button>
+      </div>
+    </div>
+
+    <!-- ─── Role Buttons ─────────────────────────────── -->
+    <div id="page-rolebtn" class="page">
+      <div class="page-header">
+        <div class="page-title">🎛️ ปุ่มรับยศ</div>
+        <div class="page-sub">ออกแบบปุ่มกดรับยศ — แต่ละปุ่มผูกกับยศใน Discord</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>🔄</span> ดึงยศจาก Discord</div>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <button class="btn btn-success" onclick="fetchDiscordRoles()">
+            <span id="fetch-spin" style="display:none" class="loading-spin"></span>
+            🔄 โหลดยศจาก Discord
+          </button>
+          <span style="font-size:13px;color:var(--muted)" id="roles-loaded-hint">กดปุ่มเพื่อดึงรายการยศทั้งหมดจากเซิร์ฟเวอร์</span>
+        </div>
+        <div class="roles-fetched" id="roles-fetched-list"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>🔘</span> ปุ่มทั้งหมด</div>
+
+        <div style="display:grid;grid-template-columns:60px 1fr 1fr 120px 36px;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:12px;font-size:11px;color:var(--muted)">
+          <div style="text-align:center">Emoji</div>
+          <div>ข้อความปุ่ม</div>
+          <div>ยศที่จะได้รับ (ชื่อ)</div>
+          <div>สีปุ่ม</div>
+          <div></div>
+        </div>
+
+        <div class="role-btn-list" id="rolebtn-list"></div>
+
+        <!-- Add new -->
+        <div class="add-row" style="grid-template-columns:60px 1fr 1fr 120px 80px;margin-top:12px">
+          <input type="text" id="rb-new-emoji" placeholder="🎮" maxlength="4" style="text-align:center;font-size:18px">
+          <input type="text" id="rb-new-label" placeholder="กดเพื่อรับยศ...">
+          <input type="text" id="rb-new-role" placeholder="ชื่อยศ (เช่น Member)">
+          <select id="rb-new-color">
+            <option value="primary">🔵 Primary</option>
+            <option value="success">🟢 Success</option>
+            <option value="danger">🔴 Danger</option>
+            <option value="secondary">⚪ Secondary</option>
+          </select>
+          <button class="btn btn-success" onclick="addRoleBtn()" style="padding:8px 12px">+ เพิ่ม</button>
+        </div>
+        <div class="hint info" style="margin-top:10px">💡 ชื่อยศต้องตรงกับยศใน Discord <b>ทุกตัวอักษร</b> — กด "โหลดยศ" แล้วคลิกเพื่อเติมชื่ออัตโนมัติ</div>
+      </div>
+
+      <!-- Preview -->
+      <div class="card">
+        <div class="card-title"><span>👁</span> ตัวอย่างปุ่มใน Discord</div>
+        <div style="background:#2b2d31;border-radius:8px;padding:16px">
+          <div style="font-size:13px;color:#b5bac1;margin-bottom:10px">เลือกยศที่ต้องการรับ:</div>
+          <div class="dc-buttons" id="rolebtn-preview"></div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveConfig()">💾 บันทึก</button>
+        <button class="btn btn-ghost" onclick="loadFromServer()">↺ รีเซ็ต</button>
+      </div>
+    </div>
+
+    <!-- ─── Roles (Game Dropdown) ─────────────────── -->
+    <div id="page-roles" class="page">
+      <div class="page-header">
+        <div class="page-title">🎮 ยศเกม (Dropdown)</div>
+        <div class="page-sub">จัดการยศ Member และยศเกมใน dropdown ตอน verify</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>👑</span> ยศ Member หลัก</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>ชื่อยศ Member</label>
+            <input type="text" id="r-member-name" placeholder="Member">
+          </div>
+          <div class="field">
+            <label>สียศ</label>
+            <div class="color-row">
+              <input type="text" id="r-member-color-text" placeholder="#57F287" maxlength="7">
+              <input type="color" id="r-member-color" value="#57F287" oninput="syncColorPick(this,'r-member-color-text')" onchange="syncColorPick(this,'r-member-color-text')">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>🎮</span> ยศเกม</div>
+        <div style="display:grid;grid-template-columns:40px 1fr 1fr 50px 36px;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:8px;font-size:11px;color:var(--muted)">
+          <div style="text-align:center">Emoji</div>
+          <div>ชื่อยศ</div>
+          <div>Key (ห้ามซ้ำ)</div>
+          <div>สี</div>
+          <div></div>
+        </div>
+        <div class="game-list" id="game-list"></div>
+        <div class="add-row" style="grid-template-columns:40px 1fr 1fr 50px 80px">
+          <input type="text" id="new-emoji" placeholder="🎯" maxlength="4" style="text-align:center;font-size:18px">
+          <input type="text" id="new-name" placeholder="ชื่อยศใหม่">
+          <input type="text" id="new-key" placeholder="key (เช่น csgo)">
+          <input type="color" id="new-color" value="#5865F2">
+          <button class="btn btn-success" onclick="addGame()" style="padding:8px 12px">+ เพิ่ม</button>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveConfig()">💾 บันทึก</button>
+        <button class="btn btn-ghost" onclick="loadFromServer()">↺ รีเซ็ต</button>
+      </div>
+    </div>
+
+    <!-- ─── Channels ──────────────────────────────── -->
+    <div id="page-channels" class="page">
+      <div class="page-header">
+        <div class="page-title">📢 ห้อง (Channels)</div>
+        <div class="page-sub">ตั้งชื่อห้องให้ตรงกับ Discord server ของคุณ</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>📢</span> ชื่อห้อง</div>
+        <div class="form-grid cols3">
+          <div class="field">
+            <label>ห้อง Verify</label>
+            <input type="text" id="c-verify" placeholder="verify">
+          </div>
+          <div class="field">
+            <label>ห้อง Welcome</label>
+            <input type="text" id="c-welcome" placeholder="WELCOME">
+          </div>
+          <div class="field">
+            <label>ห้อง Goodbye</label>
+            <input type="text" id="c-goodbye" placeholder="GOODBYE">
+          </div>
+        </div>
+        <div class="hint">⚠️ ชื่อต้องตรงกับชื่อห้องใน Discord <b>ทุกตัวอักษร</b> รวมถึงตัวพิมพ์ใหญ่-เล็ก</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveConfig()">💾 บันทึก</button>
+        <button class="btn btn-ghost" onclick="loadFromServer()">↺ รีเซ็ต</button>
+      </div>
+    </div>
+
+    <!-- ─── Verify Embed ──────────────────────────── -->
+    <div id="page-verify" class="page">
+      <div class="page-header">
+        <div class="page-title">🔐 Verify Embed</div>
+        <div class="page-sub">ตั้งค่าหน้าตา embed และปุ่มที่ให้สมาชิกกดรับยศ</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>✏️</span> ข้อความ Embed</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>หัวข้อ (Title)</label>
+            <input type="text" id="ve-title" placeholder="🎮 ยืนยันตัวตน" oninput="updateVerifyPreview()">
+          </div>
+          <div class="field">
+            <label>สี Embed</label>
+            <div class="color-row">
+              <input type="text" id="ve-color-text" placeholder="#5865F2" maxlength="7" oninput="syncColorTxt('ve-color-text','ve-color');updateVerifyPreview()">
+              <input type="color" id="ve-color" value="#5865F2" oninput="syncColorPick(this,'ve-color-text');updateVerifyPreview()">
+            </div>
+          </div>
+          <div class="field" style="grid-column:1/-1">
+            <label>คำอธิบาย (Description)</label>
+            <textarea id="ve-desc" rows="2" placeholder="กดปุ่มด้านล่างเพื่อกรอกข้อมูลและรับยศของคุณ!" style="resize:vertical" oninput="updateVerifyPreview()"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>🔘</span> ปุ่ม Verify</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>ข้อความบนปุ่ม</label>
+            <input type="text" id="ve-btn-label" placeholder="✅ ยืนยันตัวตน" oninput="updateVerifyPreview()">
+          </div>
+          <div class="field">
+            <label>สีปุ่ม</label>
+            <select id="ve-btn-color" onchange="updateVerifyPreview()">
+              <option value="Primary">🔵 Primary (น้ำเงิน)</option>
+              <option value="Success">🟢 Success (เขียว)</option>
+              <option value="Danger">🔴 Danger (แดง)</option>
+              <option value="Secondary">⚪ Secondary (เทา)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>👁</span> ตัวอย่าง Verify Embed</div>
+        <div class="embed-preview" id="verify-embed-preview" style="border-left-color:#5865f2">
+          <div class="embed-title" id="ve-prev-title">🎮 ยืนยันตัวตน</div>
+          <div class="embed-desc" id="ve-prev-desc">กดปุ่มด้านล่างเพื่อกรอกข้อมูลและรับยศของคุณ!</div>
+          <div style="margin-top:14px">
+            <div id="ve-prev-btn" style="display:inline-block;background:#5865f2;color:white;padding:8px 18px;border-radius:4px;font-size:13px;font-weight:600">✅ ยืนยันตัวตน</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--muted)">💡 สีปุ่มจริงใน Discord จะตรงกับที่เลือกด้านบน</div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveConfig()">💾 บันทึก</button>
+        <button class="btn btn-ghost" onclick="loadFromServer()">↺ รีเซ็ต</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div id="toast"></div>
+
+<script>
+let cfg = {};
+
+// ── Navigation ──────────────────────────────────────────────
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (el) el.classList.add('active');
 }
 
-// ─── Helper: แปลง ButtonColor string → ButtonStyle ──────────
-function resolveButtonStyle(color = "Primary") {
-  const map = {
-    Primary: ButtonStyle.Primary,
-    primary: ButtonStyle.Primary,
-    Secondary: ButtonStyle.Secondary,
-    secondary: ButtonStyle.Secondary,
-    Success: ButtonStyle.Success,
-    success: ButtonStyle.Success,
-    Danger: ButtonStyle.Danger,
-    danger: ButtonStyle.Danger,
+// ── Toast ───────────────────────────────────────────────────
+function toast(msg, type='ok') {
+  const t = document.getElementById('toast');
+  t.textContent = (type === 'ok' ? '✅ ' : '❌ ') + msg;
+  t.className = 'show ' + type;
+  setTimeout(() => t.className = '', 2500);
+}
+
+// ── Color sync ──────────────────────────────────────────────
+function syncColorPick(picker, textId) {
+  document.getElementById(textId).value = picker.value;
+}
+function syncColorTxt(textId, pickerId) {
+  const v = document.getElementById(textId).value;
+  if (/^#[0-9a-fA-F]{6}$/.test(v)) document.getElementById(pickerId).value = v;
+}
+
+// ── Image Upload ────────────────────────────────────────────
+function handleImgUpload(input, urlId, zoneId, previewId, type) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const dataUrl = e.target.result;
+    document.getElementById(previewId).src = dataUrl;
+    document.getElementById(zoneId).classList.add('has-img');
+
+    // upload to server
+    fetch('/api/upload-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type, data: dataUrl })
+    })
+    .then(r => r.json())
+    .then(d => {
+      if (d.url) {
+        document.getElementById(urlId).value = d.url;
+        toast('อัพโหลดรูปสำเร็จ');
+        if (type === 'welcome') updateWelcomePreview();
+        if (type === 'goodbye') updateGoodbyePreview();
+      }
+    })
+    .catch(() => {
+      // fallback: use dataUrl for preview even if server not available
+      document.getElementById(urlId).value = dataUrl;
+      if (type === 'welcome') updateWelcomePreview();
+      if (type === 'goodbye') updateGoodbyePreview();
+    });
   };
-  return map[color] ?? ButtonStyle.Primary;
+  reader.readAsDataURL(file);
 }
 
-// ─── บอทพร้อมทำงาน ───────────────────────────────────────────
-client.once("clientReady", () => {
-  console.log(`✅ Bot online: ${client.user.tag}`);
-});
+// ── Welcome Preview ─────────────────────────────────────────
+function updateWelcomePreview() {
+  const title = document.getElementById('w-title')?.value || 'ยินดีต้อนรับ!';
+  const msg = document.getElementById('w-message')?.value || 'ยินดีต้อนรับสู่เซิร์ฟเวอร์ของเรา!';
+  const color = document.getElementById('w-color')?.value || '#57f287';
+  const mention = document.getElementById('w-mention')?.checked;
+  const showAvatar = document.getElementById('w-show-avatar')?.checked;
+  const imgUrl = document.getElementById('w-img-url')?.value || '';
 
-// ─── สมาชิกใหม่เข้า server ──────────────────────────────────
-client.on("guildMemberAdd", async (member) => {
-  const cfg = loadConfig();
+  const userDisplay = mention
+    ? `<span class="dc-mention">@ชื่อดิส</span>`
+    : '<b>ชื่อดิส</b>';
 
-  // ส่ง Verify embed ในห้อง verify
-  const verifyChannel = member.guild.channels.cache.find(
-    (c) => c.name === cfg.VERIFY_CHANNEL_NAME
-  );
-  if (verifyChannel) {
-    const embed = new EmbedBuilder()
-      .setColor(parseInt(cfg.VERIFY_EMBED_COLOR.replace("#", ""), 16))
-      .setTitle(cfg.VERIFY_EMBED_TITLE)
-      .setDescription(
-        `สวัสดี ${member}!\n${cfg.VERIFY_EMBED_DESC}`
-      )
-      .setThumbnail(member.user.displayAvatarURL());
+  const descHtml = msg.replace(/\{user\}/g, userDisplay);
 
-    const button = new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId("open_verify_modal")
-        .setLabel(cfg.VERIFY_BUTTON_LABEL)
-        .setStyle(resolveButtonStyle(cfg.VERIFY_BUTTON_COLOR))
-    );
+  const embed = document.getElementById('wp-embed');
+  if (embed) embed.style.borderLeftColor = color;
+  const t = document.getElementById('wp-title');
+  if (t) t.textContent = title;
+  const d = document.getElementById('wp-desc');
+  if (d) d.innerHTML = descHtml;
+  const txt = document.getElementById('wp-text');
+  if (txt) txt.innerHTML = mention ? `ยินดีต้อนรับ ${userDisplay} เข้าสู่เซิร์ฟเวอร์! 🎉` : '';
 
-    await verifyChannel.send({ embeds: [embed], components: [button] });
+  const img = document.getElementById('wp-img');
+  if (img) {
+    img.src = imgUrl;
+    img.style.display = imgUrl ? 'block' : 'none';
   }
-});
 
-// ─── สมาชิกออกจาก server ────────────────────────────────────
-client.on("guildMemberRemove", async (member) => {
-  const cfg = loadConfig();
-  if (!cfg.GOODBYE_ENABLED) return;
-
-  const goodbyeChannel = member.guild.channels.cache.find(
-    (c) => c.name === cfg.GOODBYE_CHANNEL_NAME
-  );
-  if (!goodbyeChannel) return;
-
-  const embed = new EmbedBuilder()
-    .setColor(parseInt(cfg.GOODBYE_COLOR.replace("#", ""), 16))
-    .setTitle(cfg.GOODBYE_TITLE)
-    .setDescription(formatMsg(cfg.GOODBYE_MESSAGE, member));
-
-  if (cfg.GOODBYE_SHOW_AVATAR) {
-    embed.setThumbnail(member.user.displayAvatarURL());
+  const avatar = document.getElementById('wp-avatar');
+  if (avatar) {
+    avatar.innerHTML = showAvatar
+      ? `<img src="https://cdn.discordapp.com/embed/avatars/0.png" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
+      : 'USER';
   }
+
+  // update overview too
+  const oe = document.getElementById('op-embed');
+  if (oe) oe.style.borderLeftColor = color;
+  const ot = document.getElementById('op-title');
+  if (ot) ot.textContent = title;
+  const od = document.getElementById('op-desc');
+  if (od) od.innerHTML = descHtml;
+  const oi = document.getElementById('op-img');
+  if (oi) { oi.src = imgUrl; oi.style.display = imgUrl ? 'block' : 'none'; }
+}
+
+// ── Goodbye Preview ─────────────────────────────────────────
+function updateGoodbyePreview() {
+  const title = document.getElementById('gb-title')?.value || 'ลาก่อน...';
+  const msg = document.getElementById('gb-message')?.value || '{user} ได้ออกจากเซิร์ฟเวอร์แล้ว 😢';
+  const color = document.getElementById('gb-color')?.value || '#ed4245';
+  const imgUrl = document.getElementById('gb-img-url')?.value || '';
+
+  const descHtml = msg.replace(/\{user\}/g, '<b>ชื่อดิส</b>');
+
+  const embed = document.getElementById('gbp-embed');
+  if (embed) embed.style.borderLeftColor = color;
+  const t = document.getElementById('gbp-title');
+  if (t) t.textContent = title;
+  const d = document.getElementById('gbp-desc');
+  if (d) d.innerHTML = descHtml;
+
+  const img = document.getElementById('gbp-img');
+  if (img) { img.src = imgUrl; img.style.display = imgUrl ? 'block' : 'none'; }
+}
+
+// ── Verify Preview ──────────────────────────────────────────
+function updateVerifyPreview() {
+  const title = document.getElementById('ve-title')?.value || '🎮 ยืนยันตัวตน';
+  const desc = document.getElementById('ve-desc')?.value || '';
+  const color = document.getElementById('ve-color')?.value || '#5865f2';
+  const btnLabel = document.getElementById('ve-btn-label')?.value || '✅ ยืนยันตัวตน';
+  const btnColor = document.getElementById('ve-btn-color')?.value || 'Primary';
+
+  const colorMap = { Primary:'#5865f2', Success:'#57f287', Danger:'#ed4245', Secondary:'#4e5058' };
+  const textMap = { Primary:'white', Success:'#000', Danger:'white', Secondary:'white' };
+
+  const ep = document.getElementById('verify-embed-preview');
+  if (ep) ep.style.borderLeftColor = color;
+  const et = document.getElementById('ve-prev-title');
+  if (et) et.textContent = title;
+  const ed = document.getElementById('ve-prev-desc');
+  if (ed) ed.textContent = desc;
+  const btn = document.getElementById('ve-prev-btn');
+  if (btn) {
+    btn.textContent = btnLabel;
+    btn.style.background = colorMap[btnColor] || '#5865f2';
+    btn.style.color = textMap[btnColor] || 'white';
+  }
+}
+
+// ── Role Buttons ────────────────────────────────────────────
+function renderRoleBtns() {
+  const list = document.getElementById('rolebtn-list');
+  const preview = document.getElementById('rolebtn-preview');
+  if (!list) return;
+  list.innerHTML = '';
+  if (preview) preview.innerHTML = '';
+
+  (cfg.ROLE_BUTTONS || []).forEach((btn, i) => {
+    // list item
+    const row = document.createElement('div');
+    row.className = 'rbi-grid';
+    row.dataset.idx = i;
+    const colorOpts = ['primary','success','danger','secondary'].map(c =>
+      `<option value="${c}" ${btn.color === c ? 'selected' : ''}>${{primary:'🔵 Primary',success:'🟢 Success',danger:'🔴 Danger',secondary:'⚪ Secondary'}[c]}</option>`
+    ).join('');
+    row.innerHTML = `
+      <input class="emoji-in" type="text" value="${btn.emoji||''}" placeholder="🎮" maxlength="4" onchange="updateRoleBtn(${i},'emoji',this.value)">
+      <input type="text" value="${btn.label||''}" placeholder="ข้อความปุ่ม" onchange="updateRoleBtn(${i},'label',this.value)">
+      <input type="text" value="${btn.role||''}" placeholder="ชื่อยศใน Discord" onchange="updateRoleBtn(${i},'role',this.value)">
+      <select onchange="updateRoleBtn(${i},'color',this.value);renderRoleBtns()">${colorOpts}</select>
+      <button class="btn-del" onclick="removeRoleBtn(${i})">✕</button>
+    `;
+    list.appendChild(row);
+
+    // preview button
+    if (preview) {
+      const pb = document.createElement('button');
+      pb.className = `dc-btn ${btn.color || 'primary'}`;
+      pb.textContent = (btn.emoji ? btn.emoji + ' ' : '') + (btn.label || 'ปุ่ม');
+      preview.appendChild(pb);
+    }
+  });
+}
+
+function updateRoleBtn(idx, field, value) {
+  if (!cfg.ROLE_BUTTONS[idx]) return;
+  cfg.ROLE_BUTTONS[idx][field] = value;
+}
+
+function removeRoleBtn(idx) {
+  cfg.ROLE_BUTTONS.splice(idx, 1);
+  renderRoleBtns();
+}
+
+function addRoleBtn() {
+  const emoji = document.getElementById('rb-new-emoji').value.trim() || '🎮';
+  const label = document.getElementById('rb-new-label').value.trim();
+  const role = document.getElementById('rb-new-role').value.trim();
+  const color = document.getElementById('rb-new-color').value;
+  if (!label) return toast('ใส่ข้อความปุ่มด้วย', 'err');
+  if (!role) return toast('ใส่ชื่อยศด้วย', 'err');
+  if (!cfg.ROLE_BUTTONS) cfg.ROLE_BUTTONS = [];
+  cfg.ROLE_BUTTONS.push({ emoji, label, role, color });
+  renderRoleBtns();
+  document.getElementById('rb-new-emoji').value = '';
+  document.getElementById('rb-new-label').value = '';
+  document.getElementById('rb-new-role').value = '';
+  toast(`เพิ่มปุ่ม ${label} แล้ว`);
+}
+
+// ── Fetch Discord Roles ─────────────────────────────────────
+async function fetchDiscordRoles() {
+  const spin = document.getElementById('fetch-spin');
+  const hint = document.getElementById('roles-loaded-hint');
+  const list = document.getElementById('roles-fetched-list');
+  spin.style.display = 'inline-block';
+  hint.textContent = 'กำลังดึงข้อมูล...';
+  list.innerHTML = '';
+  try {
+    const res = await fetch('/api/roles');
+    const data = await res.json();
+    spin.style.display = 'none';
+    if (!data.roles || !data.roles.length) {
+      hint.textContent = 'ไม่พบยศ หรือบอทยังไม่ได้เชื่อมต่อ';
+      return;
+    }
+    hint.textContent = `พบ ${data.roles.length} ยศ — คลิกเพื่อเติมในช่องยศ`;
+    data.roles.forEach(role => {
+      const pill = document.createElement('div');
+      pill.className = 'role-pill';
+      pill.title = `คลิกเพื่อใส่ "${role.name}" ในช่องยศ`;
+      const dot = document.createElement('div');
+      dot.className = 'dot';
+      dot.style.background = role.color ? `#${role.color.toString(16).padStart(6,'0')}` : '#5865f2';
+      const name = document.createElement('span');
+      name.textContent = role.name;
+      pill.appendChild(dot);
+      pill.appendChild(name);
+      pill.onclick = () => {
+        const inp = document.getElementById('rb-new-role');
+        if (inp) { inp.value = role.name; inp.focus(); }
+        toast(`เลือกยศ: ${role.name}`);
+      };
+      list.appendChild(pill);
+    });
+  } catch(e) {
+    spin.style.display = 'none';
+    hint.textContent = 'โหลดไม่สำเร็จ: ' + e.message;
+  }
+}
+
+// ── Game list ───────────────────────────────────────────────
+function renderGameList() {
+  const list = document.getElementById('game-list');
+  if (!list) return;
+  list.innerHTML = '';
+  for (const [key, val] of Object.entries(cfg.GAME_ROLES || {})) {
+    const row = document.createElement('div');
+    row.className = 'game-item';
+    row.dataset.key = key;
+    row.innerHTML = `
+      <input class="game-emoji-input" type="text" value="${val.emoji||''}" placeholder="🎮" maxlength="4" onchange="updateGame('${key}','emoji',this.value)">
+      <input type="text" value="${val.name||''}" placeholder="ชื่อยศ" onchange="updateGame('${key}','name',this.value)">
+      <input type="text" value="${key}" placeholder="key" readonly style="color:var(--muted);cursor:not-allowed">
+      <input type="color" value="${val.color||'#5865F2'}" onchange="updateGame('${key}','color',this.value)" style="width:44px;height:32px;cursor:pointer;padding:2px;border-radius:6px;border:1px solid var(--border);background:var(--card)">
+      <button class="btn-del" onclick="removeGame('${key}')">✕</button>
+    `;
+    list.appendChild(row);
+  }
+  const el = document.getElementById('stat-games');
+  if (el) el.textContent = Object.keys(cfg.GAME_ROLES || {}).length;
+}
+
+function updateGame(key, field, value) { if (cfg.GAME_ROLES?.[key]) cfg.GAME_ROLES[key][field] = value; }
+
+function removeGame(key) {
+  if (Object.keys(cfg.GAME_ROLES||{}).length <= 1) return toast('ต้องมีอย่างน้อย 1 เกม', 'err');
+  delete cfg.GAME_ROLES[key];
+  renderGameList();
+}
+
+function addGame() {
+  const emoji = document.getElementById('new-emoji').value.trim() || '🎮';
+  const name = document.getElementById('new-name').value.trim();
+  const key = document.getElementById('new-key').value.trim().toLowerCase().replace(/\s+/g,'_');
+  const color = document.getElementById('new-color').value;
+  if (!name || !key) return toast('กรอกชื่อและ key ด้วย', 'err');
+  if (cfg.GAME_ROLES?.[key]) return toast('Key นี้มีอยู่แล้ว', 'err');
+  if (!cfg.GAME_ROLES) cfg.GAME_ROLES = {};
+  cfg.GAME_ROLES[key] = { name, emoji, color };
+  renderGameList();
+  document.getElementById('new-emoji').value = '';
+  document.getElementById('new-name').value = '';
+  document.getElementById('new-key').value = '';
+  toast(`เพิ่มยศ ${name} แล้ว`);
+}
+
+// ── Load config from server ─────────────────────────────────
+async function loadFromServer() {
+  try {
+    const res = await fetch('/api/config');
+    cfg = await res.json();
+    applyToUI();
+    toast('โหลดค่าสำเร็จ');
+  } catch(e) {
+    // use defaults for demo
+    cfg = {
+      WELCOME_TITLE: 'ยินดีต้อนรับ!',
+      WELCOME_MESSAGE: 'ยินดีต้อนรับ {user} เข้าสู่เซิร์ฟเวอร์ของเรา! 🎉',
+      WELCOME_COLOR: '#57F287',
+      MENTION_USER: true,
+      WELCOME_SHOW_AVATAR: true,
+      GOODBYE_TITLE: 'ลาก่อน...',
+      GOODBYE_MESSAGE: '{user} ได้ออกจากเซิร์ฟเวอร์แล้ว 😢',
+      GOODBYE_COLOR: '#ED4245',
+      GOODBYE_ENABLED: true,
+      GOODBYE_SHOW_AVATAR: true,
+      ROLE_BUTTONS: [
+        { emoji: '🎮', label: 'รับยศ Member', role: 'Member', color: 'primary' },
+        { emoji: '🎯', label: 'Minecraft', role: 'Minecraft', color: 'success' },
+      ],
+      VERIFY_EMBED_TITLE: '🎮 ยืนยันตัวตน',
+      VERIFY_EMBED_DESC: 'กดปุ่มด้านล่างเพื่อกรอกข้อมูลและรับยศของคุณ!',
+      VERIFY_EMBED_COLOR: '#5865F2',
+      VERIFY_BUTTON_LABEL: '✅ ยืนยันตัวตน',
+      VERIFY_BUTTON_COLOR: 'Primary',
+      MEMBER_ROLE_NAME: 'Member',
+      MEMBER_ROLE_COLOR: '#57F287',
+      VERIFY_CHANNEL_NAME: 'verify',
+      WELCOME_CHANNEL_NAME: 'WELCOME',
+      GOODBYE_CHANNEL_NAME: 'GOODBYE',
+      GAME_ROLES: {
+        minecraft: { name: 'Minecraft', emoji: '⛏️', color: '#57F287' },
+        valorant: { name: 'Valorant', emoji: '🔫', color: '#FF4655' },
+        genshin: { name: 'Genshin Impact', emoji: '⚔️', color: '#C8A951' },
+      }
+    };
+    applyToUI();
+  }
+}
+
+function applyToUI() {
+  // Welcome
+  document.getElementById('w-title').value = cfg.WELCOME_TITLE || '';
+  document.getElementById('w-message').value = cfg.WELCOME_MESSAGE || '';
+  const wc = cfg.WELCOME_COLOR || '#57F287';
+  document.getElementById('w-color').value = wc;
+  document.getElementById('w-color-text').value = wc;
+  document.getElementById('w-mention').checked = cfg.MENTION_USER !== false;
+  document.getElementById('w-show-avatar').checked = cfg.WELCOME_SHOW_AVATAR !== false;
+  document.getElementById('w-img-url').value = cfg.WELCOME_IMAGE || '';
+  if (cfg.WELCOME_IMAGE) {
+    const z = document.getElementById('w-upload-zone');
+    const p = document.getElementById('w-upload-preview');
+    if (z && p) { p.src = cfg.WELCOME_IMAGE; z.classList.add('has-img'); }
+  }
+
+  // Goodbye
+  document.getElementById('gb-title').value = cfg.GOODBYE_TITLE || '';
+  document.getElementById('gb-message').value = cfg.GOODBYE_MESSAGE || '';
+  const gc = cfg.GOODBYE_COLOR || '#ED4245';
+  document.getElementById('gb-color').value = gc;
+  document.getElementById('gb-color-text').value = gc;
+  document.getElementById('gb-enabled').checked = cfg.GOODBYE_ENABLED !== false;
+  document.getElementById('gb-show-avatar').checked = cfg.GOODBYE_SHOW_AVATAR !== false;
+  document.getElementById('gb-img-url').value = cfg.GOODBYE_IMAGE || '';
   if (cfg.GOODBYE_IMAGE) {
-    embed.setImage(cfg.GOODBYE_IMAGE);
+    const z = document.getElementById('gb-upload-zone');
+    const p = document.getElementById('gb-upload-preview');
+    if (z && p) { p.src = cfg.GOODBYE_IMAGE; z.classList.add('has-img'); }
   }
 
-  await goodbyeChannel.send({ embeds: [embed] });
-});
+  // Role buttons
+  if (!cfg.ROLE_BUTTONS) cfg.ROLE_BUTTONS = [];
+  renderRoleBtns();
 
-// ─── คำสั่ง !setup (Admin เท่านั้น) ─────────────────────────
-client.on("messageCreate", async (message) => {
-  if (message.content !== "!setup") return;
-  if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) return;
+  // Verify
+  document.getElementById('ve-title').value = cfg.VERIFY_EMBED_TITLE || '';
+  document.getElementById('ve-desc').value = cfg.VERIFY_EMBED_DESC || '';
+  const vc = cfg.VERIFY_EMBED_COLOR || '#5865F2';
+  document.getElementById('ve-color').value = vc;
+  document.getElementById('ve-color-text').value = vc;
+  document.getElementById('ve-btn-label').value = cfg.VERIFY_BUTTON_LABEL || '';
+  document.getElementById('ve-btn-color').value = cfg.VERIFY_BUTTON_COLOR || 'Primary';
 
-  const cfg = loadConfig();
+  // Member role
+  document.getElementById('r-member-name').value = cfg.MEMBER_ROLE_NAME || 'Member';
+  const mc = cfg.MEMBER_ROLE_COLOR || '#57F287';
+  document.getElementById('r-member-color').value = mc;
+  document.getElementById('r-member-color-text').value = mc;
 
-  const embed = new EmbedBuilder()
-    .setColor(parseInt(cfg.VERIFY_EMBED_COLOR.replace("#", ""), 16))
-    .setTitle(cfg.VERIFY_EMBED_TITLE)
-    .setDescription(cfg.VERIFY_EMBED_DESC);
+  // Channels
+  document.getElementById('c-verify').value = cfg.VERIFY_CHANNEL_NAME || 'verify';
+  document.getElementById('c-welcome').value = cfg.WELCOME_CHANNEL_NAME || 'WELCOME';
+  document.getElementById('c-goodbye').value = cfg.GOODBYE_CHANNEL_NAME || 'GOODBYE';
 
-  const button = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId("open_verify_modal")
-      .setLabel(cfg.VERIFY_BUTTON_LABEL)
-      .setStyle(resolveButtonStyle(cfg.VERIFY_BUTTON_COLOR))
-  );
+  // Game list
+  renderGameList();
 
-  await message.channel.send({ embeds: [embed], components: [button] });
-  await message.delete().catch(() => {});
-});
+  // Run previews
+  updateWelcomePreview();
+  updateGoodbyePreview();
+  updateVerifyPreview();
+}
 
-// ─── Interactions ────────────────────────────────────────────
-client.on("interactionCreate", async (interaction) => {
-  const cfg = loadConfig();
+// ── Collect UI → cfg ────────────────────────────────────────
+function collectFromUI() {
+  cfg.WELCOME_TITLE = document.getElementById('w-title').value;
+  cfg.WELCOME_MESSAGE = document.getElementById('w-message').value;
+  cfg.WELCOME_COLOR = document.getElementById('w-color-text').value || document.getElementById('w-color').value;
+  cfg.MENTION_USER = document.getElementById('w-mention').checked;
+  cfg.WELCOME_SHOW_AVATAR = document.getElementById('w-show-avatar').checked;
+  cfg.WELCOME_IMAGE = document.getElementById('w-img-url').value;
 
-  // 1) เปิด Modal
-  if (interaction.isButton() && interaction.customId === "open_verify_modal") {
-    const modal = new ModalBuilder()
-      .setCustomId("verify_modal")
-      .setTitle("📋 กรอกข้อมูลของคุณ");
+  cfg.GOODBYE_TITLE = document.getElementById('gb-title').value;
+  cfg.GOODBYE_MESSAGE = document.getElementById('gb-message').value;
+  cfg.GOODBYE_COLOR = document.getElementById('gb-color-text').value || document.getElementById('gb-color').value;
+  cfg.GOODBYE_ENABLED = document.getElementById('gb-enabled').checked;
+  cfg.GOODBYE_SHOW_AVATAR = document.getElementById('gb-show-avatar').checked;
+  cfg.GOODBYE_IMAGE = document.getElementById('gb-img-url').value;
 
-    const nameInput = new TextInputBuilder()
-      .setCustomId("name")
-      .setLabel("ชื่อที่ใช้เรียก")
-      .setStyle(TextInputStyle.Short)
-      .setPlaceholder("เช่น ไอซ์, Korn, Minnie")
-      .setRequired(true)
-      .setMaxLength(32);
+  cfg.VERIFY_EMBED_TITLE = document.getElementById('ve-title').value;
+  cfg.VERIFY_EMBED_DESC = document.getElementById('ve-desc').value;
+  cfg.VERIFY_EMBED_COLOR = document.getElementById('ve-color-text').value || document.getElementById('ve-color').value;
+  cfg.VERIFY_BUTTON_LABEL = document.getElementById('ve-btn-label').value;
+  cfg.VERIFY_BUTTON_COLOR = document.getElementById('ve-btn-color').value;
 
-    const ageInput = new TextInputBuilder()
-      .setCustomId("age")
-      .setLabel("อายุ")
-      .setStyle(TextInputStyle.Short)
-      .setPlaceholder("เช่น 18")
-      .setRequired(true)
-      .setMaxLength(3);
+  cfg.MEMBER_ROLE_NAME = document.getElementById('r-member-name').value || 'Member';
+  cfg.MEMBER_ROLE_COLOR = document.getElementById('r-member-color-text').value || document.getElementById('r-member-color').value;
 
-    const genderInput = new TextInputBuilder()
-      .setCustomId("gender")
-      .setLabel("เพศ")
-      .setStyle(TextInputStyle.Short)
-      .setPlaceholder("ชาย / หญิง / ไม่ระบุ")
-      .setRequired(true)
-      .setMaxLength(10);
+  cfg.VERIFY_CHANNEL_NAME = document.getElementById('c-verify').value || 'verify';
+  cfg.WELCOME_CHANNEL_NAME = document.getElementById('c-welcome').value || 'WELCOME';
+  cfg.GOODBYE_CHANNEL_NAME = document.getElementById('c-goodbye').value || 'GOODBYE';
 
-    const gameInput = new TextInputBuilder()
-      .setCustomId("game_text")
-      .setLabel("เกมที่เล่น")
-      .setStyle(TextInputStyle.Short)
-      .setPlaceholder("เช่น Minecraft, Valorant, Roblox")
-      .setRequired(false)
-      .setMaxLength(50);
+  // collect role button edits from DOM
+  document.querySelectorAll('#rolebtn-list .rbi-grid').forEach((row, i) => {
+    if (!cfg.ROLE_BUTTONS[i]) return;
+    const inputs = row.querySelectorAll('input');
+    const sel = row.querySelector('select');
+    cfg.ROLE_BUTTONS[i].emoji = inputs[0].value;
+    cfg.ROLE_BUTTONS[i].label = inputs[1].value;
+    cfg.ROLE_BUTTONS[i].role = inputs[2].value;
+    cfg.ROLE_BUTTONS[i].color = sel?.value || 'primary';
+  });
 
-    modal.addComponents(
-      new ActionRowBuilder().addComponents(nameInput),
-      new ActionRowBuilder().addComponents(ageInput),
-      new ActionRowBuilder().addComponents(genderInput),
-      new ActionRowBuilder().addComponents(gameInput)
-    );
+  // collect game edits
+  document.querySelectorAll('#game-list .game-item').forEach(row => {
+    const key = row.dataset.key;
+    if (!cfg.GAME_ROLES?.[key]) return;
+    const inputs = row.querySelectorAll('input');
+    cfg.GAME_ROLES[key].emoji = inputs[0].value;
+    cfg.GAME_ROLES[key].name = inputs[1].value;
+    cfg.GAME_ROLES[key].color = inputs[3].value;
+  });
+}
 
-    await interaction.showModal(modal);
-    return;
-  }
-
-  // 2) รับ Modal → dropdown เลือกยศเกม (ดึงจาก config)
-  if (interaction.isModalSubmit() && interaction.customId === "verify_modal") {
-    const name = interaction.fields.getTextInputValue("name");
-    const age = interaction.fields.getTextInputValue("age");
-    const gender = interaction.fields.getTextInputValue("gender");
-    const gameText = interaction.fields.getTextInputValue("game_text");
-
-    pendingData.set(interaction.user.id, { name, age, gender, gameText });
-
-    // สร้าง dropdown จาก GAME_ROLES ใน config
-    const gameRoles = cfg.GAME_ROLES || {};
-    const options = Object.entries(gameRoles).map(([key, val]) =>
-      new StringSelectMenuOptionBuilder()
-        .setLabel(`${val.emoji} ${val.name}`)
-        .setValue(key)
-    );
-
-    if (options.length === 0) {
-      await interaction.reply({
-        content: "⚠️ ยังไม่มียศเกมในระบบ กรุณาติดต่อ Admin",
-        ephemeral: true,
-      });
-      return;
-    }
-
-    const select = new StringSelectMenuBuilder()
-      .setCustomId("select_game_role")
-      .setPlaceholder("🎮 เลือกเกมที่คุณเล่นหลัก")
-      .addOptions(options);
-
-    await interaction.reply({
-      content: "✅ ได้รับข้อมูลแล้ว! เลือกยศเกมของคุณด้านล่าง:",
-      components: [new ActionRowBuilder().addComponents(select)],
-      ephemeral: true,
+// ── Save ────────────────────────────────────────────────────
+async function saveConfig() {
+  collectFromUI();
+  try {
+    const res = await fetch('/api/config', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(cfg)
     });
-    return;
+    const data = await res.json();
+    if (data.ok) toast('บันทึกสำเร็จ! บอทจะใช้ค่าใหม่ทันที');
+    else toast('บันทึกไม่สำเร็จ: ' + data.error, 'err');
+  } catch(e) {
+    toast('บันทึกสำเร็จ (demo mode)');
   }
+}
 
-  // 3) เลือกยศเกม → ให้ยศ + welcome embed
-  if (
-    interaction.isStringSelectMenu() &&
-    interaction.customId === "select_game_role"
-  ) {
-    const member = interaction.member;
-    const guild = interaction.guild;
-    const selectedGame = interaction.values[0];
-    const data = pendingData.get(interaction.user.id) || {};
-    const gameRoles = cfg.GAME_ROLES || {};
-    const gameInfo = gameRoles[selectedGame];
-
-    if (!gameInfo) {
-      await interaction.update({ content: "⚠️ ไม่พบยศเกมนี้", components: [] });
-      return;
-    }
-
-    // หา/สร้าง Member role
-    let memberRole = guild.roles.cache.find((r) => r.name === cfg.MEMBER_ROLE_NAME);
-    if (!memberRole) {
-      memberRole = await guild.roles.create({
-        name: cfg.MEMBER_ROLE_NAME,
-        color: parseInt((cfg.MEMBER_ROLE_COLOR || "#57F287").replace("#", ""), 16),
-        reason: "Auto-created by verify bot",
-      });
-    }
-
-    // หา/สร้าง Game role
-    let gameRole = guild.roles.cache.find((r) => r.name === gameInfo.name);
-    if (!gameRole) {
-      gameRole = await guild.roles.create({
-        name: gameInfo.name,
-        color: parseInt((gameInfo.color || "#5865F2").replace("#", ""), 16),
-        reason: "Auto-created by verify bot",
-      });
-    }
-
-    await member.roles.add([memberRole, gameRole]).catch(console.error);
-    pendingData.delete(interaction.user.id);
-
-    await interaction.update({
-      content: `🎉 ยินดีต้อนรับ **${data.name}**! คุณได้รับยศ **${gameInfo.name}** แล้ว`,
-      components: [],
-    });
-
-    // ส่ง Welcome embed
-    const welcomeChannel = guild.channels.cache.find(
-      (c) => c.name === cfg.WELCOME_CHANNEL_NAME
-    );
-    if (welcomeChannel) {
-      const welcomeEmbed = new EmbedBuilder()
-        .setColor(parseInt(cfg.WELCOME_COLOR.replace("#", ""), 16))
-        .setTitle(cfg.WELCOME_TITLE)
-        .setDescription(formatMsg(cfg.WELCOME_MESSAGE, member))
-        .addFields(
-          { name: "ชื่อ", value: data.name || "-", inline: true },
-          { name: "อายุ", value: data.age || "-", inline: true },
-          { name: "เพศ", value: data.gender || "-", inline: true },
-          { name: "เกม", value: `${gameInfo.emoji} ${gameInfo.name}`, inline: true }
-        )
-        .setTimestamp();
-
-      if (cfg.WELCOME_SHOW_AVATAR) {
-        welcomeEmbed.setThumbnail(interaction.user.displayAvatarURL());
-      }
-      if (cfg.WELCOME_IMAGE) {
-        welcomeEmbed.setImage(cfg.WELCOME_IMAGE);
-      }
-      if (cfg.MENTION_USER) {
-        await welcomeChannel.send({ content: `${member}`, embeds: [welcomeEmbed] });
-      } else {
-        await welcomeChannel.send({ embeds: [welcomeEmbed] });
-      }
-    }
+// ── Bot status ───────────────────────────────────────────────
+async function loadStatus() {
+  try {
+    const res = await fetch('/api/status');
+    const d = await res.json();
+    document.getElementById('bot-tag').textContent = d.tag || 'Offline';
+    document.getElementById('stat-online').textContent = d.online ? '🟢 Online' : '🔴 Offline';
+    document.getElementById('stat-guilds').textContent = d.guilds;
+  } catch(e) {
+    document.getElementById('bot-tag').textContent = 'Bot';
+    document.getElementById('stat-online').textContent = '–';
+    document.getElementById('stat-guilds').textContent = '–';
   }
-});
+}
 
-client.login(process.env.DISCORD_TOKEN);
+// ── Init ─────────────────────────────────────────────────────
+loadFromServer();
+loadStatus();
+setInterval(loadStatus, 30000);
+</script>
+</body>
+</html>
