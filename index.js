@@ -31,7 +31,7 @@ const client = new Client({
 // ============================================================
 const CONFIG = {
   VERIFY_CHANNEL_NAME: "verify",         // ชื่อห้องสำหรับ verify
-  WELCOME_CHANNEL_NAME: "welcome",       // ชื่อห้อง welcome
+  WELCOME_CHANNEL_NAME: "WELCOME",       // ชื่อห้อง welcome
   MEMBER_ROLE_NAME: "Member",            // ยศหลัก (ได้ทุกคนหลัง verify)
 
   // ยศเกม — ชื่อต้องตรงกับ Role ใน Discord server ของคุณ
