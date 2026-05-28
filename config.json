@@ -24,11 +24,7 @@
   "VERIFY_EMBED_COLOR": "#5865F2",
   "VERIFY_BUTTON_LABEL": "✅ ยืนยันตัวตน",
   "VERIFY_BUTTON_COLOR": "Primary",
-
-  "ROLE_BUTTONS": [
-    { "emoji": "🎮", "label": "รับยศ Member", "role": "Member", "color": "primary" },
-    { "emoji": "🎯", "label": "Minecraft", "role": "Minecraft", "color": "success" }
-  ],
+  "VERIFY_IMAGE": "",
 
   "GAME_ROLES": {
     "minecraft": { "name": "Minecraft", "emoji": "⛏️", "color": "#57F287" },
