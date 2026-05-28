@@ -49,7 +49,7 @@ const CONFIG = {
 const pendingData = new Map();
 
 // ─── บอทพร้อมทำงาน ───────────────────────────────────────────
-client.once("ready", () => {
+client.once("clientReady", () => {
   console.log(`✅ Bot online: ${client.user.tag}`);
 });
 
