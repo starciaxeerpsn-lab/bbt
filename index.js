@@ -12,16 +12,21 @@ const {
   StringSelectMenuOptionBuilder,
   EmbedBuilder,
   PermissionFlagsBits,
+  REST,
+  Routes,
+  SlashCommandBuilder,
 } = require("discord.js");
 
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
+const multer = require("multer");
 
 require("dotenv").config();
 
 // ============================================================
-// 📁 CONFIG — โหลดจาก config.json (แก้ผ่าน Dashboard ได้เลย)
+// 📁 CONFIG
 // ============================================================
 const CONFIG_PATH = path.join(__dirname, "config.json");
 
@@ -34,14 +39,174 @@ function saveConfig(data) {
 }
 
 // ============================================================
-// 🌐 EXPRESS — Dashboard Web UI
+// 🔐 SESSION STORE (in-memory)
+// sessions[token] = { userId, username, avatar, guildId, expiry }
+// ============================================================
+const sessions = new Map();
+
+function createSession(userData) {
+  const token = crypto.randomBytes(32).toString("hex");
+  sessions.set(token, {
+    ...userData,
+    expiry: Date.now() + 1000 * 60 * 60 * 24, // 24h
+  });
+  return token;
+}
+
+function getSession(token) {
+  if (!token) return null;
+  const s = sessions.get(token);
+  if (!s) return null;
+  if (Date.now() > s.expiry) {
+    sessions.delete(token);
+    return null;
+  }
+  return s;
+}
+
+function deleteSession(token) {
+  sessions.delete(token);
+}
+
+// ============================================================
+// 🌐 EXPRESS
 // ============================================================
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
-// GET /api/config → ส่ง config ให้ Dashboard
-app.get("/api/config", (req, res) => {
+// สร้างโฟลเดอร์ uploads อัตโนมัติถ้ายังไม่มี
+const uploadsDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
+// Multer สำหรับ upload รูป
+const storage = multer.diskStorage({
+  destination: path.join(__dirname, "uploads"),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `${Date.now()}-${crypto.randomBytes(6).toString("hex")}${ext}`);
+  },
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith("image/")) cb(null, true);
+    else cb(new Error("Only images allowed"));
+  },
+});
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// ── Auth middleware ──────────────────────────────────────────
+function requireAuth(req, res, next) {
+  const token = req.headers["x-session-token"] || req.query.token;
+  const session = getSession(token);
+  if (!session) return res.status(401).json({ error: "Unauthorized" });
+  req.session = session;
+  next();
+}
+
+// ── Discord OAuth2 ───────────────────────────────────────────
+const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
+const REDIRECT_URI = process.env.REDIRECT_URI || `http://localhost:${process.env.PORT || 3000}/auth/callback`;
+
+// GET /auth/login → redirect to Discord OAuth
+app.get("/auth/login", (req, res) => {
+  const params = new URLSearchParams({
+    client_id: DISCORD_CLIENT_ID,
+    redirect_uri: REDIRECT_URI,
+    response_type: "code",
+    scope: "identify guilds",
+  });
+  res.redirect(`https://discord.com/api/oauth2/authorize?${params}`);
+});
+
+// GET /auth/callback → exchange code → verify admin → create session
+app.get("/auth/callback", async (req, res) => {
+  const { code } = req.query;
+  if (!code) return res.redirect("/?error=no_code");
+
+  try {
+    // Exchange code for access token
+    const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: DISCORD_CLIENT_ID,
+        client_secret: DISCORD_CLIENT_SECRET,
+        grant_type: "authorization_code",
+        code,
+        redirect_uri: REDIRECT_URI,
+      }),
+    });
+    const tokenData = await tokenRes.json();
+    if (!tokenData.access_token) return res.redirect("/?error=token_failed");
+
+    // Get user info
+    const userRes = await fetch("https://discord.com/api/users/@me", {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+    const user = await userRes.json();
+
+    // Get user's guilds
+    const guildsRes = await fetch("https://discord.com/api/users/@me/guilds", {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+    const guilds = await guildsRes.json();
+
+    // หา guild ที่ user เป็น Admin (ADMINISTRATOR permission = 0x8)
+    const adminGuilds = guilds.filter(
+      (g) => (BigInt(g.permissions) & BigInt(0x8)) !== BigInt(0)
+    );
+
+    // ตรวจว่าเป็น Admin ใน guild ที่บอทอยู่
+    const botGuildIds = [...client.guilds.cache.keys()];
+    const matchedGuild = adminGuilds.find((g) => botGuildIds.includes(g.id));
+
+    if (!matchedGuild) {
+      return res.redirect("/?error=not_admin");
+    }
+
+    const token = createSession({
+      userId: user.id,
+      username: user.username,
+      avatar: user.avatar,
+      guildId: matchedGuild.id,
+      guildName: matchedGuild.name,
+    });
+
+    res.redirect(`/dashboard.html?token=${token}`);
+  } catch (err) {
+    console.error("OAuth error:", err);
+    res.redirect("/?error=oauth_error");
+  }
+});
+
+// GET /auth/logout
+app.get("/auth/logout", (req, res) => {
+  const token = req.query.token;
+  if (token) deleteSession(token);
+  res.redirect("/");
+});
+
+// ── API: สถานะบอท ────────────────────────────────────────────
+app.get("/api/status", requireAuth, (req, res) => {
+  res.json({
+    online: client.isReady(),
+    tag: client.user?.tag || "Offline",
+    guilds: client.guilds?.cache?.size || 0,
+    user: {
+      userId: req.session.userId,
+      username: req.session.username,
+      avatar: req.session.avatar,
+      guildName: req.session.guildName,
+    },
+  });
+});
+
+// ── API: Config ──────────────────────────────────────────────
+app.get("/api/config", requireAuth, (req, res) => {
   try {
     res.json(loadConfig());
   } catch (e) {
@@ -49,8 +214,7 @@ app.get("/api/config", (req, res) => {
   }
 });
 
-// POST /api/config → รับค่าจาก Dashboard และบันทึก
-app.post("/api/config", (req, res) => {
+app.post("/api/config", requireAuth, (req, res) => {
   try {
     saveConfig(req.body);
     res.json({ ok: true });
@@ -59,13 +223,33 @@ app.post("/api/config", (req, res) => {
   }
 });
 
-// GET /api/status → สถานะบอทสำหรับ Dashboard
-app.get("/api/status", (req, res) => {
-  res.json({
-    tag: client.user?.tag || "Offline",
-    online: client.isReady(),
-    guilds: client.guilds?.cache?.size || 0,
-  });
+// ── API: ดึงยศจาก Discord ────────────────────────────────────
+app.get("/api/roles", requireAuth, (req, res) => {
+  const guildId = req.session.guildId;
+  const guild = client.guilds.cache.get(guildId);
+  if (!guild) return res.json({ roles: [] });
+
+  const roles = guild.roles.cache
+    .filter((r) => r.name !== "@everyone" && !r.managed)
+    .sort((a, b) => b.position - a.position)
+    .map((r) => ({ id: r.id, name: r.name, color: r.color }));
+
+  res.json({ roles });
+});
+
+// ── API: Upload รูป ──────────────────────────────────────────
+app.post("/api/upload", requireAuth, upload.single("image"), (req, res) => {
+  if (!req.file) return res.json({ ok: false, error: "No file" });
+  const url = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+  res.json({ ok: true, url });
+});
+
+// ── Error handler สำหรับ multer ──────────────────────────────
+app.use((err, req, res, next) => {
+  if (err.message === "Only images allowed") {
+    return res.status(400).json({ ok: false, error: err.message });
+  }
+  next(err);
 });
 
 const PORT = process.env.PORT || 3000;
@@ -86,15 +270,37 @@ const client = new Client({
   partials: [Partials.GuildMember],
 });
 
-// เก็บข้อมูลชั่วคราวก่อนเลือกเกม
 const pendingData = new Map();
 
-// ─── Helper: แทน {user} ด้วย mention จริง ───────────────────
+// Auto-cleanup pendingData ที่ค้างเกิน 10 นาที
+function setPendingData(userId, data) {
+  // ถ้ามี timer เก่าอยู่ ยกเลิกก่อน
+  if (pendingData.has(userId)) {
+    clearTimeout(pendingData.get(userId)._timer);
+  }
+  const timer = setTimeout(() => {
+    pendingData.delete(userId);
+  }, 10 * 60 * 1000); // 10 นาที
+  pendingData.set(userId, { ...data, _timer: timer });
+}
+
+function getPendingData(userId) {
+  const entry = pendingData.get(userId);
+  if (!entry) return {};
+  const { _timer, ...data } = entry;
+  return data;
+}
+
+function deletePendingData(userId) {
+  const entry = pendingData.get(userId);
+  if (entry?._timer) clearTimeout(entry._timer);
+  pendingData.delete(userId);
+}
+
 function formatMsg(template, member) {
   return template.replace(/\{user\}/g, `${member}`);
 }
 
-// ─── Helper: แปลง ButtonColor string → ButtonStyle ──────────
 function resolveButtonStyle(color = "Primary") {
   const map = {
     Primary: ButtonStyle.Primary,
@@ -109,27 +315,52 @@ function resolveButtonStyle(color = "Primary") {
   return map[color] ?? ButtonStyle.Primary;
 }
 
-// ─── บอทพร้อมทำงาน ───────────────────────────────────────────
-client.once("clientReady", () => {
+// ── Register Slash Commands ──────────────────────────────────
+async function registerCommands() {
+  const commands = [
+    new SlashCommandBuilder()
+      .setName("setup")
+      .setDescription("ส่ง Verify embed ในห้องนี้")
+      .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+    new SlashCommandBuilder()
+      .setName("dashboard")
+      .setDescription("รับลิงก์เข้า Dashboard (Admin เท่านั้น)")
+      .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+  ].map((cmd) => cmd.toJSON());
+
+  const rest = new REST().setToken(process.env.DISCORD_TOKEN);
+  try {
+    await rest.put(Routes.applicationCommands(process.env.DISCORD_CLIENT_ID), {
+      body: commands,
+    });
+    console.log("✅ Slash commands registered");
+  } catch (err) {
+    console.error("❌ Failed to register commands:", err);
+  }
+}
+
+// ── Bot Ready ────────────────────────────────────────────────
+client.once("clientReady", async () => {
   console.log(`✅ Bot online: ${client.user.tag}`);
+  await registerCommands();
 });
 
-// ─── สมาชิกใหม่เข้า server ──────────────────────────────────
+// ── guildMemberAdd ───────────────────────────────────────────
 client.on("guildMemberAdd", async (member) => {
-  const cfg = loadConfig();
+  try {
+    const cfg = loadConfig();
+    const verifyChannel = member.guild.channels.cache.find(
+      (c) => c.name === cfg.VERIFY_CHANNEL_NAME
+    );
+    if (!verifyChannel) return;
 
-  // ส่ง Verify embed ในห้อง verify
-  const verifyChannel = member.guild.channels.cache.find(
-    (c) => c.name === cfg.VERIFY_CHANNEL_NAME
-  );
-  if (verifyChannel) {
     const embed = new EmbedBuilder()
       .setColor(parseInt(cfg.VERIFY_EMBED_COLOR.replace("#", ""), 16))
       .setTitle(cfg.VERIFY_EMBED_TITLE)
-      .setDescription(
-        `สวัสดี ${member}!\n${cfg.VERIFY_EMBED_DESC}`
-      )
+      .setDescription(`สวัสดี ${member}!\n${cfg.VERIFY_EMBED_DESC}`)
       .setThumbnail(member.user.displayAvatarURL());
+
+    if (cfg.VERIFY_IMAGE) embed.setImage(cfg.VERIFY_IMAGE);
 
     const button = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
@@ -139,120 +370,133 @@ client.on("guildMemberAdd", async (member) => {
     );
 
     await verifyChannel.send({ embeds: [embed], components: [button] });
+  } catch (err) {
+    console.error("❌ guildMemberAdd error:", err);
   }
 });
 
-// ─── สมาชิกออกจาก server ────────────────────────────────────
+// ── guildMemberRemove ────────────────────────────────────────
 client.on("guildMemberRemove", async (member) => {
-  const cfg = loadConfig();
-  if (!cfg.GOODBYE_ENABLED) return;
+  try {
+    const cfg = loadConfig();
+    if (!cfg.GOODBYE_ENABLED) return;
 
-  const goodbyeChannel = member.guild.channels.cache.find(
-    (c) => c.name === cfg.GOODBYE_CHANNEL_NAME
-  );
-  if (!goodbyeChannel) return;
+    const goodbyeChannel = member.guild.channels.cache.find(
+      (c) => c.name === cfg.GOODBYE_CHANNEL_NAME
+    );
+    if (!goodbyeChannel) return;
 
-  const embed = new EmbedBuilder()
-    .setColor(parseInt(cfg.GOODBYE_COLOR.replace("#", ""), 16))
-    .setTitle(cfg.GOODBYE_TITLE)
-    .setDescription(formatMsg(cfg.GOODBYE_MESSAGE, member));
+    const embed = new EmbedBuilder()
+      .setColor(parseInt(cfg.GOODBYE_COLOR.replace("#", ""), 16))
+      .setTitle(cfg.GOODBYE_TITLE)
+      .setDescription(formatMsg(cfg.GOODBYE_MESSAGE, member.user.username));
 
-  if (cfg.GOODBYE_SHOW_AVATAR) {
-    embed.setThumbnail(member.user.displayAvatarURL());
+    if (cfg.GOODBYE_SHOW_AVATAR) embed.setThumbnail(member.user.displayAvatarURL());
+    if (cfg.GOODBYE_IMAGE) embed.setImage(cfg.GOODBYE_IMAGE);
+
+    await goodbyeChannel.send({ embeds: [embed] });
+  } catch (err) {
+    console.error("❌ guildMemberRemove error:", err);
   }
-  if (cfg.GOODBYE_IMAGE) {
-    embed.setImage(cfg.GOODBYE_IMAGE);
-  }
-
-  await goodbyeChannel.send({ embeds: [embed] });
 });
 
-// ─── คำสั่ง !setup (Admin เท่านั้น) ─────────────────────────
-client.on("messageCreate", async (message) => {
-  if (message.content !== "!setup") return;
-  if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) return;
-
-  const cfg = loadConfig();
-
-  const embed = new EmbedBuilder()
-    .setColor(parseInt(cfg.VERIFY_EMBED_COLOR.replace("#", ""), 16))
-    .setTitle(cfg.VERIFY_EMBED_TITLE)
-    .setDescription(cfg.VERIFY_EMBED_DESC);
-
-  const button = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId("open_verify_modal")
-      .setLabel(cfg.VERIFY_BUTTON_LABEL)
-      .setStyle(resolveButtonStyle(cfg.VERIFY_BUTTON_COLOR))
-  );
-
-  await message.channel.send({ embeds: [embed], components: [button] });
-  await message.delete().catch(() => {});
-});
-
-// ─── Interactions ────────────────────────────────────────────
+// ── Interactions ─────────────────────────────────────────────
 client.on("interactionCreate", async (interaction) => {
   const cfg = loadConfig();
 
-  // 1) เปิด Modal
+  // ── Slash: /setup ─────────────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === "setup") {
+    await interaction.deferReply({ ephemeral: true });
+
+    const embed = new EmbedBuilder()
+      .setColor(parseInt(cfg.VERIFY_EMBED_COLOR.replace("#", ""), 16))
+      .setTitle(cfg.VERIFY_EMBED_TITLE)
+      .setDescription(cfg.VERIFY_EMBED_DESC);
+
+    if (cfg.VERIFY_IMAGE) embed.setImage(cfg.VERIFY_IMAGE);
+
+    const button = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("open_verify_modal")
+        .setLabel(cfg.VERIFY_BUTTON_LABEL)
+        .setStyle(resolveButtonStyle(cfg.VERIFY_BUTTON_COLOR))
+    );
+
+    await interaction.channel.send({ embeds: [embed], components: [button] });
+    await interaction.editReply({ content: "✅ ส่ง Verify embed แล้ว!" });
+    return;
+  }
+
+  // ── Slash: /dashboard ────────────────────────────────────
+  if (interaction.isChatInputCommand() && interaction.commandName === "dashboard") {
+    await interaction.deferReply({ ephemeral: true });
+    const dashUrl = process.env.REDIRECT_URI
+      ? process.env.REDIRECT_URI.replace("/auth/callback", "/auth/login")
+      : `http://localhost:${PORT}/auth/login`;
+    await interaction.editReply({
+      content: `🔗 **Dashboard Link**\n${dashUrl}\n\n_ลิงก์นี้จะพาไปหน้า Login ด้วย Discord_`,
+    });
+    return;
+  }
+
+  // ── Button: เปิด Verify Modal ─────────────────────────────
   if (interaction.isButton() && interaction.customId === "open_verify_modal") {
     const modal = new ModalBuilder()
       .setCustomId("verify_modal")
       .setTitle("📋 กรอกข้อมูลของคุณ");
 
-    const nameInput = new TextInputBuilder()
-      .setCustomId("name")
-      .setLabel("ชื่อที่ใช้เรียก")
-      .setStyle(TextInputStyle.Short)
-      .setPlaceholder("เช่น ไอซ์, Korn, Minnie")
-      .setRequired(true)
-      .setMaxLength(32);
-
-    const ageInput = new TextInputBuilder()
-      .setCustomId("age")
-      .setLabel("อายุ")
-      .setStyle(TextInputStyle.Short)
-      .setPlaceholder("เช่น 18")
-      .setRequired(true)
-      .setMaxLength(3);
-
-    const genderInput = new TextInputBuilder()
-      .setCustomId("gender")
-      .setLabel("เพศ")
-      .setStyle(TextInputStyle.Short)
-      .setPlaceholder("ชาย / หญิง / ไม่ระบุ")
-      .setRequired(true)
-      .setMaxLength(10);
-
-    const gameInput = new TextInputBuilder()
-      .setCustomId("game_text")
-      .setLabel("เกมที่เล่น")
-      .setStyle(TextInputStyle.Short)
-      .setPlaceholder("เช่น Minecraft, Valorant, Roblox")
-      .setRequired(false)
-      .setMaxLength(50);
-
     modal.addComponents(
-      new ActionRowBuilder().addComponents(nameInput),
-      new ActionRowBuilder().addComponents(ageInput),
-      new ActionRowBuilder().addComponents(genderInput),
-      new ActionRowBuilder().addComponents(gameInput)
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+          .setCustomId("name")
+          .setLabel("ชื่อที่ใช้เรียก")
+          .setStyle(TextInputStyle.Short)
+          .setPlaceholder("เช่น ไอซ์, Korn, Minnie")
+          .setRequired(true)
+          .setMaxLength(32)
+      ),
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+          .setCustomId("age")
+          .setLabel("อายุ")
+          .setStyle(TextInputStyle.Short)
+          .setPlaceholder("เช่น 18")
+          .setRequired(true)
+          .setMaxLength(3)
+      ),
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+          .setCustomId("gender")
+          .setLabel("เพศ")
+          .setStyle(TextInputStyle.Short)
+          .setPlaceholder("ชาย / หญิง / ไม่ระบุ")
+          .setRequired(true)
+          .setMaxLength(10)
+      ),
+      new ActionRowBuilder().addComponents(
+        new TextInputBuilder()
+          .setCustomId("game_text")
+          .setLabel("เกมที่เล่น (optional)")
+          .setStyle(TextInputStyle.Short)
+          .setPlaceholder("เช่น Minecraft, Valorant, Roblox")
+          .setRequired(false)
+          .setMaxLength(50)
+      )
     );
 
     await interaction.showModal(modal);
     return;
   }
 
-  // 2) รับ Modal → dropdown เลือกยศเกม (ดึงจาก config)
+  // ── Modal Submit: verify_modal ────────────────────────────
   if (interaction.isModalSubmit() && interaction.customId === "verify_modal") {
     const name = interaction.fields.getTextInputValue("name");
     const age = interaction.fields.getTextInputValue("age");
     const gender = interaction.fields.getTextInputValue("gender");
     const gameText = interaction.fields.getTextInputValue("game_text");
 
-    pendingData.set(interaction.user.id, { name, age, gender, gameText });
+    setPendingData(interaction.user.id, { name, age, gender, gameText });
 
-    // สร้าง dropdown จาก GAME_ROLES ใน config
     const gameRoles = cfg.GAME_ROLES || {};
     const options = Object.entries(gameRoles).map(([key, val]) =>
       new StringSelectMenuOptionBuilder()
@@ -281,7 +525,7 @@ client.on("interactionCreate", async (interaction) => {
     return;
   }
 
-  // 3) เลือกยศเกม → ให้ยศ + welcome embed
+  // ── Select Menu: เลือกยศเกม ───────────────────────────────
   if (
     interaction.isStringSelectMenu() &&
     interaction.customId === "select_game_role"
@@ -289,7 +533,7 @@ client.on("interactionCreate", async (interaction) => {
     const member = interaction.member;
     const guild = interaction.guild;
     const selectedGame = interaction.values[0];
-    const data = pendingData.get(interaction.user.id) || {};
+    const data = getPendingData(interaction.user.id);
     const gameRoles = cfg.GAME_ROLES || {};
     const gameInfo = gameRoles[selectedGame];
 
@@ -319,7 +563,7 @@ client.on("interactionCreate", async (interaction) => {
     }
 
     await member.roles.add([memberRole, gameRole]).catch(console.error);
-    pendingData.delete(interaction.user.id);
+    deletePendingData(interaction.user.id);
 
     await interaction.update({
       content: `🎉 ยินดีต้อนรับ **${data.name}**! คุณได้รับยศ **${gameInfo.name}** แล้ว`,
@@ -349,11 +593,9 @@ client.on("interactionCreate", async (interaction) => {
       if (cfg.WELCOME_IMAGE) {
         welcomeEmbed.setImage(cfg.WELCOME_IMAGE);
       }
-      if (cfg.MENTION_USER) {
-        await welcomeChannel.send({ content: `${member}`, embeds: [welcomeEmbed] });
-      } else {
-        await welcomeChannel.send({ embeds: [welcomeEmbed] });
-      }
+
+      const content = cfg.MENTION_USER ? `${member}` : undefined;
+      await welcomeChannel.send({ content, embeds: [welcomeEmbed] });
     }
   }
 });
