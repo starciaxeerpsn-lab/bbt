@@ -1026,7 +1026,18 @@ if (!SESSION_TOKEN) {
 
 function authFetch(url, options = {}) {
   options.headers = { ...(options.headers || {}), 'x-session-token': SESSION_TOKEN };
-  return fetch(url, options);
+  return fetch(url, options).then(res => {
+    if (res.status === 401) {
+      sessionStorage.removeItem('bot_token');
+      // แสดง overlay แล้ว redirect
+      const ov = document.createElement('div');
+      ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:16px;color:white;font-size:16px';
+      ov.innerHTML = '<div style="font-size:40px">⏰</div><div>Session หมดอายุ กำลังพาไปหน้า Login...</div>';
+      document.body.appendChild(ov);
+      setTimeout(() => { window.location.href = '/auth/login'; }, 2000);
+    }
+    return res;
+  });
 }
 
 let cfg = {};
@@ -1309,22 +1320,33 @@ async function fetchDiscordRoles() {
       return;
     }
     hint.textContent = `พบ ${data.roles.length} ยศ — คลิกเพื่อเติมในช่องยศ`;
+    discordRoles = data.roles; // sync cache
     data.roles.forEach(role => {
       const pill = document.createElement('div');
       pill.className = 'role-pill';
-      pill.title = `คลิกเพื่อใส่ "${role.name}" ในช่องยศ`;
+      if (role.isAdmin) {
+        pill.style.cssText = 'opacity:.4;cursor:not-allowed;border:1px solid #ed4245';
+        pill.title = `🚫 ยศ Admin — ไม่ควรใช้กับบอท`;
+      } else if (role.isDangerous) {
+        pill.style.cssText = 'border:1px solid #faa61a';
+        pill.title = `⚠️ ยศนี้มีสิทธิ์พิเศษ — ระวังในการใช้`;
+      } else {
+        pill.title = `คลิกเพื่อใส่ "${role.name}" ในช่องยศ`;
+      }
       const dot = document.createElement('div');
       dot.className = 'dot';
       dot.style.background = role.color ? `#${role.color.toString(16).padStart(6,'0')}` : '#5865f2';
       const name = document.createElement('span');
-      name.textContent = role.name;
+      name.textContent = (role.isAdmin ? '🚫 ' : role.isDangerous ? '⚠️ ' : '') + role.name;
       pill.appendChild(dot);
       pill.appendChild(name);
-      pill.onclick = () => {
-        const inp = document.getElementById('rb-new-role');
-        if (inp) { inp.value = role.name; inp.focus(); }
-        toast(`เลือกยศ: ${role.name}`);
-      };
+      if (!role.isAdmin) {
+        pill.onclick = () => {
+          const inp = document.getElementById('rb-new-role');
+          if (inp) { inp.value = role.name; inp.focus(); }
+          toast((role.isDangerous ? '⚠️ ระวัง — ' : '') + `เลือกยศ: ${role.name}`);
+        };
+      }
       list.appendChild(pill);
     });
   } catch(e) {
@@ -1346,11 +1368,26 @@ async function loadRoleOptions() {
   } catch(e) { toast('โหลดยศไม่สำเร็จ', 'err'); }
 }
 
-function roleOptions(selectedId = '') {
-  return `<option value="">— ไม่เลือก (สร้างใหม่) —</option>` +
-    discordRoles.map(r =>
-      `<option value="${r.id}" ${r.id === selectedId ? 'selected' : ''}>${r.name}</option>`
-    ).join('');
+function roleOptions(selectedId = '', allowAdmin = false) {
+  const safe = allowAdmin ? discordRoles : discordRoles.filter(r => !r.isAdmin);
+  const groups = { safe: [], danger: [] };
+  safe.forEach(r => r.isDangerous ? groups.danger.push(r) : groups.safe.push(r));
+
+  let html = `<option value="">— ไม่เลือก (สร้างใหม่) —</option>`;
+  if (groups.safe.length) {
+    html += `<optgroup label="✅ ยศปกติ">` +
+      groups.safe.map(r => `<option value="${r.id}" ${r.id === selectedId ? 'selected' : ''}>${r.name}</option>`).join('') +
+      `</optgroup>`;
+  }
+  if (groups.danger.length) {
+    html += `<optgroup label="⚠️ ยศมีสิทธิ์พิเศษ (ระวัง)">` +
+      groups.danger.map(r => `<option value="${r.id}" ${r.id === selectedId ? 'selected' : ''}>⚠️ ${r.name}</option>`).join('') +
+      `</optgroup>`;
+  }
+  if (!allowAdmin && discordRoles.some(r => r.isAdmin)) {
+    html += `<optgroup label="🚫 ซ่อน — ยศ Admin (อันตราย)"><option disabled>ถูกซ่อนเพื่อความปลอดภัย</option></optgroup>`;
+  }
+  return html;
 }
 
 function populateRoleSelects() {
