@@ -940,14 +940,23 @@
             </div>
           </div>
           <div class="field" style="grid-column:1/-1">
-            <label>รูป Thumbnail (มุมขวา — URL หรืออัปโหลด)</label>
-            <div style="display:flex;gap:8px;align-items:center">
+            <label>รูป Thumbnail (มุมขวา)</label>
+            <div style="display:flex;gap:8px;margin-bottom:8px">
+              <select id="ve-thumb-preset" onchange="applyThumbPreset()" style="flex:1">
+                <option value="">(ไม่มี thumbnail)</option>
+                <option value="[user]">👤 [user] — รูป avatar ของคนที่เข้ามา</option>
+                <option value="[server]">🖼️ [server] — รูป icon ของเซิร์ฟเวอร์</option>
+                <option value="custom">🔗 URL รูปเอง / อัปโหลด</option>
+              </select>
+            </div>
+            <div id="ve-thumb-custom-wrap" style="display:none;display:flex;gap:8px;align-items:center">
               <input type="text" id="ve-thumb" placeholder="https://..." style="flex:1" oninput="updateVerifyPreview()">
               <label style="cursor:pointer;background:var(--btn-ghost-bg,#2b2d31);border:1px solid var(--border);padding:7px 14px;border-radius:6px;font-size:13px;white-space:nowrap">
                 📁 อัปโหลด
                 <input type="file" accept="image/*" style="display:none" onchange="uploadVerifyThumb(this)">
               </label>
             </div>
+            <div style="margin-top:6px;font-size:11px;color:var(--muted)" id="ve-thumb-hint"></div>
           </div>
         </div>
       </div>
@@ -1185,8 +1194,46 @@ async function uploadVerifyThumb(input) {
   const fd = new FormData(); fd.append('image', file);
   const r = await authFetch('/api/upload', { method:'POST', body: fd });
   const d = await r.json();
-  if (d.ok) { document.getElementById('ve-thumb').value = d.url; updateVerifyPreview(); }
-  else alert('อัปโหลดไม่สำเร็จ: ' + d.error);
+  if (d.ok) {
+    document.getElementById('ve-thumb').value = d.url;
+    document.getElementById('ve-thumb-preset').value = 'custom';
+    applyThumbPreset();
+  } else alert('อัปโหลดไม่สำเร็จ: ' + d.error);
+}
+
+function applyThumbPreset() {
+  const preset = document.getElementById('ve-thumb-preset').value;
+  const wrap = document.getElementById('ve-thumb-custom-wrap');
+  const hint = document.getElementById('ve-thumb-hint');
+  const hintMap = {
+    '': 'ไม่มีรูปมุมขวา',
+    '[user]': '👤 บอทจะใช้รูป avatar ของคนที่กดยืนยัน',
+    '[server]': '🖼️ บอทจะใช้รูป icon ของเซิร์ฟเวอร์',
+    'custom': 'ใส่ URL รูปหรืออัปโหลดไฟล์',
+  };
+  hint.textContent = hintMap[preset] || '';
+  if (preset === 'custom') {
+    wrap.style.display = 'flex';
+  } else {
+    wrap.style.display = 'none';
+    document.getElementById('ve-thumb').value = preset; // เก็บ [user] / [server] / ''
+  }
+  updateVerifyPreview();
+}
+
+function initThumbPreset(val) {
+  const sel = document.getElementById('ve-thumb-preset');
+  if (!sel) return;
+  if (val === '[user]' || val === '[server]' || val === '') {
+    sel.value = val || '';
+  } else if (val) {
+    sel.value = 'custom';
+    document.getElementById('ve-thumb').value = val;
+    document.getElementById('ve-thumb-custom-wrap').style.display = 'flex';
+  } else {
+    sel.value = '';
+  }
+  applyThumbPreset();
 }
 
 function clearVerifyImage() {
@@ -1230,8 +1277,21 @@ function updateVerifyPreview() {
   const thumbWrap = document.getElementById('ve-prev-thumb-wrap');
   const thumbEl = document.getElementById('ve-prev-thumb');
   if (thumbWrap && thumbEl) {
-    if (thumb) { thumbEl.src = thumb; thumbWrap.style.display = ''; }
-    else thumbWrap.style.display = 'none';
+    if (thumb === '[user]') {
+      thumbEl.src = 'https://cdn.discordapp.com/embed/avatars/0.png';
+      thumbEl.title = 'ตัวอย่าง: จะเป็นรูป avatar ของ user จริงๆ';
+      thumbWrap.style.display = '';
+    } else if (thumb === '[server]') {
+      thumbEl.src = 'https://cdn.discordapp.com/embed/avatars/1.png';
+      thumbEl.title = 'ตัวอย่าง: จะเป็นรูป icon ของเซิร์ฟเวอร์';
+      thumbWrap.style.display = '';
+    } else if (thumb) {
+      thumbEl.src = thumb;
+      thumbEl.title = '';
+      thumbWrap.style.display = '';
+    } else {
+      thumbWrap.style.display = 'none';
+    }
   }
   // image upload preview
   const upWrap = document.getElementById('ve-image-preview-wrap');
@@ -1555,7 +1615,7 @@ function applyToUI() {
   document.getElementById('ve-btn-label').value = cfg.VERIFY_BUTTON_LABEL || '';
   document.getElementById('ve-btn-color').value = cfg.VERIFY_BUTTON_COLOR || 'Primary';
   document.getElementById('ve-image').value = cfg.VERIFY_IMAGE || '';
-  document.getElementById('ve-thumb').value = cfg.VERIFY_THUMBNAIL || '';
+  initThumbPreset(cfg.VERIFY_THUMBNAIL || '[user]');
 
   // Member role
   document.getElementById('r-member-name').value = cfg.MEMBER_ROLE_NAME || 'Member';
