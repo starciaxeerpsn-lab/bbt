@@ -267,10 +267,23 @@ app.get("/api/roles", requireAuth, (req, res) => {
   const guild = client.guilds.cache.get(guildId);
   if (!guild) return res.json({ roles: [] });
 
+  const DANGEROUS = BigInt(0x8) | BigInt(0x20) | BigInt(0x10); // ADMINISTRATOR | MANAGE_GUILD | MANAGE_ROLES
+
   const roles = guild.roles.cache
     .filter((r) => r.name !== "@everyone" && !r.managed)
     .sort((a, b) => b.position - a.position)
-    .map((r) => ({ id: r.id, name: r.name, color: r.color }));
+    .map((r) => {
+      const perms = BigInt(r.permissions.bitfield);
+      const isAdmin = (perms & BigInt(0x8)) !== BigInt(0);
+      const isDangerous = !isAdmin && (perms & DANGEROUS) !== BigInt(0);
+      return {
+        id: r.id,
+        name: r.name,
+        color: r.color,
+        isAdmin,
+        isDangerous,
+      };
+    });
 
   res.json({ roles });
 });
