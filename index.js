@@ -22,6 +22,7 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 const multer = require("multer");
+const { Redis } = require("@upstash/redis");
 
 require("dotenv").config();
 
@@ -39,67 +40,35 @@ function saveConfig(data) {
 }
 
 // ============================================================
-// 🔐 SESSION STORE (file-based — survives restarts)
-// sessions[token] = { userId, username, avatar, guildId, expiry }
+// 🔐 SESSION STORE (Upstash Redis — survives restarts & redeploys)
 // ============================================================
-const SESSIONS_PATH = path.join(__dirname, "sessions.json");
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN,
+});
 
-function loadSessions() {
-  try {
-    if (!fs.existsSync(SESSIONS_PATH)) return {};
-    return JSON.parse(fs.readFileSync(SESSIONS_PATH, "utf8"));
-  } catch {
-    return {};
-  }
-}
+const SESSION_TTL = 60 * 60 * 24 * 30; // 30 วัน (วินาที)
 
-function saveSessions(data) {
-  try {
-    fs.writeFileSync(SESSIONS_PATH, JSON.stringify(data));
-  } catch (e) {
-    console.error("❌ Failed to save sessions:", e.message);
-  }
-}
-
-function createSession(userData) {
+async function createSession(userData) {
   const token = crypto.randomBytes(32).toString("hex");
-  const data = loadSessions();
-  data[token] = {
-    ...userData,
-    expiry: Date.now() + 1000 * 60 * 60 * 24 * 30, // 30 วัน
-  };
-  saveSessions(data);
+  await redis.set(`session:${token}`, JSON.stringify(userData), { ex: SESSION_TTL });
   return token;
 }
 
-function getSession(token) {
+async function getSession(token) {
   if (!token) return null;
-  const data = loadSessions();
-  const s = data[token];
-  if (!s) return null;
-  if (Date.now() > s.expiry) {
-    deleteSession(token);
+  try {
+    const raw = await redis.get(`session:${token}`);
+    if (!raw) return null;
+    return typeof raw === "string" ? JSON.parse(raw) : raw;
+  } catch {
     return null;
   }
-  return s;
 }
 
-function deleteSession(token) {
-  const data = loadSessions();
-  delete data[token];
-  saveSessions(data);
+async function deleteSession(token) {
+  await redis.del(`session:${token}`);
 }
-
-// ล้าง session หมดอายุทุก 1 ชั่วโมง
-setInterval(() => {
-  const data = loadSessions();
-  const now = Date.now();
-  let changed = false;
-  for (const [token, s] of Object.entries(data)) {
-    if (now > s.expiry) { delete data[token]; changed = true; }
-  }
-  if (changed) saveSessions(data);
-}, 1000 * 60 * 60);
 
 // ============================================================
 // 🌐 EXPRESS
@@ -131,9 +100,9 @@ const upload = multer({
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ── Auth middleware ──────────────────────────────────────────
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
   const token = req.headers["x-session-token"] || req.query.token;
-  const session = getSession(token);
+  const session = await getSession(token);
   if (!session) return res.status(401).json({ error: "Unauthorized" });
   req.session = session;
   next();
@@ -206,7 +175,7 @@ app.get("/auth/callback", async (req, res) => {
       return res.redirect("/login.html?error=not_admin");
     }
 
-    const token = createSession({
+    const token = await createSession({
       userId: user.id,
       username: user.username,
       avatar: user.avatar,
@@ -222,9 +191,9 @@ app.get("/auth/callback", async (req, res) => {
 });
 
 // GET /auth/logout
-app.get("/auth/logout", (req, res) => {
+app.get("/auth/logout", async (req, res) => {
   const token = req.query.token;
-  if (token) deleteSession(token);
+  if (token) await deleteSession(token);
   res.redirect("/");
 });
 
