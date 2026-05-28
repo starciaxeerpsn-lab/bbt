@@ -39,34 +39,67 @@ function saveConfig(data) {
 }
 
 // ============================================================
-// 🔐 SESSION STORE (in-memory)
+// 🔐 SESSION STORE (file-based — survives restarts)
 // sessions[token] = { userId, username, avatar, guildId, expiry }
 // ============================================================
-const sessions = new Map();
+const SESSIONS_PATH = path.join(__dirname, "sessions.json");
+
+function loadSessions() {
+  try {
+    if (!fs.existsSync(SESSIONS_PATH)) return {};
+    return JSON.parse(fs.readFileSync(SESSIONS_PATH, "utf8"));
+  } catch {
+    return {};
+  }
+}
+
+function saveSessions(data) {
+  try {
+    fs.writeFileSync(SESSIONS_PATH, JSON.stringify(data));
+  } catch (e) {
+    console.error("❌ Failed to save sessions:", e.message);
+  }
+}
 
 function createSession(userData) {
   const token = crypto.randomBytes(32).toString("hex");
-  sessions.set(token, {
+  const data = loadSessions();
+  data[token] = {
     ...userData,
-    expiry: Date.now() + 1000 * 60 * 60 * 24, // 24h
-  });
+    expiry: Date.now() + 1000 * 60 * 60 * 24 * 7, // 7 วัน
+  };
+  saveSessions(data);
   return token;
 }
 
 function getSession(token) {
   if (!token) return null;
-  const s = sessions.get(token);
+  const data = loadSessions();
+  const s = data[token];
   if (!s) return null;
   if (Date.now() > s.expiry) {
-    sessions.delete(token);
+    deleteSession(token);
     return null;
   }
   return s;
 }
 
 function deleteSession(token) {
-  sessions.delete(token);
+  const data = loadSessions();
+  delete data[token];
+  saveSessions(data);
 }
+
+// ล้าง session หมดอายุทุก 1 ชั่วโมง
+setInterval(() => {
+  const data = loadSessions();
+  const now = Date.now();
+  let changed = false;
+  for (const [token, s] of Object.entries(data)) {
+    if (now > s.expiry) { delete data[token]; changed = true; }
+  }
+  if (changed) saveSessions(data);
+}, 1000 * 60 * 60);
 
 // ============================================================
 // 🌐 EXPRESS
