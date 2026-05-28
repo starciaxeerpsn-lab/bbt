@@ -410,8 +410,9 @@ client.on("guildMemberAdd", async (member) => {
       .setTitle(cfg.VERIFY_EMBED_TITLE)
       .setDescription(`สวัสดี ${member}!\n${cfg.VERIFY_EMBED_DESC}`);
 
-    if (cfg.VERIFY_THUMBNAIL) embed.setThumbnail(cfg.VERIFY_THUMBNAIL);
-    else embed.setThumbnail(member.user.displayAvatarURL());
+    if (cfg.VERIFY_THUMBNAIL === '[user]' || !cfg.VERIFY_THUMBNAIL) embed.setThumbnail(member.user.displayAvatarURL());
+    else if (cfg.VERIFY_THUMBNAIL === '[server]' && member.guild.iconURL()) embed.setThumbnail(member.guild.iconURL());
+    else if (cfg.VERIFY_THUMBNAIL) embed.setThumbnail(cfg.VERIFY_THUMBNAIL);
     if (cfg.VERIFY_IMAGE) embed.setImage(cfg.VERIFY_IMAGE);
 
     const button = new ActionRowBuilder().addComponents(
@@ -465,7 +466,8 @@ client.on("interactionCreate", async (interaction) => {
       .setTitle(cfg.VERIFY_EMBED_TITLE)
       .setDescription(cfg.VERIFY_EMBED_DESC);
 
-    if (cfg.VERIFY_THUMBNAIL) embed.setThumbnail(cfg.VERIFY_THUMBNAIL);
+    if (cfg.VERIFY_THUMBNAIL === '[server]' && interaction.guild.iconURL()) embed.setThumbnail(interaction.guild.iconURL());
+    else if (cfg.VERIFY_THUMBNAIL && cfg.VERIFY_THUMBNAIL !== '[user]') embed.setThumbnail(cfg.VERIFY_THUMBNAIL);
     if (cfg.VERIFY_IMAGE) embed.setImage(cfg.VERIFY_IMAGE);
 
     const button = new ActionRowBuilder().addComponents(
