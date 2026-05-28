@@ -66,7 +66,7 @@ function createSession(userData) {
   const data = loadSessions();
   data[token] = {
     ...userData,
-    expiry: Date.now() + 1000 * 60 * 60 * 24 * 7, // 7 วัน
+    expiry: Date.now() + 1000 * 60 * 60 * 24 * 30, // 30 วัน
   };
   saveSessions(data);
   return token;
