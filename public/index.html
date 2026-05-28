@@ -959,6 +959,30 @@
 <div id="toast"></div>
 
 <script>
+// ── Session Token Management ──────────────────────────────────
+let SESSION_TOKEN = new URLSearchParams(window.location.search).get('token')
+                 || sessionStorage.getItem('bot_token');
+
+function redirectToLogin() {
+  sessionStorage.removeItem('bot_token');
+  window.location.href = '/login.html';
+}
+
+if (!SESSION_TOKEN) {
+  redirectToLogin();
+}  else {
+  sessionStorage.setItem('bot_token', SESSION_TOKEN);
+  // Clean token from URL without reload
+  const url = new URL(window.location);
+  url.searchParams.delete('token');
+  window.history.replaceState({}, '', url);
+}
+
+function authFetch(url, options = {}) {
+  options.headers = { ...(options.headers || {}), 'x-session-token': SESSION_TOKEN };
+  return fetch(url, options);
+}
+
 let cfg = {};
 
 // ── Navigation ──────────────────────────────────────────────
@@ -997,7 +1021,7 @@ function handleImgUpload(input, urlId, zoneId, previewId, type) {
     document.getElementById(zoneId).classList.add('has-img');
 
     // upload to server
-    fetch('/api/upload-image', {
+    authFetch('/api/upload-image', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type, data: dataUrl })
@@ -1184,7 +1208,7 @@ async function fetchDiscordRoles() {
   hint.textContent = 'กำลังดึงข้อมูล...';
   list.innerHTML = '';
   try {
-    const res = await fetch('/api/roles');
+    const res = await authFetch('/api/roles');
     const data = await res.json();
     spin.style.display = 'none';
     if (!data.roles || !data.roles.length) {
@@ -1265,7 +1289,7 @@ function addGame() {
 // ── Load config from server ─────────────────────────────────
 async function loadFromServer() {
   try {
-    const res = await fetch('/api/config');
+    const res = await authFetch('/api/config');
     cfg = await res.json();
     applyToUI();
     toast('โหลดค่าสำเร็จ');
@@ -1425,7 +1449,7 @@ function collectFromUI() {
 async function saveConfig() {
   collectFromUI();
   try {
-    const res = await fetch('/api/config', {
+    const res = await authFetch('/api/config', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify(cfg)
@@ -1441,7 +1465,8 @@ async function saveConfig() {
 // ── Bot status ───────────────────────────────────────────────
 async function loadStatus() {
   try {
-    const res = await fetch('/api/status');
+    const res = await authFetch('/api/status');
+    if (!res.ok) { if (res.status === 401) redirectToLogin(); return; }
     const d = await res.json();
     document.getElementById('bot-tag').textContent = d.tag || 'Offline';
     document.getElementById('stat-online').textContent = d.online ? '🟢 Online' : '🔴 Offline';
