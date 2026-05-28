@@ -816,13 +816,24 @@
 
       <div class="card">
         <div class="card-title"><span>👑</span> ยศ Member หลัก</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px">เลือกยศที่มีอยู่แล้วใน Discord — บอทจะไม่สร้างยศซ้ำ</div>
         <div class="form-grid">
+          <div class="field" style="grid-column:1/-1">
+            <label>เลือกยศ Member จาก Discord</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <select id="r-member-role-id" style="flex:1" onchange="onMemberRolePick()">
+                <option value="">— เลือกยศ —</option>
+              </select>
+              <button class="btn btn-ghost" onclick="loadRoleOptions()" style="white-space:nowrap;padding:8px 12px">🔄 โหลด</button>
+            </div>
+            <div id="r-member-role-tag" style="margin-top:6px;font-size:12px;color:var(--muted)"></div>
+          </div>
           <div class="field">
-            <label>ชื่อยศ Member</label>
+            <label>ชื่อยศ Member (fallback ถ้าไม่เลือก)</label>
             <input type="text" id="r-member-name" placeholder="Member">
           </div>
           <div class="field">
-            <label>สียศ</label>
+            <label>สียศ (ใช้ตอนสร้างใหม่เท่านั้น)</label>
             <div class="color-row">
               <input type="text" id="r-member-color-text" placeholder="#57F287" maxlength="7">
               <input type="color" id="r-member-color" value="#57F287" oninput="syncColorPick(this,'r-member-color-text')" onchange="syncColorPick(this,'r-member-color-text')">
@@ -833,19 +844,19 @@
 
       <div class="card">
         <div class="card-title"><span>🎮</span> ยศเกม</div>
-        <div style="display:grid;grid-template-columns:40px 1fr 1fr 50px 36px;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:8px;font-size:11px;color:var(--muted)">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px">กด 🔄 โหลด แล้วเลือกยศที่มีอยู่ในคอลัมน์ "ยศใน Discord" เพื่อไม่ให้บอทสร้างซ้ำ</div>
+        <div style="display:grid;grid-template-columns:36px 1fr 1fr 36px;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:8px;font-size:11px;color:var(--muted)">
           <div style="text-align:center">Emoji</div>
-          <div>ชื่อยศ</div>
-          <div>Key (ห้ามซ้ำ)</div>
-          <div>สี</div>
+          <div>Label ใน Dropdown</div>
+          <div>ยศใน Discord (เลือก)</div>
           <div></div>
         </div>
         <div class="game-list" id="game-list"></div>
-        <div class="add-row" style="grid-template-columns:40px 1fr 1fr 50px 80px">
+        <div class="add-row" style="grid-template-columns:36px 1fr 1fr 36px 80px;margin-top:10px">
           <input type="text" id="new-emoji" placeholder="🎯" maxlength="4" style="text-align:center;font-size:18px">
-          <input type="text" id="new-name" placeholder="ชื่อยศใหม่">
+          <input type="text" id="new-name" placeholder="ชื่อยศ / ป้ายกำกับ">
           <input type="text" id="new-key" placeholder="key (เช่น csgo)">
-          <input type="color" id="new-color" value="#5865F2">
+          <input type="color" id="new-color" value="#5865F2" title="สี (ใช้ตอนสร้างใหม่)">
           <button class="btn btn-success" onclick="addGame()" style="padding:8px 12px">+ เพิ่ม</button>
         </div>
       </div>
@@ -911,7 +922,32 @@
           </div>
           <div class="field" style="grid-column:1/-1">
             <label>คำอธิบาย (Description)</label>
-            <textarea id="ve-desc" rows="2" placeholder="กดปุ่มด้านล่างเพื่อกรอกข้อมูลและรับยศของคุณ!" style="resize:vertical" oninput="updateVerifyPreview()"></textarea>
+            <textarea id="ve-desc" rows="5" placeholder="กดปุ่มด้านล่างเพื่อกรอกข้อมูลและรับยศของคุณ!" style="resize:vertical" oninput="updateVerifyPreview()"></textarea>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">💡 รองรับข้อความยาว สามารถเว้นบรรทัดได้</div>
+          </div>
+          <div class="field" style="grid-column:1/-1">
+            <label>รูปภาพ Embed (Image URL หรืออัปโหลด)</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="text" id="ve-image" placeholder="https://..." style="flex:1" oninput="updateVerifyPreview()">
+              <label style="cursor:pointer;background:var(--btn-ghost-bg,#2b2d31);border:1px solid var(--border);padding:7px 14px;border-radius:6px;font-size:13px;white-space:nowrap">
+                📁 อัปโหลด
+                <input type="file" accept="image/*" style="display:none" onchange="uploadVerifyImage(this)">
+              </label>
+            </div>
+            <div id="ve-image-preview-wrap" style="display:none;margin-top:8px">
+              <img id="ve-image-preview-img" src="" style="max-width:100%;max-height:180px;border-radius:6px;border:1px solid var(--border)">
+              <button onclick="clearVerifyImage()" style="display:block;margin-top:4px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px">✕ ลบรูป</button>
+            </div>
+          </div>
+          <div class="field" style="grid-column:1/-1">
+            <label>รูป Thumbnail (มุมขวา — URL หรืออัปโหลด)</label>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input type="text" id="ve-thumb" placeholder="https://..." style="flex:1" oninput="updateVerifyPreview()">
+              <label style="cursor:pointer;background:var(--btn-ghost-bg,#2b2d31);border:1px solid var(--border);padding:7px 14px;border-radius:6px;font-size:13px;white-space:nowrap">
+                📁 อัปโหลด
+                <input type="file" accept="image/*" style="display:none" onchange="uploadVerifyThumb(this)">
+              </label>
+            </div>
           </div>
         </div>
       </div>
@@ -938,8 +974,18 @@
       <div class="card">
         <div class="card-title"><span>👁</span> ตัวอย่าง Verify Embed</div>
         <div class="embed-preview" id="verify-embed-preview" style="border-left-color:#5865f2">
-          <div class="embed-title" id="ve-prev-title">🎮 ยืนยันตัวตน</div>
-          <div class="embed-desc" id="ve-prev-desc">กดปุ่มด้านล่างเพื่อกรอกข้อมูลและรับยศของคุณ!</div>
+          <div style="display:flex;gap:10px">
+            <div style="flex:1">
+              <div class="embed-title" id="ve-prev-title">🎮 ยืนยันตัวตน</div>
+              <div class="embed-desc" id="ve-prev-desc" style="white-space:pre-wrap">กดปุ่มด้านล่างเพื่อกรอกข้อมูลและรับยศของคุณ!</div>
+            </div>
+            <div id="ve-prev-thumb-wrap" style="display:none;flex-shrink:0">
+              <img id="ve-prev-thumb" src="" style="width:72px;height:72px;object-fit:cover;border-radius:4px">
+            </div>
+          </div>
+          <div id="ve-prev-image-wrap" style="display:none;margin-top:10px">
+            <img id="ve-prev-image" src="" style="max-width:100%;max-height:200px;border-radius:4px">
+          </div>
           <div style="margin-top:14px">
             <div id="ve-prev-btn" style="display:inline-block;background:#5865f2;color:white;padding:8px 18px;border-radius:4px;font-size:13px;font-weight:600">✅ ยืนยันตัวตน</div>
           </div>
@@ -1114,12 +1160,38 @@ function updateGoodbyePreview() {
 }
 
 // ── Verify Preview ──────────────────────────────────────────
+async function uploadVerifyImage(input) {
+  const file = input.files[0]; if (!file) return;
+  const fd = new FormData(); fd.append('image', file);
+  const r = await authFetch('/api/upload', { method:'POST', body: fd });
+  const d = await r.json();
+  if (d.ok) { document.getElementById('ve-image').value = d.url; updateVerifyPreview(); }
+  else alert('อัปโหลดไม่สำเร็จ: ' + d.error);
+}
+
+async function uploadVerifyThumb(input) {
+  const file = input.files[0]; if (!file) return;
+  const fd = new FormData(); fd.append('image', file);
+  const r = await authFetch('/api/upload', { method:'POST', body: fd });
+  const d = await r.json();
+  if (d.ok) { document.getElementById('ve-thumb').value = d.url; updateVerifyPreview(); }
+  else alert('อัปโหลดไม่สำเร็จ: ' + d.error);
+}
+
+function clearVerifyImage() {
+  document.getElementById('ve-image').value = '';
+  updateVerifyPreview();
+}
+
+
 function updateVerifyPreview() {
   const title = document.getElementById('ve-title')?.value || '🎮 ยืนยันตัวตน';
   const desc = document.getElementById('ve-desc')?.value || '';
   const color = document.getElementById('ve-color')?.value || '#5865f2';
   const btnLabel = document.getElementById('ve-btn-label')?.value || '✅ ยืนยันตัวตน';
   const btnColor = document.getElementById('ve-btn-color')?.value || 'Primary';
+  const image = document.getElementById('ve-image')?.value || '';
+  const thumb = document.getElementById('ve-thumb')?.value || '';
 
   const colorMap = { Primary:'#5865f2', Success:'#57f287', Danger:'#ed4245', Secondary:'#4e5058' };
   const textMap = { Primary:'white', Success:'#000', Danger:'white', Secondary:'white' };
@@ -1135,6 +1207,27 @@ function updateVerifyPreview() {
     btn.textContent = btnLabel;
     btn.style.background = colorMap[btnColor] || '#5865f2';
     btn.style.color = textMap[btnColor] || 'white';
+  }
+  // image
+  const imgWrap = document.getElementById('ve-prev-image-wrap');
+  const imgEl = document.getElementById('ve-prev-image');
+  if (imgWrap && imgEl) {
+    if (image) { imgEl.src = image; imgWrap.style.display = ''; }
+    else imgWrap.style.display = 'none';
+  }
+  // thumbnail
+  const thumbWrap = document.getElementById('ve-prev-thumb-wrap');
+  const thumbEl = document.getElementById('ve-prev-thumb');
+  if (thumbWrap && thumbEl) {
+    if (thumb) { thumbEl.src = thumb; thumbWrap.style.display = ''; }
+    else thumbWrap.style.display = 'none';
+  }
+  // image upload preview
+  const upWrap = document.getElementById('ve-image-preview-wrap');
+  const upImg = document.getElementById('ve-image-preview-img');
+  if (upWrap && upImg) {
+    if (image) { upImg.src = image; upWrap.style.display = ''; }
+    else upWrap.style.display = 'none';
   }
 }
 
@@ -1240,6 +1333,55 @@ async function fetchDiscordRoles() {
   }
 }
 
+// ── Discord Roles cache ─────────────────────────────────────
+let discordRoles = [];
+
+async function loadRoleOptions() {
+  try {
+    const r = await authFetch('/api/roles');
+    const d = await r.json();
+    discordRoles = d.roles || [];
+    populateRoleSelects();
+    toast('โหลดยศสำเร็จ ' + discordRoles.length + ' ยศ');
+  } catch(e) { toast('โหลดยศไม่สำเร็จ', 'err'); }
+}
+
+function roleOptions(selectedId = '') {
+  return `<option value="">— ไม่เลือก (สร้างใหม่) —</option>` +
+    discordRoles.map(r =>
+      `<option value="${r.id}" ${r.id === selectedId ? 'selected' : ''}>${r.name}</option>`
+    ).join('');
+}
+
+function populateRoleSelects() {
+  // Member
+  const ms = document.getElementById('r-member-role-id');
+  if (ms) { const cur = ms.value; ms.innerHTML = roleOptions(cur || cfg.MEMBER_ROLE_ID || ''); updateMemberTag(); }
+  // Game roles
+  document.querySelectorAll('.game-role-select').forEach(sel => {
+    const key = sel.dataset.key;
+    const cur = cfg.GAME_ROLES?.[key]?.roleId || '';
+    sel.innerHTML = roleOptions(cur);
+  });
+}
+
+function onMemberRolePick() { updateMemberTag(); }
+
+function updateMemberTag() {
+  const sel = document.getElementById('r-member-role-id');
+  const tag = document.getElementById('r-member-role-tag');
+  if (!sel || !tag) return;
+  const id = sel.value;
+  if (id) {
+    const role = discordRoles.find(r => r.id === id);
+    tag.textContent = role ? `✅ เลือก: ${role.name} (ID: ${id})` : `ID: ${id}`;
+    tag.style.color = 'var(--success, #57f287)';
+  } else {
+    tag.textContent = 'ไม่ได้เลือก — บอทจะค้นหาจากชื่อหรือสร้างใหม่';
+    tag.style.color = 'var(--muted)';
+  }
+}
+
 // ── Game list ───────────────────────────────────────────────
 function renderGameList() {
   const list = document.getElementById('game-list');
@@ -1249,11 +1391,13 @@ function renderGameList() {
     const row = document.createElement('div');
     row.className = 'game-item';
     row.dataset.key = key;
+    row.style.cssText = 'display:grid;grid-template-columns:36px 1fr 1fr 36px;gap:8px;align-items:center;margin-bottom:6px';
     row.innerHTML = `
-      <input class="game-emoji-input" type="text" value="${val.emoji||''}" placeholder="🎮" maxlength="4" onchange="updateGame('${key}','emoji',this.value)">
+      <input class="game-emoji-input" type="text" value="${val.emoji||''}" placeholder="🎮" maxlength="4" style="text-align:center;font-size:18px" onchange="updateGame('${key}','emoji',this.value)">
       <input type="text" value="${val.name||''}" placeholder="ชื่อยศ" onchange="updateGame('${key}','name',this.value)">
-      <input type="text" value="${key}" placeholder="key" readonly style="color:var(--muted);cursor:not-allowed">
-      <input type="color" value="${val.color||'#5865F2'}" onchange="updateGame('${key}','color',this.value)" style="width:44px;height:32px;cursor:pointer;padding:2px;border-radius:6px;border:1px solid var(--border);background:var(--card)">
+      <select class="game-role-select" data-key="${key}" onchange="updateGame('${key}','roleId',this.value)">
+        ${roleOptions(val.roleId || '')}
+      </select>
       <button class="btn-del" onclick="removeGame('${key}')">✕</button>
     `;
     list.appendChild(row);
@@ -1278,12 +1422,12 @@ function addGame() {
   if (!name || !key) return toast('กรอกชื่อและ key ด้วย', 'err');
   if (cfg.GAME_ROLES?.[key]) return toast('Key นี้มีอยู่แล้ว', 'err');
   if (!cfg.GAME_ROLES) cfg.GAME_ROLES = {};
-  cfg.GAME_ROLES[key] = { name, emoji, color };
+  cfg.GAME_ROLES[key] = { name, emoji, color, roleId: '' };
   renderGameList();
   document.getElementById('new-emoji').value = '';
   document.getElementById('new-name').value = '';
   document.getElementById('new-key').value = '';
-  toast(`เพิ่มยศ ${name} แล้ว`);
+  toast(`เพิ่มยศ ${name} แล้ว — กด 🔄 โหลด เพื่อเลือกยศจาก Discord`);
 }
 
 // ── Load config from server ─────────────────────────────────
@@ -1373,12 +1517,18 @@ function applyToUI() {
   document.getElementById('ve-color-text').value = vc;
   document.getElementById('ve-btn-label').value = cfg.VERIFY_BUTTON_LABEL || '';
   document.getElementById('ve-btn-color').value = cfg.VERIFY_BUTTON_COLOR || 'Primary';
+  document.getElementById('ve-image').value = cfg.VERIFY_IMAGE || '';
+  document.getElementById('ve-thumb').value = cfg.VERIFY_THUMBNAIL || '';
 
   // Member role
   document.getElementById('r-member-name').value = cfg.MEMBER_ROLE_NAME || 'Member';
   const mc = cfg.MEMBER_ROLE_COLOR || '#57F287';
   document.getElementById('r-member-color').value = mc;
   document.getElementById('r-member-color-text').value = mc;
+  // ถ้ามี discordRoles แล้ว ให้ set dropdown ทันที
+  const ms = document.getElementById('r-member-role-id');
+  if (ms) { ms.innerHTML = roleOptions(cfg.MEMBER_ROLE_ID || ''); updateMemberTag(); }
+  renderGameList();
 
   // Channels
   document.getElementById('c-verify').value = cfg.VERIFY_CHANNEL_NAME || 'verify';
@@ -1415,9 +1565,12 @@ function collectFromUI() {
   cfg.VERIFY_EMBED_COLOR = document.getElementById('ve-color-text').value || document.getElementById('ve-color').value;
   cfg.VERIFY_BUTTON_LABEL = document.getElementById('ve-btn-label').value;
   cfg.VERIFY_BUTTON_COLOR = document.getElementById('ve-btn-color').value;
+  cfg.VERIFY_IMAGE = document.getElementById('ve-image').value;
+  cfg.VERIFY_THUMBNAIL = document.getElementById('ve-thumb').value;
 
   cfg.MEMBER_ROLE_NAME = document.getElementById('r-member-name').value || 'Member';
   cfg.MEMBER_ROLE_COLOR = document.getElementById('r-member-color-text').value || document.getElementById('r-member-color').value;
+  cfg.MEMBER_ROLE_ID = document.getElementById('r-member-role-id')?.value || '';
 
   cfg.VERIFY_CHANNEL_NAME = document.getElementById('c-verify').value || 'verify';
   cfg.WELCOME_CHANNEL_NAME = document.getElementById('c-welcome').value || 'WELCOME';
@@ -1439,9 +1592,10 @@ function collectFromUI() {
     const key = row.dataset.key;
     if (!cfg.GAME_ROLES?.[key]) return;
     const inputs = row.querySelectorAll('input');
+    const sel = row.querySelector('.game-role-select');
     cfg.GAME_ROLES[key].emoji = inputs[0].value;
     cfg.GAME_ROLES[key].name = inputs[1].value;
-    cfg.GAME_ROLES[key].color = inputs[3].value;
+    cfg.GAME_ROLES[key].roleId = sel?.value || '';
   });
 }
 
