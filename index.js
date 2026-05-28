@@ -111,6 +111,11 @@ const DISCORD_CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const DISCORD_CLIENT_SECRET = process.env.DISCORD_CLIENT_SECRET;
 const REDIRECT_URI = process.env.REDIRECT_URI || `http://localhost:${process.env.PORT || 3000}/auth/callback`;
 
+// GET / → login page
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+
 // GET /auth/login → redirect to Discord OAuth
 app.get("/auth/login", (req, res) => {
   const params = new URLSearchParams({
@@ -125,7 +130,7 @@ app.get("/auth/login", (req, res) => {
 // GET /auth/callback → exchange code → verify admin → create session
 app.get("/auth/callback", async (req, res) => {
   const { code } = req.query;
-  if (!code) return res.redirect("/?error=no_code");
+  if (!code) return res.redirect("/login.html?error=no_code");
 
   try {
     // Exchange code for access token
@@ -141,7 +146,7 @@ app.get("/auth/callback", async (req, res) => {
       }),
     });
     const tokenData = await tokenRes.json();
-    if (!tokenData.access_token) return res.redirect("/?error=token_failed");
+    if (!tokenData.access_token) return res.redirect("/login.html?error=token_failed");
 
     // Get user info
     const userRes = await fetch("https://discord.com/api/users/@me", {
@@ -165,7 +170,7 @@ app.get("/auth/callback", async (req, res) => {
     const matchedGuild = adminGuilds.find((g) => botGuildIds.includes(g.id));
 
     if (!matchedGuild) {
-      return res.redirect("/?error=not_admin");
+      return res.redirect("/login.html?error=not_admin");
     }
 
     const token = createSession({
@@ -179,7 +184,7 @@ app.get("/auth/callback", async (req, res) => {
     res.redirect(`/dashboard.html?token=${token}`);
   } catch (err) {
     console.error("OAuth error:", err);
-    res.redirect("/?error=oauth_error");
+    res.redirect("/login.html?error=oauth_error");
   }
 });
 
