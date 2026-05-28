@@ -1,0 +1,40 @@
+{
+  "VERIFY_CHANNEL_NAME": "verify",
+  "WELCOME_CHANNEL_NAME": "WELCOME",
+  "GOODBYE_CHANNEL_NAME": "GOODBYE",
+  "MEMBER_ROLE_NAME": "Member",
+  "MEMBER_ROLE_COLOR": "#57F287",
+
+  "WELCOME_TITLE": "ยินดีต้อนรับ!",
+  "WELCOME_MESSAGE": "ยินดีต้อนรับ {user} เข้าสู่เซิร์ฟเวอร์ของเรา! 🎉",
+  "WELCOME_COLOR": "#57F287",
+  "WELCOME_IMAGE": "",
+  "WELCOME_SHOW_AVATAR": true,
+  "MENTION_USER": true,
+
+  "GOODBYE_ENABLED": true,
+  "GOODBYE_TITLE": "ลาก่อน...",
+  "GOODBYE_MESSAGE": "{user} ได้ออกจากเซิร์ฟเวอร์แล้ว 😢",
+  "GOODBYE_COLOR": "#ED4245",
+  "GOODBYE_IMAGE": "",
+  "GOODBYE_SHOW_AVATAR": true,
+
+  "VERIFY_EMBED_TITLE": "🎮 ยืนยันตัวตน",
+  "VERIFY_EMBED_DESC": "กดปุ่มด้านล่างเพื่อกรอกข้อมูลและรับยศของคุณ!",
+  "VERIFY_EMBED_COLOR": "#5865F2",
+  "VERIFY_BUTTON_LABEL": "✅ ยืนยันตัวตน",
+  "VERIFY_BUTTON_COLOR": "Primary",
+
+  "ROLE_BUTTONS": [
+    { "emoji": "🎮", "label": "รับยศ Member", "role": "Member", "color": "primary" },
+    { "emoji": "🎯", "label": "Minecraft", "role": "Minecraft", "color": "success" }
+  ],
+
+  "GAME_ROLES": {
+    "minecraft": { "name": "Minecraft", "emoji": "⛏️", "color": "#57F287" },
+    "valorant":  { "name": "Valorant",  "emoji": "🔫", "color": "#FF4655" },
+    "lol":       { "name": "League of Legends", "emoji": "🧙", "color": "#C8A951" },
+    "roblox":    { "name": "Roblox",    "emoji": "🟥", "color": "#E53935" },
+    "other":     { "name": "Other Games","emoji": "🎮", "color": "#5865F2" }
+  }
+}

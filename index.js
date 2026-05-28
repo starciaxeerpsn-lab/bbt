@@ -14,8 +14,68 @@ const {
   PermissionFlagsBits,
 } = require("discord.js");
 
+const express = require("express");
+const fs = require("fs");
+const path = require("path");
+
 require("dotenv").config();
 
+// ============================================================
+// 📁 CONFIG — โหลดจาก config.json (แก้ผ่าน Dashboard ได้เลย)
+// ============================================================
+const CONFIG_PATH = path.join(__dirname, "config.json");
+
+function loadConfig() {
+  return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
+}
+
+function saveConfig(data) {
+  fs.writeFileSync(CONFIG_PATH, JSON.stringify(data, null, 2));
+}
+
+// ============================================================
+// 🌐 EXPRESS — Dashboard Web UI
+// ============================================================
+const app = express();
+app.use(express.json());
+app.use(express.static(path.join(__dirname, "public")));
+
+// GET /api/config → ส่ง config ให้ Dashboard
+app.get("/api/config", (req, res) => {
+  try {
+    res.json(loadConfig());
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// POST /api/config → รับค่าจาก Dashboard และบันทึก
+app.post("/api/config", (req, res) => {
+  try {
+    saveConfig(req.body);
+    res.json({ ok: true });
+  } catch (e) {
+    res.json({ ok: false, error: e.message });
+  }
+});
+
+// GET /api/status → สถานะบอทสำหรับ Dashboard
+app.get("/api/status", (req, res) => {
+  res.json({
+    tag: client.user?.tag || "Offline",
+    online: client.isReady(),
+    guilds: client.guilds?.cache?.size || 0,
+  });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`🌐 Dashboard: http://localhost:${PORT}`);
+});
+
+// ============================================================
+// 🤖 DISCORD BOT
+// ============================================================
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -26,27 +86,28 @@ const client = new Client({
   partials: [Partials.GuildMember],
 });
 
-// ============================================================
-// ⚙️  CONFIG — แก้ตรงนี้ให้ตรงกับ server ของคุณ
-// ============================================================
-const CONFIG = {
-  VERIFY_CHANNEL_NAME: "verify",         // ชื่อห้องสำหรับ verify
-  WELCOME_CHANNEL_NAME: "WELCOME",       // ชื่อห้อง welcome
-  MEMBER_ROLE_NAME: "Member",            // ยศหลัก (ได้ทุกคนหลัง verify)
-
-  // ยศเกม — ชื่อต้องตรงกับ Role ใน Discord server ของคุณ
-  GAME_ROLES: {
-    minecraft: "Minecraft",
-    valorant: "Valorant",
-    lol: "League of Legends",
-    roblox: "Roblox",
-    other: "Other Games",
-  },
-};
-// ============================================================
-
-// เก็บข้อมูลชั่วคราว (ชื่อ+อายุ+เพศ) ก่อนเลือกเกม
+// เก็บข้อมูลชั่วคราวก่อนเลือกเกม
 const pendingData = new Map();
+
+// ─── Helper: แทน {user} ด้วย mention จริง ───────────────────
+function formatMsg(template, member) {
+  return template.replace(/\{user\}/g, `${member}`);
+}
+
+// ─── Helper: แปลง ButtonColor string → ButtonStyle ──────────
+function resolveButtonStyle(color = "Primary") {
+  const map = {
+    Primary: ButtonStyle.Primary,
+    primary: ButtonStyle.Primary,
+    Secondary: ButtonStyle.Secondary,
+    secondary: ButtonStyle.Secondary,
+    Success: ButtonStyle.Success,
+    success: ButtonStyle.Success,
+    Danger: ButtonStyle.Danger,
+    danger: ButtonStyle.Danger,
+  };
+  return map[color] ?? ButtonStyle.Primary;
+}
 
 // ─── บอทพร้อมทำงาน ───────────────────────────────────────────
 client.once("clientReady", () => {
@@ -55,53 +116,83 @@ client.once("clientReady", () => {
 
 // ─── สมาชิกใหม่เข้า server ──────────────────────────────────
 client.on("guildMemberAdd", async (member) => {
+  const cfg = loadConfig();
+
+  // ส่ง Verify embed ในห้อง verify
   const verifyChannel = member.guild.channels.cache.find(
-    (c) => c.name === CONFIG.VERIFY_CHANNEL_NAME
+    (c) => c.name === cfg.VERIFY_CHANNEL_NAME
   );
-  if (!verifyChannel) return;
+  if (verifyChannel) {
+    const embed = new EmbedBuilder()
+      .setColor(parseInt(cfg.VERIFY_EMBED_COLOR.replace("#", ""), 16))
+      .setTitle(cfg.VERIFY_EMBED_TITLE)
+      .setDescription(
+        `สวัสดี ${member}!\n${cfg.VERIFY_EMBED_DESC}`
+      )
+      .setThumbnail(member.user.displayAvatarURL());
 
-  const embed = new EmbedBuilder()
-    .setColor(0x5865f2)
-    .setTitle("👋 ยินดีต้อนรับ!")
-    .setDescription(
-      `สวัสดี ${member}!\nกดปุ่มด้านล่างเพื่อยืนยันตัวตนและเข้าถึงห้องทั้งหมด`
-    )
-    .setThumbnail(member.user.displayAvatarURL())
-    .setFooter({ text: "กรอกข้อมูลให้ครบเพื่อรับยศ" });
+    const button = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId("open_verify_modal")
+        .setLabel(cfg.VERIFY_BUTTON_LABEL)
+        .setStyle(resolveButtonStyle(cfg.VERIFY_BUTTON_COLOR))
+    );
 
-  const button = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId("open_verify_modal")
-      .setLabel("✅ ยืนยันตัวตน")
-      .setStyle(ButtonStyle.Primary)
-  );
-
-  await verifyChannel.send({ embeds: [embed], components: [button] });
+    await verifyChannel.send({ embeds: [embed], components: [button] });
+  }
 });
 
-// ─── ส่ง verify embed ด้วยคำสั่ง !setup (Admin เท่านั้น) ────
+// ─── สมาชิกออกจาก server ────────────────────────────────────
+client.on("guildMemberRemove", async (member) => {
+  const cfg = loadConfig();
+  if (!cfg.GOODBYE_ENABLED) return;
+
+  const goodbyeChannel = member.guild.channels.cache.find(
+    (c) => c.name === cfg.GOODBYE_CHANNEL_NAME
+  );
+  if (!goodbyeChannel) return;
+
+  const embed = new EmbedBuilder()
+    .setColor(parseInt(cfg.GOODBYE_COLOR.replace("#", ""), 16))
+    .setTitle(cfg.GOODBYE_TITLE)
+    .setDescription(formatMsg(cfg.GOODBYE_MESSAGE, member));
+
+  if (cfg.GOODBYE_SHOW_AVATAR) {
+    embed.setThumbnail(member.user.displayAvatarURL());
+  }
+  if (cfg.GOODBYE_IMAGE) {
+    embed.setImage(cfg.GOODBYE_IMAGE);
+  }
+
+  await goodbyeChannel.send({ embeds: [embed] });
+});
+
+// ─── คำสั่ง !setup (Admin เท่านั้น) ─────────────────────────
 client.on("messageCreate", async (message) => {
   if (message.content !== "!setup") return;
   if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) return;
 
+  const cfg = loadConfig();
+
   const embed = new EmbedBuilder()
-    .setColor(0x5865f2)
-    .setTitle("🎮 ยืนยันตัวตน")
-    .setDescription("กดปุ่มด้านล่างเพื่อกรอกข้อมูลและรับยศของคุณ!");
+    .setColor(parseInt(cfg.VERIFY_EMBED_COLOR.replace("#", ""), 16))
+    .setTitle(cfg.VERIFY_EMBED_TITLE)
+    .setDescription(cfg.VERIFY_EMBED_DESC);
 
   const button = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId("open_verify_modal")
-      .setLabel("✅ ยืนยันตัวตน")
-      .setStyle(ButtonStyle.Primary)
+      .setLabel(cfg.VERIFY_BUTTON_LABEL)
+      .setStyle(resolveButtonStyle(cfg.VERIFY_BUTTON_COLOR))
   );
 
   await message.channel.send({ embeds: [embed], components: [button] });
   await message.delete().catch(() => {});
 });
 
-// ─── กดปุ่ม ─────────────────────────────────────────────────
+// ─── Interactions ────────────────────────────────────────────
 client.on("interactionCreate", async (interaction) => {
+  const cfg = loadConfig();
 
   // 1) เปิด Modal
   if (interaction.isButton() && interaction.customId === "open_verify_modal") {
@@ -135,7 +226,7 @@ client.on("interactionCreate", async (interaction) => {
 
     const gameInput = new TextInputBuilder()
       .setCustomId("game_text")
-      .setLabel("เกมที่เล่น (กรอกก่อน แล้วเลือกยศด้านล่าง)")
+      .setLabel("เกมที่เล่น")
       .setStyle(TextInputStyle.Short)
       .setPlaceholder("เช่น Minecraft, Valorant, Roblox")
       .setRequired(false)
@@ -152,48 +243,45 @@ client.on("interactionCreate", async (interaction) => {
     return;
   }
 
-  // 2) รับ Modal → แสดง dropdown เลือกยศเกม
+  // 2) รับ Modal → dropdown เลือกยศเกม (ดึงจาก config)
   if (interaction.isModalSubmit() && interaction.customId === "verify_modal") {
     const name = interaction.fields.getTextInputValue("name");
     const age = interaction.fields.getTextInputValue("age");
     const gender = interaction.fields.getTextInputValue("gender");
     const gameText = interaction.fields.getTextInputValue("game_text");
 
-    // เก็บข้อมูลไว้ก่อน
     pendingData.set(interaction.user.id, { name, age, gender, gameText });
+
+    // สร้าง dropdown จาก GAME_ROLES ใน config
+    const gameRoles = cfg.GAME_ROLES || {};
+    const options = Object.entries(gameRoles).map(([key, val]) =>
+      new StringSelectMenuOptionBuilder()
+        .setLabel(`${val.emoji} ${val.name}`)
+        .setValue(key)
+    );
+
+    if (options.length === 0) {
+      await interaction.reply({
+        content: "⚠️ ยังไม่มียศเกมในระบบ กรุณาติดต่อ Admin",
+        ephemeral: true,
+      });
+      return;
+    }
 
     const select = new StringSelectMenuBuilder()
       .setCustomId("select_game_role")
       .setPlaceholder("🎮 เลือกเกมที่คุณเล่นหลัก")
-      .addOptions(
-        new StringSelectMenuOptionBuilder()
-          .setLabel("⛏️ Minecraft")
-          .setValue("minecraft"),
-        new StringSelectMenuOptionBuilder()
-          .setLabel("🔫 Valorant")
-          .setValue("valorant"),
-        new StringSelectMenuOptionBuilder()
-          .setLabel("🧙 League of Legends")
-          .setValue("lol"),
-        new StringSelectMenuOptionBuilder()
-          .setLabel("🟥 Roblox")
-          .setValue("roblox"),
-        new StringSelectMenuOptionBuilder()
-          .setLabel("🎮 เกมอื่นๆ")
-          .setValue("other")
-      );
-
-    const row = new ActionRowBuilder().addComponents(select);
+      .addOptions(options);
 
     await interaction.reply({
-      content: `✅ ได้รับข้อมูลแล้ว! เลือกยศเกมของคุณด้านล่าง:`,
-      components: [row],
+      content: "✅ ได้รับข้อมูลแล้ว! เลือกยศเกมของคุณด้านล่าง:",
+      components: [new ActionRowBuilder().addComponents(select)],
       ephemeral: true,
     });
     return;
   }
 
-  // 3) เลือกยศเกม → ให้ยศ + welcome
+  // 3) เลือกยศเกม → ให้ยศ + welcome embed
   if (
     interaction.isStringSelectMenu() &&
     interaction.customId === "select_game_role"
@@ -202,68 +290,70 @@ client.on("interactionCreate", async (interaction) => {
     const guild = interaction.guild;
     const selectedGame = interaction.values[0];
     const data = pendingData.get(interaction.user.id) || {};
+    const gameRoles = cfg.GAME_ROLES || {};
+    const gameInfo = gameRoles[selectedGame];
+
+    if (!gameInfo) {
+      await interaction.update({ content: "⚠️ ไม่พบยศเกมนี้", components: [] });
+      return;
+    }
 
     // หา/สร้าง Member role
-    let memberRole = guild.roles.cache.find(
-      (r) => r.name === CONFIG.MEMBER_ROLE_NAME
-    );
+    let memberRole = guild.roles.cache.find((r) => r.name === cfg.MEMBER_ROLE_NAME);
     if (!memberRole) {
       memberRole = await guild.roles.create({
-        name: CONFIG.MEMBER_ROLE_NAME,
-        color: 0x57f287,
+        name: cfg.MEMBER_ROLE_NAME,
+        color: parseInt((cfg.MEMBER_ROLE_COLOR || "#57F287").replace("#", ""), 16),
         reason: "Auto-created by verify bot",
       });
     }
 
     // หา/สร้าง Game role
-    const gameRoleName = CONFIG.GAME_ROLES[selectedGame];
-    let gameRole = guild.roles.cache.find((r) => r.name === gameRoleName);
+    let gameRole = guild.roles.cache.find((r) => r.name === gameInfo.name);
     if (!gameRole) {
       gameRole = await guild.roles.create({
-        name: gameRoleName,
+        name: gameInfo.name,
+        color: parseInt((gameInfo.color || "#5865F2").replace("#", ""), 16),
         reason: "Auto-created by verify bot",
       });
     }
 
-    // ให้ยศ
     await member.roles.add([memberRole, gameRole]).catch(console.error);
-
-    // ลบข้อมูลชั่วคราว
     pendingData.delete(interaction.user.id);
 
-    // ยืนยันกับ user
-    const gameEmoji = {
-      minecraft: "⛏️",
-      valorant: "🔫",
-      lol: "🧙",
-      roblox: "🟥",
-      other: "🎮",
-    };
-
     await interaction.update({
-      content: `🎉 ยินดีต้อนรับ **${data.name}**! คุณได้รับยศ **${gameRoleName}** แล้ว`,
+      content: `🎉 ยินดีต้อนรับ **${data.name}**! คุณได้รับยศ **${gameInfo.name}** แล้ว`,
       components: [],
     });
 
-    // ส่งข้อความ welcome
+    // ส่ง Welcome embed
     const welcomeChannel = guild.channels.cache.find(
-      (c) => c.name === CONFIG.WELCOME_CHANNEL_NAME
+      (c) => c.name === cfg.WELCOME_CHANNEL_NAME
     );
     if (welcomeChannel) {
       const welcomeEmbed = new EmbedBuilder()
-        .setColor(0x57f287)
-        .setTitle(`${gameEmoji[selectedGame]} สมาชิกใหม่มาถึงแล้ว!`)
-        .setDescription(`ยินดีต้อนรับ ${member} เข้าสู่เซิร์ฟเวอร์! 🎊`)
+        .setColor(parseInt(cfg.WELCOME_COLOR.replace("#", ""), 16))
+        .setTitle(cfg.WELCOME_TITLE)
+        .setDescription(formatMsg(cfg.WELCOME_MESSAGE, member))
         .addFields(
           { name: "ชื่อ", value: data.name || "-", inline: true },
           { name: "อายุ", value: data.age || "-", inline: true },
           { name: "เพศ", value: data.gender || "-", inline: true },
-          { name: "เกม", value: gameRoleName, inline: true }
+          { name: "เกม", value: `${gameInfo.emoji} ${gameInfo.name}`, inline: true }
         )
-        .setThumbnail(interaction.user.displayAvatarURL())
         .setTimestamp();
 
-      await welcomeChannel.send({ embeds: [welcomeEmbed] });
+      if (cfg.WELCOME_SHOW_AVATAR) {
+        welcomeEmbed.setThumbnail(interaction.user.displayAvatarURL());
+      }
+      if (cfg.WELCOME_IMAGE) {
+        welcomeEmbed.setImage(cfg.WELCOME_IMAGE);
+      }
+      if (cfg.MENTION_USER) {
+        await welcomeChannel.send({ content: `${member}`, embeds: [welcomeEmbed] });
+      } else {
+        await welcomeChannel.send({ embeds: [welcomeEmbed] });
+      }
     }
   }
 });
