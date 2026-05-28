@@ -395,9 +395,10 @@ client.on("guildMemberAdd", async (member) => {
     const embed = new EmbedBuilder()
       .setColor(parseInt(cfg.VERIFY_EMBED_COLOR.replace("#", ""), 16))
       .setTitle(cfg.VERIFY_EMBED_TITLE)
-      .setDescription(`สวัสดี ${member}!\n${cfg.VERIFY_EMBED_DESC}`)
-      .setThumbnail(member.user.displayAvatarURL());
+      .setDescription(`สวัสดี ${member}!\n${cfg.VERIFY_EMBED_DESC}`);
 
+    if (cfg.VERIFY_THUMBNAIL) embed.setThumbnail(cfg.VERIFY_THUMBNAIL);
+    else embed.setThumbnail(member.user.displayAvatarURL());
     if (cfg.VERIFY_IMAGE) embed.setImage(cfg.VERIFY_IMAGE);
 
     const button = new ActionRowBuilder().addComponents(
@@ -451,6 +452,7 @@ client.on("interactionCreate", async (interaction) => {
       .setTitle(cfg.VERIFY_EMBED_TITLE)
       .setDescription(cfg.VERIFY_EMBED_DESC);
 
+    if (cfg.VERIFY_THUMBNAIL) embed.setThumbnail(cfg.VERIFY_THUMBNAIL);
     if (cfg.VERIFY_IMAGE) embed.setImage(cfg.VERIFY_IMAGE);
 
     const button = new ActionRowBuilder().addComponents(
@@ -580,8 +582,10 @@ client.on("interactionCreate", async (interaction) => {
       return;
     }
 
-    // หา/สร้าง Member role
-    let memberRole = guild.roles.cache.find((r) => r.name === cfg.MEMBER_ROLE_NAME);
+    // หา Member role — ใช้ ID ก่อน, fallback ชื่อ, fallback สร้างใหม่
+    let memberRole = cfg.MEMBER_ROLE_ID
+      ? guild.roles.cache.get(cfg.MEMBER_ROLE_ID)
+      : guild.roles.cache.find((r) => r.name === cfg.MEMBER_ROLE_NAME);
     if (!memberRole) {
       memberRole = await guild.roles.create({
         name: cfg.MEMBER_ROLE_NAME,
@@ -590,8 +594,10 @@ client.on("interactionCreate", async (interaction) => {
       });
     }
 
-    // หา/สร้าง Game role
-    let gameRole = guild.roles.cache.find((r) => r.name === gameInfo.name);
+    // หา Game role — ใช้ roleId ก่อน, fallback ชื่อ, fallback สร้างใหม่
+    let gameRole = gameInfo.roleId
+      ? guild.roles.cache.get(gameInfo.roleId)
+      : guild.roles.cache.find((r) => r.name === gameInfo.name);
     if (!gameRole) {
       gameRole = await guild.roles.create({
         name: gameInfo.name,
