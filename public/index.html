@@ -1016,17 +1016,17 @@
 <script>
 // ── Session Token Management ──────────────────────────────────
 let SESSION_TOKEN = new URLSearchParams(window.location.search).get('token')
-                 || sessionStorage.getItem('bot_token');
+                 || localStorage.getItem('bot_token');
 
 function redirectToLogin() {
-  sessionStorage.removeItem('bot_token');
+  localStorage.removeItem('bot_token');
   window.location.href = '/login.html';
 }
 
 if (!SESSION_TOKEN) {
   redirectToLogin();
 }  else {
-  sessionStorage.setItem('bot_token', SESSION_TOKEN);
+  localStorage.setItem('bot_token', SESSION_TOKEN);
   // Clean token from URL without reload
   const url = new URL(window.location);
   url.searchParams.delete('token');
@@ -1037,7 +1037,7 @@ function authFetch(url, options = {}) {
   options.headers = { ...(options.headers || {}), 'x-session-token': SESSION_TOKEN };
   return fetch(url, options).then(res => {
     if (res.status === 401) {
-      sessionStorage.removeItem('bot_token');
+      localStorage.removeItem('bot_token');
       // แสดง overlay แล้ว redirect
       const ov = document.createElement('div');
       ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:16px;color:white;font-size:16px';
