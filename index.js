@@ -566,16 +566,17 @@ client.on("interactionCreate", async (interaction) => {
       return;
     }
 
-    // หา Member role — ใช้ ID ก่อน, fallback ชื่อ, fallback สร้างใหม่
-    let memberRole = cfg.MEMBER_ROLE_ID
-      ? guild.roles.cache.get(cfg.MEMBER_ROLE_ID)
-      : guild.roles.cache.find((r) => r.name === cfg.MEMBER_ROLE_NAME);
+    // หา Member role — ใช้ MEMBER_ROLE_ID ก่อน (แนะนำ), fallback ชื่อ
+    // ⚠️ ถ้าไม่เจอ = ไม่ยัดยศ member (ป้องกันสร้างยศซ้ำ)
+    let memberRole = null;
+    if (cfg.MEMBER_ROLE_ID) {
+      memberRole = guild.roles.cache.get(cfg.MEMBER_ROLE_ID);
+    }
+    if (!memberRole && cfg.MEMBER_ROLE_NAME) {
+      memberRole = guild.roles.cache.find((r) => r.name === cfg.MEMBER_ROLE_NAME);
+    }
     if (!memberRole) {
-      memberRole = await guild.roles.create({
-        name: cfg.MEMBER_ROLE_NAME,
-        color: parseInt((cfg.MEMBER_ROLE_COLOR || "#57F287").replace("#", ""), 16),
-        reason: "Auto-created by verify bot",
-      });
+      console.warn(`⚠️ ไม่พบยศ Member (ID: ${cfg.MEMBER_ROLE_ID}, ชื่อ: ${cfg.MEMBER_ROLE_NAME}) — ข้าม member role`);
     }
 
     // หา Game role — ใช้ roleId ก่อน, fallback ชื่อ, fallback สร้างใหม่
@@ -590,7 +591,8 @@ client.on("interactionCreate", async (interaction) => {
       });
     }
 
-    await member.roles.add([memberRole, gameRole]).catch(console.error);
+    const rolesToAdd = [gameRole, memberRole].filter(Boolean);
+    await member.roles.add(rolesToAdd).catch(console.error);
     deletePendingData(interaction.user.id);
 
     await interaction.update({
