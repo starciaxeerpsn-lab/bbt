@@ -618,18 +618,24 @@ body::before {
 <div class="toast" id="toast"></div>
 
 <script>
+// รับ token จาก URL ?token= (กรณี OAuth callback ส่งมา)
+(function() {
+  const urlToken = new URLSearchParams(window.location.search).get('token');
+  if (urlToken) {
+    localStorage.setItem('session_token', urlToken);
+    // ลบ token ออกจาก URL โดยไม่ reload
+    history.replaceState(null, '', '/index.html');
+  }
+})();
+
 function getCookie(name) {
   const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
   return match ? match[2] : null;
 }
-const TOKEN = getCookie('session_token') || localStorage.getItem('session_token');
+const TOKEN = localStorage.getItem('session_token') || getCookie('session_token');
 if (TOKEN) localStorage.setItem('session_token', TOKEN);
-// ใช้ sessionStorage flag เพื่อกันวนซ้ำ: ถ้าไม่มี token ให้ redirect ไป login ได้แค่ครั้งเดียว
 if (!TOKEN) {
-  if (!sessionStorage.getItem('_redirecting')) {
-    sessionStorage.setItem('_redirecting', '1');
-    window.location.replace('/');
-  }
+  window.location.replace('/');
 }
 
 let cfg = {};
@@ -654,18 +660,9 @@ async function api(method, path, body) {
   });
   if (res.status === 401) {
     localStorage.removeItem('session_token');
+    sessionStorage.removeItem('_redirecting');
     document.cookie = 'session_token=; Max-Age=0; path=/';
-    document.body.innerHTML = `
-      <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#09080f;font-family:Sarabun,sans-serif">
-        <div style="text-align:center;color:#ede8f5">
-          <div style="font-size:48px;margin-bottom:16px">🔒</div>
-          <h2 style="font-size:22px;margin-bottom:8px">Session หมดอายุ</h2>
-          <p style="color:#7a6a8a;margin-bottom:24px">กรุณาเข้าสู่ระบบใหม่อีกครั้ง</p>
-          <a href="/auth/logout" style="background:linear-gradient(135deg,#ff6eb4,#e0307a);color:#fff;padding:12px 28px;border-radius:10px;text-decoration:none;font-size:16px;font-weight:600">
-            🔄 เข้าสู่ระบบใหม่
-          </a>
-        </div>
-      </div>`;
+    window.location.replace('/');
     return null;
   }
   return res.json();
