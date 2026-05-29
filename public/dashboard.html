@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Bot Panel</title>
+<script>
+  (function() {
+    // dashboard.html ทำหน้าที่เป็น redirect หลังจาก OAuth callback ส่ง token มา
+    var token = new URLSearchParams(window.location.search).get('token');
+    if (token) {
+      localStorage.setItem('session_token', token);
+    }
+    // redirect ไป index.html เสมอ (ถ้าไม่มี token ก็ปล่อย index.html จัดการเอง)
+    window.location.replace('/index.html');
+  })();
+</script>
+</head>
+<body></body>
+</html>

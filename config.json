@@ -1,0 +1,45 @@
+{
+  "VERIFY_CHANNEL_NAME": "verify",
+  "WELCOME_CHANNEL_NAME": "WELCOME",
+  "GOODBYE_CHANNEL_NAME": "GOODBYE",
+  "MEMBER_ROLE_ID": "",
+  "MEMBER_ROLE_NAME": "Member",
+  "MEMBER_ROLE_COLOR": "#ff6eb4",
+
+  "WELCOME_TITLE": "ยินดีต้อนรับ!",
+  "WELCOME_MESSAGE": "ยินดีต้อนรับ {user} เข้าสู่เซิร์ฟเวอร์ของเรา! 🎉",
+  "WELCOME_COLOR": "#ff6eb4",
+  "WELCOME_IMAGE": "",
+  "WELCOME_SHOW_AVATAR": true,
+  "MENTION_USER": true,
+  "WELCOME_THUMBNAIL": "[user]",
+
+  "GOODBYE_ENABLED": true,
+  "GOODBYE_TITLE": "ลาก่อน...",
+  "GOODBYE_MESSAGE": "{user} ได้ออกจากเซิร์ฟเวอร์แล้ว 😢",
+  "GOODBYE_COLOR": "#ff4f8b",
+  "GOODBYE_IMAGE": "",
+  "GOODBYE_SHOW_AVATAR": true,
+  "GOODBYE_THUMBNAIL": "[user]",
+
+  "VERIFY_EMBED_TITLE": "🌸 ยืนยันตัวตน",
+  "VERIFY_EMBED_DESC": "กดปุ่มด้านล่างเพื่อกรอกข้อมูลและรับยศของคุณ!",
+  "VERIFY_EMBED_COLOR": "#ff6eb4",
+  "VERIFY_BUTTON_LABEL": "✅ ยืนยันตัวตน",
+  "VERIFY_BUTTON_COLOR": "Primary",
+  "VERIFY_IMAGE": "",
+  "VERIFY_THUMBNAIL": "[server]",
+
+  "ROLE_CATEGORIES": [
+    {
+      "id": "cat_games",
+      "name": "🎮 เกมที่เล่น",
+      "multi": true,
+      "roles": [
+        { "id": "r1", "emoji": "⛏️", "label": "Minecraft", "roleId": "", "roleName": "Minecraft", "color": "#57F287" },
+        { "id": "r2", "emoji": "🔫", "label": "Valorant",  "roleId": "", "roleName": "Valorant",  "color": "#FF4655" },
+        { "id": "r3", "emoji": "🟥", "label": "Roblox",    "roleId": "", "roleName": "Roblox",    "color": "#E53935" }
+      ]
+    }
+  ]
+}

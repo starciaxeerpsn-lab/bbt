@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bot Panel — เข้าสู่ระบบ</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=Chakra+Petch:wght@600;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Sarabun', sans-serif;
+  background: #0a0a0f;
+  color: #e8e0f0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(255,110,180,.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(200,50,130,.06) 0%, transparent 50%);
+  pointer-events: none;
+}
+.card {
+  background: rgba(20,12,28,.95);
+  border: 1px solid rgba(255,110,180,.2);
+  border-radius: 20px;
+  padding: 52px 44px;
+  text-align: center;
+  width: 100%;
+  max-width: 400px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 0 60px rgba(255,80,160,.08), 0 20px 60px rgba(0,0,0,.5);
+  position: relative; z-index: 1;
+}
+.logo {
+  font-family: 'Chakra Petch', sans-serif;
+  font-size: 32px; font-weight: 700;
+  background: linear-gradient(135deg, #ff6eb4, #ff3080, #c91070);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 4px;
+  letter-spacing: 2px;
+}
+.sub { font-size: 13px; color: #9080a0; margin-bottom: 40px; }
+.btn-discord {
+  display: inline-flex; align-items: center; gap: 12px;
+  background: linear-gradient(135deg, #ff6eb4, #e0307a);
+  color: #fff;
+  font-family: 'Sarabun', sans-serif; font-size: 16px; font-weight: 600;
+  padding: 14px 28px; border-radius: 12px; border: none; cursor: pointer;
+  text-decoration: none; transition: all .2s; width: 100%; justify-content: center;
+  box-shadow: 0 4px 20px rgba(255,80,150,.3);
+}
+.btn-discord:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(255,80,150,.45); }
+.btn-discord svg { width: 22px; height: 22px; fill: white; }
+.error {
+  background: rgba(255,60,100,.15); border: 1px solid rgba(255,60,100,.3);
+  border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #ff8080;
+  margin-bottom: 20px; display: none;
+}
+.error.show { display: block; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">✦ BOT PANEL</div>
+  <div class="sub">เข้าสู่ระบบด้วย Discord เพื่อจัดการบอท</div>
+  <div class="error" id="err"></div>
+  <a href="/auth/login" class="btn-discord">
+    <svg viewBox="0 0 127.14 96.36"><path d="M107.7 8.07A105.15 105.15 0 0081.47 0a72.06 72.06 0 00-3.36 6.83 97.68 97.68 0 00-29.11 0A72.37 72.37 0 0045.64 0a105.89 105.89 0 00-26.25 8.09C2.79 32.65-1.71 56.6.54 80.21a105.73 105.73 0 0032.17 16.15 77.7 77.7 0 006.89-11.11 68.42 68.42 0 01-10.85-5.18c.91-.66 1.8-1.34 2.66-2a75.57 75.57 0 0064.32 0c.87.71 1.76 1.39 2.66 2a68.68 68.68 0 01-10.87 5.19 77 77 0 006.89 11.1 105.25 105.25 0 0032.19-16.14c2.64-27.38-4.51-51.11-18.9-72.15zM42.45 65.69C36.18 65.69 31 60 31 53s5-12.74 11.43-12.74S54 46 53.89 53s-5.05 12.69-11.44 12.69zm42.24 0C78.41 65.69 73.25 60 73.25 53s5-12.74 11.44-12.74S96.23 46 96.12 53s-5.04 12.69-11.43 12.69z"/></svg>
+    เข้าสู่ระบบด้วย Discord
+  </a>
+</div>
+<script>
+// ล้าง redirect flags ทุกครั้งที่โหลดหน้า login
+try {
+  sessionStorage.removeItem('_redirecting');
+  sessionStorage.removeItem('_no_token');
+  localStorage.removeItem('session_token');
+  document.cookie = 'session_token=; Max-Age=0; path=/';
+} catch(e) {}
+
+const err = new URLSearchParams(location.search).get('error');
+if (err) {
+  const msgs = { not_admin:'คุณไม่มีสิทธิ์ Admin ในเซิร์ฟเวอร์ที่บอทอยู่', token_failed:'ไม่สามารถยืนยันตัวตนได้', oauth_error:'เกิดข้อผิดพลาดในการเข้าสู่ระบบ' };
+  const el = document.getElementById('err');
+  el.textContent = msgs[err] || 'เกิดข้อผิดพลาด: ' + err;
+  el.classList.add('show');
+}
+</script>
+</body>
+</html>
