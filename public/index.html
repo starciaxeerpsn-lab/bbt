@@ -618,32 +618,29 @@ body::before {
 <div class="toast" id="toast"></div>
 
 <script>
-// รับ token จาก URL ?token= (กรณี OAuth callback ส่งมา)
+// รับ token จาก URL หลัง OAuth login
 (function() {
-  const urlToken = new URLSearchParams(window.location.search).get('token');
-  if (urlToken) {
-    localStorage.setItem('session_token', urlToken);
-    sessionStorage.removeItem('auth_redirect');
-    // ลบ token ออกจาก URL โดยไม่ reload
-    history.replaceState(null, '', '/index.html');
-  }
+  try {
+    var t = new URLSearchParams(window.location.search).get('token');
+    if (t) {
+      localStorage.setItem('session_token', t);
+      history.replaceState(null, '', '/index.html');
+    }
+  } catch(e) {}
 })();
 
 function getCookie(name) {
-  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-  return match ? match[2] : null;
+  var m = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+  return m ? m[2] : null;
 }
-const TOKEN = localStorage.getItem('session_token') || getCookie('session_token');
-if (TOKEN) localStorage.setItem('session_token', TOKEN);
+
+var TOKEN = localStorage.getItem('session_token') || getCookie('session_token');
+
 if (!TOKEN) {
-  // กัน redirect วนซ้ำ: ถ้าเพิ่ง redirect ไปแล้วให้หยุด
-  if (sessionStorage.getItem('auth_redirect')) {
-    sessionStorage.removeItem('auth_redirect');
-    document.body.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#09080f;font-family:Sarabun,sans-serif;color:#ede8f5;flex-direction:column;gap:16px"><div style="font-size:48px">🔒</div><p>กรุณาเข้าสู่ระบบ</p><a href="/" style="background:linear-gradient(135deg,#ff6eb4,#e0307a);color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:600">เข้าสู่ระบบ</a></div>';
-  } else {
-    sessionStorage.setItem('auth_redirect', '1');
-    window.location.replace('/');
-  }
+  // หยุด JS ทั้งหมด แล้วไปหน้า login
+  document.body.innerHTML = '';
+  window.location.href = '/';
+  throw new Error('No session');
 }
 
 let cfg = {};
@@ -1019,10 +1016,10 @@ function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').
 // ── Logout ───────────────────────────────────────────────────
 function doLogout(e) {
   if (e) e.preventDefault();
+  var t = TOKEN;
   localStorage.removeItem('session_token');
-  sessionStorage.removeItem('_redirecting');
   document.cookie = 'session_token=; Max-Age=0; path=/';
-  window.location.replace('/auth/logout?token=' + TOKEN);
+  window.location.href = '/auth/logout' + (t ? '?token=' + t : '');
 }
 const _logoutBtn = document.getElementById('logout-btn');
 if (_logoutBtn) {
