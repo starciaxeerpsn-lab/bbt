@@ -649,7 +649,7 @@ async function api(method, path, body) {
     method, headers: { 'Content-Type': 'application/json', 'x-session-token': TOKEN },
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (res.status === 401) { location.href = '/'; return null; }
+  if (res.status === 401) { localStorage.removeItem('session_token'); window.location.replace('/'); return null; }
   return res.json();
 }
 
