@@ -623,6 +623,7 @@ body::before {
   const urlToken = new URLSearchParams(window.location.search).get('token');
   if (urlToken) {
     localStorage.setItem('session_token', urlToken);
+    sessionStorage.removeItem('auth_redirect');
     // ลบ token ออกจาก URL โดยไม่ reload
     history.replaceState(null, '', '/index.html');
   }
@@ -635,7 +636,14 @@ function getCookie(name) {
 const TOKEN = localStorage.getItem('session_token') || getCookie('session_token');
 if (TOKEN) localStorage.setItem('session_token', TOKEN);
 if (!TOKEN) {
-  window.location.replace('/');
+  // กัน redirect วนซ้ำ: ถ้าเพิ่ง redirect ไปแล้วให้หยุด
+  if (sessionStorage.getItem('auth_redirect')) {
+    sessionStorage.removeItem('auth_redirect');
+    document.body.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#09080f;font-family:Sarabun,sans-serif;color:#ede8f5;flex-direction:column;gap:16px"><div style="font-size:48px">🔒</div><p>กรุณาเข้าสู่ระบบ</p><a href="/" style="background:linear-gradient(135deg,#ff6eb4,#e0307a);color:#fff;padding:12px 24px;border-radius:10px;text-decoration:none;font-weight:600">เข้าสู่ระบบ</a></div>';
+  } else {
+    sessionStorage.setItem('auth_redirect', '1');
+    window.location.replace('/');
+  }
 }
 
 let cfg = {};
