@@ -88,7 +88,7 @@ app.get("/auth/login", (req, res) => {
 
 app.get("/auth/callback", async (req, res) => {
   const { code } = req.query;
-  if (!code) return res.redirect("/login.html?error=no_code");
+  if (!code) return res.redirect("/?error=no_code");
   try {
     const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
       method: "POST",
@@ -96,7 +96,7 @@ app.get("/auth/callback", async (req, res) => {
       body: new URLSearchParams({ client_id: DISCORD_CLIENT_ID, client_secret: DISCORD_CLIENT_SECRET, grant_type: "authorization_code", code, redirect_uri: REDIRECT_URI }),
     });
     const tokenData = await tokenRes.json();
-    if (!tokenData.access_token) return res.redirect("/login.html?error=token_failed");
+    if (!tokenData.access_token) return res.redirect("/?error=token_failed");
 
     const user = await (await fetch("https://discord.com/api/users/@me", { headers: { Authorization: `Bearer ${tokenData.access_token}` } })).json();
     const guilds = await (await fetch("https://discord.com/api/users/@me/guilds", { headers: { Authorization: `Bearer ${tokenData.access_token}` } })).json();
@@ -104,13 +104,14 @@ app.get("/auth/callback", async (req, res) => {
     const adminGuilds = guilds.filter((g) => (BigInt(g.permissions) & BigInt(0x8)) !== BigInt(0));
     const botGuildIds = [...client.guilds.cache.keys()];
     const matchedGuild = adminGuilds.find((g) => botGuildIds.includes(g.id));
-    if (!matchedGuild) return res.redirect("/login.html?error=not_admin");
+    if (!matchedGuild) return res.redirect("/?error=not_admin");
 
     const token = await createSession({ userId: user.id, username: user.username, avatar: user.avatar, guildId: matchedGuild.id, guildName: matchedGuild.name });
-    res.redirect(`/dashboard.html?token=${token}`);
+    res.cookie("session_token", token, { httpOnly: false, maxAge: 1000 * 60 * 60 * 24 * 30, sameSite: "lax" });
+    res.redirect("/index.html");
   } catch (err) {
     console.error("OAuth error:", err);
-    res.redirect("/login.html?error=oauth_error");
+    res.redirect("/?error=oauth_error");
   }
 });
 
