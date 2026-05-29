@@ -665,9 +665,8 @@ async function api(method, path, body) {
   });
   if (res.status === 401) {
     localStorage.removeItem('session_token');
-    sessionStorage.removeItem('_redirecting');
     document.cookie = 'session_token=; Max-Age=0; path=/';
-    window.location.replace('/');
+    window.location.href = '/';
     return null;
   }
   return res.json();
