@@ -47,8 +47,8 @@ body{background:var(--bg);color:var(--tx);font-family:'Noto Sans Thai',sans-seri
 /* SIDEBAR */
 .sb{position:sticky;top:0;height:100vh;width:var(--sbw);flex-shrink:0;background:var(--bg2);border-right:1px solid var(--b1);display:flex;flex-direction:column;z-index:20;overflow:hidden}
 .sb::after{content:'';position:absolute;top:0;left:0;bottom:0;width:1px;background:linear-gradient(180deg,var(--pk) 0%,transparent 60%);pointer-events:none}
-.sb-logo-area{padding:0;text-align:center;border-bottom:1px solid var(--b1);background:linear-gradient(160deg,#1a0a10 0%,#0d0d0d 100%)}
-.sb-logo-img{width:150px;height:auto;display:block;margin:0 auto;padding:16px 0 8px;filter:drop-shadow(0 0 18px rgba(255,61,120,.5))}
+.sb-logo-area{padding:0;text-align:center;border-bottom:1px solid var(--b1);background:#0d0d0d}
+.sb-logo-img{width:150px;height:auto;display:block;margin:0 auto;padding:16px 0 8px;filter:drop-shadow(0 0 18px rgba(255,61,120,.5));mix-blend-mode:lighten;background:transparent}
 .sb-guild{font-family:'Space Mono',monospace;font-size:9px;color:var(--tx3);text-align:center;letter-spacing:2px;padding-bottom:12px;text-transform:uppercase}
 .sb-status{display:flex;justify-content:center;padding:8px 14px;border-bottom:1px solid var(--b1)}
 .sb-online{display:inline-flex;align-items:center;gap:6px;background:var(--gr-dim);border:1px solid var(--gr-border);border-radius:20px;padding:3px 11px;font-size:11px;color:var(--gr);font-weight:700;font-family:'Space Mono',monospace}
@@ -963,4 +963,25 @@ function closeAllDD(exceptKey){Object.keys(ddState).forEach(k=>{if(k===exceptKey
 function filterDD(key,q){renderDDOpts(key,q.toLowerCase());}
 function renderDDOpts(key,q){var st=ddState[key];if(!st)return;var el=document.getElementById(key+'-dd-opts');if(!el)return;var filtered=st.roles.filter(r=>!q||r.name.toLowerCase().includes(q));if(!filtered.length){el.innerHTML='<div class="dd-empty">ไม่พบยศ</div>';return;}el.innerHTML='';filtered.forEach(r=>{var hex=r.color?'#'+r.color.toString(16).padStart(6,'0'):'#ff3d78';var isSel=st.selected.has(r.id);var div=document.createElement('div');div.className='role-dd-opt'+(isSel?' sel':'');div.innerHTML='<span class="rdo-dot" style="background:'+hex+'"></span><span style="color:'+hex+';font-weight:700">'+esc(r.name)+'</span>';div.onclick=()=>selectDDOpt(key,r);el.appendChild(div);});}
 function selectDDOpt(key,role){var st=ddState[key];if(!st)return;if(st.single){st.selected.clear();st.selected.add(role.id);var m=document.getElementById(key+'-dd-menu');var t=document.getElementById(key+'-dd-trigger');if(m)m.classList.remove('open');if(t)t.classList.remove('open');}else{if(st.selected.has(role.id))st.selected.delete(role.id);else st.selected.add(role.id);}updateDDDisplay(key);renderDDOpts(key,'');st.onChange(Array.from(st.selected));}
-function 
+function setDDSelection(key,ids){var st=ddState[key];if(!st)return;st.selected=new Set(ids);updateDDDisplay(key);renderDDOpts(key,'');}
+function updateDDDisplay(key){var st=ddState[key];if(!st)return;var el=document.getElementById(key+'-dd-display');if(!el)return;var sel=Array.from(st.selected).map(id=>{var r=st.roles.find(x=>x.id===id);return r;}).filter(Boolean);if(!sel.length){el.innerHTML='<span class="placeholder-txt">— เลือกยศ —</span>';return;}el.innerHTML=sel.map(r=>{var hex=r.color?'#'+r.color.toString(16).padStart(6,'0'):'#ff3d78';return '<span class="role-tag" style="color:'+hex+';border-color:'+hex+'44;background:'+hex+'18"><span class="rdo-dot" style="background:'+hex+'"></span>'+r.name+'</span>';}).join('');}
+
+document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('logout-btn').onclick=function(e){
+    e.preventDefault();
+    localStorage.removeItem('session_token');
+    document.cookie='session_token=; Max-Age=0; path=/';
+    window.location.href='/auth/login';
+  };
+  document.addEventListener('click',function(e){
+    if(!e.target.closest('.role-dd-wrap'))closeAllDD();
+  });
+  load().then(function(){
+    loadStatus();
+    loadChannels(false);
+    loadAllRoles(false);
+  });
+});
+</script>
+</body>
+</html>
