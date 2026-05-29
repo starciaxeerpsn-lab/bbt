@@ -501,10 +501,7 @@
 
       <div class="nav-section">ระบบยศ</div>
       <div class="nav-item" onclick="showPage('rolebtn',this)">
-        <span class="nav-icon">🎛️</span> ปุ่มรับยศ
-      </div>
-      <div class="nav-item" onclick="showPage('roles',this)">
-        <span class="nav-icon">🎮</span> ยศเกม (Dropdown)
+        <span class="nav-icon">🎛️</span> จัดการยศ
       </div>
 
       <div class="nav-section">ตั้งค่า</div>
@@ -771,93 +768,37 @@
     <!-- ─── Role Buttons ─────────────────────────────── -->
     <div id="page-rolebtn" class="page">
       <div class="page-header">
-        <div class="page-title">🎛️ ปุ่มรับยศ</div>
-        <div class="page-sub">ออกแบบปุ่มกดรับยศ — แต่ละปุ่มผูกกับยศใน Discord</div>
+        <div class="page-title">🎛️ จัดการยศ</div>
+        <div class="page-sub">ปุ่มรับยศ และยศเกม (Dropdown ตอน verify) — จัดการในที่เดียว</div>
       </div>
 
+      <!-- ── โหลดยศจาก Discord ── -->
       <div class="card">
         <div class="card-title"><span>🔄</span> ดึงยศจาก Discord</div>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-          <button class="btn btn-success" onclick="fetchDiscordRoles()">
+          <button class="btn btn-success" onclick="fetchAllRoles()">
             <span id="fetch-spin" style="display:none" class="loading-spin"></span>
             🔄 โหลดยศจาก Discord
           </button>
-          <span style="font-size:13px;color:var(--muted)" id="roles-loaded-hint">กดปุ่มเพื่อดึงรายการยศทั้งหมดจากเซิร์ฟเวอร์</span>
+          <span style="font-size:13px;color:var(--muted)" id="roles-loaded-hint">กดเพื่อดึงยศทั้งหมดจากเซิร์ฟเวอร์</span>
         </div>
         <div class="roles-fetched" id="roles-fetched-list"></div>
       </div>
 
-      <div class="card">
-        <div class="card-title"><span>🔘</span> ปุ่มทั้งหมด</div>
-
-        <div style="display:grid;grid-template-columns:60px 1fr 1fr 120px 36px;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:12px;font-size:11px;color:var(--muted)">
-          <div style="text-align:center">Emoji</div>
-          <div>ข้อความปุ่ม</div>
-          <div>ยศที่จะได้รับ (ชื่อ)</div>
-          <div>สีปุ่ม</div>
-          <div></div>
-        </div>
-
-        <div class="role-btn-list" id="rolebtn-list"></div>
-
-        <!-- Add new -->
-        <div class="add-row" style="grid-template-columns:60px 1fr 1fr 120px 80px;margin-top:12px">
-          <input type="text" id="rb-new-emoji" placeholder="🎮" maxlength="4" style="text-align:center;font-size:18px">
-          <input type="text" id="rb-new-label" placeholder="กดเพื่อรับยศ...">
-          <input type="text" id="rb-new-role" placeholder="ชื่อยศ (เช่น Member)">
-          <select id="rb-new-color">
-            <option value="primary">🔵 Primary</option>
-            <option value="success">🟢 Success</option>
-            <option value="danger">🔴 Danger</option>
-            <option value="secondary">⚪ Secondary</option>
-          </select>
-          <button class="btn btn-success" onclick="addRoleBtn()" style="padding:8px 12px">+ เพิ่ม</button>
-        </div>
-        <div class="hint info" style="margin-top:10px">💡 ชื่อยศต้องตรงกับยศใน Discord <b>ทุกตัวอักษร</b> — กด "โหลดยศ" แล้วคลิกเพื่อเติมชื่ออัตโนมัติ</div>
-      </div>
-
-      <!-- Preview -->
-      <div class="card">
-        <div class="card-title"><span>👁</span> ตัวอย่างปุ่มใน Discord</div>
-        <div style="background:#2b2d31;border-radius:8px;padding:16px">
-          <div style="font-size:13px;color:#b5bac1;margin-bottom:10px">เลือกยศที่ต้องการรับ:</div>
-          <div class="dc-buttons" id="rolebtn-preview"></div>
-        </div>
-      </div>
-
-      <div class="btn-row">
-        <button class="btn btn-primary" onclick="saveConfig()">💾 บันทึก</button>
-        <button class="btn btn-ghost" onclick="loadFromServer()">↺ รีเซ็ต</button>
-      </div>
-    </div>
-
-    <!-- ─── Roles (Game Dropdown) ─────────────────── -->
-    <div id="page-roles" class="page">
-      <div class="page-header">
-        <div class="page-title">🎮 ยศเกม (Dropdown)</div>
-        <div class="page-sub">จัดการยศ Member และยศเกมใน dropdown ตอน verify</div>
-      </div>
-
+      <!-- ── ยศ Member หลัก ── -->
       <div class="card">
         <div class="card-title"><span>👑</span> ยศ Member หลัก</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:12px">เลือกยศที่มีอยู่แล้วใน Discord — บอทจะไม่สร้างยศซ้ำ</div>
-        <div class="form-grid">
-          <div class="field" style="grid-column:1/-1">
-            <label>เลือกยศ Member จาก Discord</label>
-            <div style="display:flex;gap:8px;align-items:center">
-              <select id="r-member-role-id" style="flex:1" onchange="onMemberRolePick()">
-                <option value="">— เลือกยศ —</option>
-              </select>
-              <button class="btn btn-ghost" onclick="loadRoleOptions()" style="white-space:nowrap;padding:8px 12px">🔄 โหลด</button>
-            </div>
-            <div id="r-member-role-tag" style="margin-top:6px;font-size:12px;color:var(--muted)"></div>
-          </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">ยศที่ member ได้รับทันทีหลัง verify — กด "โหลดยศ" แล้วคลิกเลือก</div>
+        <div id="member-role-picker" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px"></div>
+        <div id="member-role-selected" style="font-size:13px;color:var(--muted);margin-bottom:10px">ยังไม่ได้เลือก</div>
+        <input type="hidden" id="r-member-role-id">
+        <div class="form-grid" style="margin-top:8px">
           <div class="field">
-            <label>ชื่อยศ Member (fallback ถ้าไม่เลือก)</label>
+            <label>ชื่อ fallback (ถ้าไม่เลือก)</label>
             <input type="text" id="r-member-name" placeholder="Member">
           </div>
           <div class="field">
-            <label>สียศ (ใช้ตอนสร้างใหม่เท่านั้น)</label>
+            <label>สีเวลาสร้างใหม่</label>
             <div class="color-row">
               <input type="text" id="r-member-color-text" placeholder="#57F287" maxlength="7">
               <input type="color" id="r-member-color" value="#57F287" oninput="syncColorPick(this,'r-member-color-text')" onchange="syncColorPick(this,'r-member-color-text')">
@@ -866,22 +807,53 @@
         </div>
       </div>
 
+      <!-- ── ปุ่มรับยศ ── -->
       <div class="card">
-        <div class="card-title"><span>🎮</span> ยศเกม</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:12px">กด 🔄 โหลด แล้วเลือกยศที่มีอยู่ในคอลัมน์ "ยศใน Discord" เพื่อไม่ให้บอทสร้างซ้ำ</div>
-        <div style="display:grid;grid-template-columns:36px 1fr 1fr 36px;gap:8px;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:8px;font-size:11px;color:var(--muted)">
-          <div style="text-align:center">Emoji</div>
-          <div>Label ใน Dropdown</div>
-          <div>ยศใน Discord (เลือก)</div>
-          <div></div>
+        <div class="card-title"><span>🔘</span> ปุ่มรับยศ</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">แต่ละปุ่มผูกกับยศใน Discord — กดที่ยศด้านบนเพื่อเลือก</div>
+
+        <div style="display:grid;grid-template-columns:52px 1fr auto 110px 34px;gap:10px;padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:10px;font-size:11px;color:var(--muted)">
+          <div style="text-align:center">Emoji</div><div>ข้อความปุ่ม</div><div>ยศที่ได้รับ</div><div>สีปุ่ม</div><div></div>
         </div>
-        <div class="game-list" id="game-list"></div>
-        <div class="add-row" style="grid-template-columns:36px 1fr 1fr 36px 80px;margin-top:10px">
+        <div class="role-btn-list" id="rolebtn-list"></div>
+
+        <div style="display:grid;grid-template-columns:52px 1fr auto 110px 80px;gap:10px;margin-top:12px;align-items:center">
+          <input type="text" id="rb-new-emoji" placeholder="🎮" maxlength="4" style="text-align:center;font-size:18px">
+          <input type="text" id="rb-new-label" placeholder="กดเพื่อรับยศ...">
+          <div id="rb-new-role-display" onclick="startRolePick('btn')" style="cursor:pointer;min-width:120px;padding:8px 12px;border-radius:8px;border:1px dashed var(--border);font-size:13px;color:var(--muted);white-space:nowrap">คลิกเพื่อเลือกยศ →</div>
+          <input type="hidden" id="rb-new-role">
+          <select id="rb-new-color">
+            <option value="primary">🔵 Primary</option>
+            <option value="success">🟢 Success</option>
+            <option value="danger">🔴 Danger</option>
+            <option value="secondary">⚪ Secondary</option>
+          </select>
+          <button class="btn btn-success" onclick="addRoleBtn()" style="padding:8px 12px">+ เพิ่ม</button>
+        </div>
+      </div>
+
+      <!-- ── ยศเกม (Dropdown) ── -->
+      <div class="card">
+        <div class="card-title"><span>🎮</span> ยศเกม (ตัวเลือก dropdown ตอน verify)</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px">กด "โหลดยศ" แล้วคลิกที่แถบยศเพื่อผูกกับเกม</div>
+
+        <div id="game-list"></div>
+
+        <div style="display:grid;grid-template-columns:42px 1fr 1fr 36px 80px;gap:10px;margin-top:10px;align-items:center">
           <input type="text" id="new-emoji" placeholder="🎯" maxlength="4" style="text-align:center;font-size:18px">
           <input type="text" id="new-name" placeholder="ชื่อยศ / ป้ายกำกับ">
           <input type="text" id="new-key" placeholder="key (เช่น csgo)">
-          <input type="color" id="new-color" value="#5865F2" title="สี (ใช้ตอนสร้างใหม่)">
+          <input type="color" id="new-color" value="#5865F2" title="สีเวลาสร้างใหม่">
           <button class="btn btn-success" onclick="addGame()" style="padding:8px 12px">+ เพิ่ม</button>
+        </div>
+      </div>
+
+      <!-- ── Preview ── -->
+      <div class="card">
+        <div class="card-title"><span>👁</span> ตัวอย่างปุ่มใน Discord</div>
+        <div style="background:#2b2d31;border-radius:8px;padding:16px">
+          <div style="font-size:13px;color:#b5bac1;margin-bottom:10px">เลือกยศที่ต้องการรับ:</div>
+          <div class="dc-buttons" id="rolebtn-preview"></div>
         </div>
       </div>
 
@@ -1342,23 +1314,30 @@ function renderRoleBtns() {
   if (preview) preview.innerHTML = '';
 
   (cfg.ROLE_BUTTONS || []).forEach((btn, i) => {
-    // list item
+    const colorOpts = ['primary','success','danger','secondary'].map(c =>
+      `<option value="${c}" ${btn.color===c?'selected':''}>${{primary:'🔵 Primary',success:'🟢 Success',danger:'🔴 Danger',secondary:'⚪ Secondary'}[c]}</option>`
+    ).join('');
+
+    // Role badge display
+    const roleColor = btn._roleColor ? `#${parseInt(btn._roleColor).toString(16).padStart(6,'0')}` : '#5865f2';
+    const roleBadge = btn.role
+      ? `<div onclick="startRolePick('btn',${i})" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:20px;background:${roleColor}22;border:1px solid ${roleColor};font-size:12px;white-space:nowrap;max-width:180px;overflow:hidden;text-overflow:ellipsis" title="คลิกเพื่อเปลี่ยน">
+          <span style="width:8px;height:8px;border-radius:50%;background:${roleColor};flex-shrink:0"></span>${btn.role}
+        </div>`
+      : `<div onclick="startRolePick('btn',${i})" style="cursor:pointer;padding:5px 10px;border-radius:20px;border:1px dashed var(--border);font-size:12px;color:var(--muted);white-space:nowrap">คลิกเลือกยศ →</div>`;
+
     const row = document.createElement('div');
     row.className = 'rbi-grid';
     row.dataset.idx = i;
-    const colorOpts = ['primary','success','danger','secondary'].map(c =>
-      `<option value="${c}" ${btn.color === c ? 'selected' : ''}>${{primary:'🔵 Primary',success:'🟢 Success',danger:'🔴 Danger',secondary:'⚪ Secondary'}[c]}</option>`
-    ).join('');
     row.innerHTML = `
       <input class="emoji-in" type="text" value="${btn.emoji||''}" placeholder="🎮" maxlength="4" onchange="updateRoleBtn(${i},'emoji',this.value)">
       <input type="text" value="${btn.label||''}" placeholder="ข้อความปุ่ม" onchange="updateRoleBtn(${i},'label',this.value)">
-      <input type="text" value="${btn.role||''}" placeholder="ชื่อยศใน Discord" onchange="updateRoleBtn(${i},'role',this.value)">
+      ${roleBadge}
       <select onchange="updateRoleBtn(${i},'color',this.value);renderRoleBtns()">${colorOpts}</select>
       <button class="btn-del" onclick="removeRoleBtn(${i})">✕</button>
     `;
     list.appendChild(row);
 
-    // preview button
     if (preview) {
       const pb = document.createElement('button');
       pb.className = `dc-btn ${btn.color || 'primary'}`;
@@ -1372,141 +1351,191 @@ function updateRoleBtn(idx, field, value) {
   if (!cfg.ROLE_BUTTONS[idx]) return;
   cfg.ROLE_BUTTONS[idx][field] = value;
 }
-
-function removeRoleBtn(idx) {
-  cfg.ROLE_BUTTONS.splice(idx, 1);
-  renderRoleBtns();
-}
+function removeRoleBtn(idx) { cfg.ROLE_BUTTONS.splice(idx, 1); renderRoleBtns(); }
 
 function addRoleBtn() {
   const emoji = document.getElementById('rb-new-emoji').value.trim() || '🎮';
   const label = document.getElementById('rb-new-label').value.trim();
-  const role = document.getElementById('rb-new-role').value.trim();
+  const role  = document.getElementById('rb-new-role').value.trim();
   const color = document.getElementById('rb-new-color').value;
   if (!label) return toast('ใส่ข้อความปุ่มด้วย', 'err');
-  if (!role) return toast('ใส่ชื่อยศด้วย', 'err');
+  if (!role)  return toast('เลือกยศด้วย', 'err');
   if (!cfg.ROLE_BUTTONS) cfg.ROLE_BUTTONS = [];
-  cfg.ROLE_BUTTONS.push({ emoji, label, role, color });
+  const picked = discordRoles.find(r => r.name === role);
+  cfg.ROLE_BUTTONS.push({ emoji, label, role, color, _roleColor: picked?.color || '' });
   renderRoleBtns();
   document.getElementById('rb-new-emoji').value = '';
   document.getElementById('rb-new-label').value = '';
-  document.getElementById('rb-new-role').value = '';
+  document.getElementById('rb-new-role').value  = '';
+  document.getElementById('rb-new-role-display').textContent = 'คลิกเพื่อเลือกยศ →';
+  document.getElementById('rb-new-role-display').style.cssText = 'cursor:pointer;min-width:120px;padding:8px 12px;border-radius:8px;border:1px dashed var(--border);font-size:13px;color:var(--muted);white-space:nowrap';
   toast(`เพิ่มปุ่ม ${label} แล้ว`);
 }
 
-// ── Fetch Discord Roles ─────────────────────────────────────
-async function fetchDiscordRoles() {
+// ── Role Picker (unified) ────────────────────────────────────
+// target: 'btn' (new btn), 'btn_edit:{idx}', 'member', 'game:{key}'
+let _rolePickTarget = null;
+
+function startRolePick(type, idx) {
+  if (type === 'btn') _rolePickTarget = idx !== undefined ? `btn_edit:${idx}` : 'btn';
+  if (type === 'member') _rolePickTarget = 'member';
+  if (type === 'game') _rolePickTarget = `game:${idx}`;
+  showRolePickerModal();
+}
+
+function showRolePickerModal() {
+  let modal = document.getElementById('role-picker-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'role-picker-modal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#0008;padding:16px';
+    modal.innerHTML = `
+      <div style="background:var(--bg2,#161b22);border:1px solid var(--border);border-radius:14px;width:100%;max-width:520px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden">
+        <div style="padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+          <div style="font-weight:600;font-size:15px">🎭 เลือกยศ</div>
+          <button onclick="closeRolePickerModal()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:4px 8px">✕</button>
+        </div>
+        <div style="padding:12px 20px;border-bottom:1px solid var(--border)">
+          <input type="text" id="role-picker-search" placeholder="ค้นหายศ..." oninput="filterRolePicker(this.value)"
+            style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg,#0d1117);color:var(--text);font-size:14px">
+        </div>
+        <div id="role-picker-list" style="overflow-y:auto;padding:12px 20px;display:flex;flex-wrap:wrap;gap:8px"></div>
+        <div style="padding:14px 20px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)">คลิกที่ยศเพื่อเลือก</div>
+      </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) closeRolePickerModal(); });
+  }
+  renderRolePickerList(discordRoles);
+  modal.style.display = 'flex';
+  setTimeout(() => document.getElementById('role-picker-search')?.focus(), 100);
+}
+
+function closeRolePickerModal() {
+  const m = document.getElementById('role-picker-modal');
+  if (m) m.style.display = 'none';
+}
+
+function filterRolePicker(q) {
+  const filtered = q ? discordRoles.filter(r => r.name.toLowerCase().includes(q.toLowerCase())) : discordRoles;
+  renderRolePickerList(filtered);
+}
+
+function renderRolePickerList(roles) {
+  const list = document.getElementById('role-picker-list');
+  if (!list) return;
+  list.innerHTML = '';
+  if (!roles.length) { list.innerHTML = '<div style="color:var(--muted);font-size:13px">ไม่พบยศ — กด "โหลดยศจาก Discord" ก่อน</div>'; return; }
+  roles.forEach(role => {
+    const hex = role.color ? `#${role.color.toString(16).padStart(6,'0')}` : '#5865f2';
+    const chip = document.createElement('div');
+    chip.style.cssText = `display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;cursor:pointer;font-size:13px;background:${hex}22;border:1px solid ${hex};transition:transform .1s,opacity .1s`;
+    if (role.isAdmin) { chip.style.opacity = '0.4'; chip.style.cursor = 'not-allowed'; chip.title = '🚫 ยศ Admin'; }
+    else { chip.onmouseenter = () => chip.style.transform = 'scale(1.05)'; chip.onmouseleave = () => chip.style.transform = ''; }
+    chip.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:${hex};flex-shrink:0"></span>${role.isAdmin?'🚫 ':''}${role.isDangerous?'⚠️ ':''}${role.name}`;
+    if (!role.isAdmin) chip.onclick = () => applyRolePick(role);
+    list.appendChild(chip);
+  });
+}
+
+function applyRolePick(role) {
+  const hex = role.color ? `#${role.color.toString(16).padStart(6,'0')}` : '#5865f2';
+  const target = _rolePickTarget;
+  closeRolePickerModal();
+
+  if (target === 'btn') {
+    document.getElementById('rb-new-role').value = role.name;
+    const disp = document.getElementById('rb-new-role-display');
+    if (disp) {
+      disp.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:${hex};display:inline-block;margin-right:6px"></span>${role.name}`;
+      disp.style.cssText = `cursor:pointer;display:inline-flex;align-items:center;min-width:120px;padding:8px 12px;border-radius:8px;background:${hex}22;border:1px solid ${hex};font-size:13px;white-space:nowrap`;
+    }
+    toast(`เลือก: ${role.name}`);
+  } else if (target && target.startsWith('btn_edit:')) {
+    const idx = parseInt(target.split(':')[1]);
+    if (cfg.ROLE_BUTTONS[idx]) { cfg.ROLE_BUTTONS[idx].role = role.name; cfg.ROLE_BUTTONS[idx]._roleColor = role.color; }
+    renderRoleBtns();
+    toast(`เปลี่ยนเป็น: ${role.name}`);
+  } else if (target === 'member') {
+    document.getElementById('r-member-role-id').value = role.id;
+    const sel = document.getElementById('member-role-selected');
+    if (sel) sel.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;background:${hex}22;border:1px solid ${hex};font-size:13px"><span style="width:8px;height:8px;border-radius:50%;background:${hex}"></span>✅ เลือก: ${role.name} (ID: ${role.id})</span>`;
+    toast(`Member role: ${role.name}`);
+  } else if (target && target.startsWith('game:')) {
+    const key = target.split(':')[1];
+    if (cfg.GAME_ROLES?.[key]) { cfg.GAME_ROLES[key].roleId = role.id; cfg.GAME_ROLES[key]._roleColor = role.color; }
+    renderGameList();
+    toast(`ผูกยศ ${role.name} กับเกม`);
+  }
+}
+
+// ── Fetch Discord Roles (unified) ─────────────────────────────
+let discordRoles = [];
+
+async function fetchAllRoles() {
   const spin = document.getElementById('fetch-spin');
   const hint = document.getElementById('roles-loaded-hint');
   const list = document.getElementById('roles-fetched-list');
   spin.style.display = 'inline-block';
   hint.textContent = 'กำลังดึงข้อมูล...';
-  list.innerHTML = '';
+  if (list) list.innerHTML = '';
   try {
     const res = await authFetch('/api/roles');
     const data = await res.json();
     spin.style.display = 'none';
-    if (!data.roles || !data.roles.length) {
-      hint.textContent = 'ไม่พบยศ หรือบอทยังไม่ได้เชื่อมต่อ';
-      return;
+    if (!data.roles || !data.roles.length) { hint.textContent = 'ไม่พบยศ หรือบอทยังไม่ได้เชื่อมต่อ'; return; }
+    discordRoles = data.roles;
+    hint.textContent = `พบ ${data.roles.length} ยศ — คลิกที่ยศด้านล่างเพื่อเลือกได้เลย`;
+
+    // Render pill list
+    if (list) {
+      list.innerHTML = '';
+      data.roles.forEach(role => {
+        const hex = role.color ? `#${role.color.toString(16).padStart(6,'0')}` : '#5865f2';
+        const pill = document.createElement('div');
+        pill.className = 'role-pill';
+        if (role.isAdmin) { pill.style.cssText = 'opacity:.4;cursor:not-allowed;border:1px solid #ed4245'; pill.title = '🚫 ยศ Admin'; }
+        else if (role.isDangerous) { pill.style.borderColor = '#faa61a'; pill.title = '⚠️ ยศมีสิทธิ์พิเศษ'; }
+        const dot = document.createElement('div'); dot.className = 'dot'; dot.style.background = hex;
+        const name = document.createElement('span'); name.textContent = (role.isAdmin?'🚫 ':role.isDangerous?'⚠️ ':'')+role.name;
+        pill.appendChild(dot); pill.appendChild(name);
+        if (!role.isAdmin) pill.onclick = () => { startRolePick('btn'); applyRolePick(role); };
+        list.appendChild(pill);
+      });
     }
-    hint.textContent = `พบ ${data.roles.length} ยศ — คลิกเพื่อเติมในช่องยศ`;
-    discordRoles = data.roles; // sync cache
-    data.roles.forEach(role => {
-      const pill = document.createElement('div');
-      pill.className = 'role-pill';
-      if (role.isAdmin) {
-        pill.style.cssText = 'opacity:.4;cursor:not-allowed;border:1px solid #ed4245';
-        pill.title = `🚫 ยศ Admin — ไม่ควรใช้กับบอท`;
-      } else if (role.isDangerous) {
-        pill.style.cssText = 'border:1px solid #faa61a';
-        pill.title = `⚠️ ยศนี้มีสิทธิ์พิเศษ — ระวังในการใช้`;
-      } else {
-        pill.title = `คลิกเพื่อใส่ "${role.name}" ในช่องยศ`;
-      }
-      const dot = document.createElement('div');
-      dot.className = 'dot';
-      dot.style.background = role.color ? `#${role.color.toString(16).padStart(6,'0')}` : '#5865f2';
-      const name = document.createElement('span');
-      name.textContent = (role.isAdmin ? '🚫 ' : role.isDangerous ? '⚠️ ' : '') + role.name;
-      pill.appendChild(dot);
-      pill.appendChild(name);
-      if (!role.isAdmin) {
-        pill.onclick = () => {
-          const inp = document.getElementById('rb-new-role');
-          if (inp) { inp.value = role.name; inp.focus(); }
-          toast((role.isDangerous ? '⚠️ ระวัง — ' : '') + `เลือกยศ: ${role.name}`);
-        };
-      }
-      list.appendChild(pill);
-    });
-  } catch(e) {
-    spin.style.display = 'none';
-    hint.textContent = 'โหลดไม่สำเร็จ: ' + e.message;
-  }
+    // re-populate member picker
+    renderMemberRolePicker();
+    // re-render game selects
+    renderGameList();
+  } catch(e) { spin.style.display = 'none'; hint.textContent = 'โหลดไม่สำเร็จ: ' + e.message; }
 }
 
-// ── Discord Roles cache ─────────────────────────────────────
-let discordRoles = [];
+// keep old name as alias for applyToUI calls
+async function fetchDiscordRoles() { return fetchAllRoles(); }
+async function loadRoleOptions() { return fetchAllRoles(); }
 
-async function loadRoleOptions() {
-  try {
-    const r = await authFetch('/api/roles');
-    const d = await r.json();
-    discordRoles = d.roles || [];
-    populateRoleSelects();
-    toast('โหลดยศสำเร็จ ' + discordRoles.length + ' ยศ');
-  } catch(e) { toast('โหลดยศไม่สำเร็จ', 'err'); }
-}
-
-function roleOptions(selectedId = '', allowAdmin = false) {
-  const safe = allowAdmin ? discordRoles : discordRoles.filter(r => !r.isAdmin);
-  const groups = { safe: [], danger: [] };
-  safe.forEach(r => r.isDangerous ? groups.danger.push(r) : groups.safe.push(r));
-
-  let html = `<option value="">— ไม่เลือก (สร้างใหม่) —</option>`;
-  if (groups.safe.length) {
-    html += `<optgroup label="✅ ยศปกติ">` +
-      groups.safe.map(r => `<option value="${r.id}" ${r.id === selectedId ? 'selected' : ''}>${r.name}</option>`).join('') +
-      `</optgroup>`;
-  }
-  if (groups.danger.length) {
-    html += `<optgroup label="⚠️ ยศมีสิทธิ์พิเศษ (ระวัง)">` +
-      groups.danger.map(r => `<option value="${r.id}" ${r.id === selectedId ? 'selected' : ''}>⚠️ ${r.name}</option>`).join('') +
-      `</optgroup>`;
-  }
-  if (!allowAdmin && discordRoles.some(r => r.isAdmin)) {
-    html += `<optgroup label="🚫 ซ่อน — ยศ Admin (อันตราย)"><option disabled>ถูกซ่อนเพื่อความปลอดภัย</option></optgroup>`;
-  }
-  return html;
-}
-
-function populateRoleSelects() {
-  // Member
-  const ms = document.getElementById('r-member-role-id');
-  if (ms) { const cur = ms.value; ms.innerHTML = roleOptions(cur || cfg.MEMBER_ROLE_ID || ''); updateMemberTag(); }
-  // Game roles
-  document.querySelectorAll('.game-role-select').forEach(sel => {
-    const key = sel.dataset.key;
-    const cur = cfg.GAME_ROLES?.[key]?.roleId || '';
-    sel.innerHTML = roleOptions(cur);
+function renderMemberRolePicker() {
+  const picker = document.getElementById('member-role-picker');
+  if (!picker) return;
+  picker.innerHTML = '';
+  const currentId = document.getElementById('r-member-role-id')?.value || cfg.MEMBER_ROLE_ID || '';
+  discordRoles.filter(r => !r.isAdmin).forEach(role => {
+    const hex = role.color ? `#${role.color.toString(16).padStart(6,'0')}` : '#5865f2';
+    const selected = role.id === currentId;
+    const chip = document.createElement('div');
+    chip.style.cssText = `display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;cursor:pointer;font-size:13px;background:${selected?hex:hex+'22'};border:1px solid ${hex};color:${selected?'#fff':'inherit'};transition:all .15s;${role.isDangerous?'border-style:dashed':''}`;
+    chip.innerHTML = `<span style="width:8px;height:8px;border-radius:50%;background:${hex};flex-shrink:0"></span>${role.isDangerous?'⚠️ ':''}${role.name}`;
+    chip.title = role.isDangerous ? '⚠️ ยศนี้มีสิทธิ์พิเศษ' : `เลือก: ${role.name}`;
+    chip.onclick = () => applyRolePick(role);
+    picker.appendChild(chip);
   });
-}
-
-function onMemberRolePick() { updateMemberTag(); }
-
-function updateMemberTag() {
-  const sel = document.getElementById('r-member-role-id');
-  const tag = document.getElementById('r-member-role-tag');
-  if (!sel || !tag) return;
-  const id = sel.value;
-  if (id) {
-    const role = discordRoles.find(r => r.id === id);
-    tag.textContent = role ? `✅ เลือก: ${role.name} (ID: ${id})` : `ID: ${id}`;
-    tag.style.color = 'var(--success, #57f287)';
-  } else {
-    tag.textContent = 'ไม่ได้เลือก — บอทจะค้นหาจากชื่อหรือสร้างใหม่';
-    tag.style.color = 'var(--muted)';
+  // Update selected display
+  const sel = document.getElementById('member-role-selected');
+  if (sel && currentId) {
+    const r = discordRoles.find(x => x.id === currentId);
+    if (r) {
+      const hex = r.color ? `#${r.color.toString(16).padStart(6,'0')}` : '#5865f2';
+      sel.innerHTML = `<span style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;background:${hex}22;border:1px solid ${hex};font-size:13px"><span style="width:8px;height:8px;border-radius:50%;background:${hex}"></span>✅ เลือก: ${r.name} (ID: ${r.id})</span>`;
+    }
   }
 }
 
@@ -1516,16 +1545,22 @@ function renderGameList() {
   if (!list) return;
   list.innerHTML = '';
   for (const [key, val] of Object.entries(cfg.GAME_ROLES || {})) {
+    const roleHex = val._roleColor ? `#${parseInt(val._roleColor).toString(16).padStart(6,'0')}` : '#5865f2';
+    const linkedRole = discordRoles.find(r => r.id === val.roleId);
+    const roleBadge = linkedRole
+      ? `<div onclick="startRolePick('game','${key}')" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;background:${roleHex}22;border:1px solid ${roleHex};font-size:12px;white-space:nowrap" title="คลิกเพื่อเปลี่ยน">
+          <span style="width:8px;height:8px;border-radius:50%;background:${roleHex}"></span>${linkedRole.name}
+         </div>`
+      : `<div onclick="startRolePick('game','${key}')" style="cursor:pointer;padding:5px 12px;border-radius:20px;border:1px dashed var(--border);font-size:12px;color:var(--muted);white-space:nowrap">คลิกผูกยศ →</div>`;
+
     const row = document.createElement('div');
     row.className = 'game-item';
     row.dataset.key = key;
-    row.style.cssText = 'display:grid;grid-template-columns:36px 1fr 1fr 36px;gap:8px;align-items:center;margin-bottom:6px';
+    row.style.cssText = 'display:grid;grid-template-columns:42px 1fr auto 34px;gap:10px;align-items:center;margin-bottom:8px;padding:8px;border-radius:8px;background:var(--card-inner,#0d1117)';
     row.innerHTML = `
       <input class="game-emoji-input" type="text" value="${val.emoji||''}" placeholder="🎮" maxlength="4" style="text-align:center;font-size:18px" onchange="updateGame('${key}','emoji',this.value)">
       <input type="text" value="${val.name||''}" placeholder="ชื่อยศ" onchange="updateGame('${key}','name',this.value)">
-      <select class="game-role-select" data-key="${key}" onchange="updateGame('${key}','roleId',this.value)">
-        ${roleOptions(val.roleId || '')}
-      </select>
+      ${roleBadge}
       <button class="btn-del" onclick="removeGame('${key}')">✕</button>
     `;
     list.appendChild(row);
@@ -1544,8 +1579,8 @@ function removeGame(key) {
 
 function addGame() {
   const emoji = document.getElementById('new-emoji').value.trim() || '🎮';
-  const name = document.getElementById('new-name').value.trim();
-  const key = document.getElementById('new-key').value.trim().toLowerCase().replace(/\s+/g,'_');
+  const name  = document.getElementById('new-name').value.trim();
+  const key   = document.getElementById('new-key').value.trim().toLowerCase().replace(/\s+/g,'_');
   const color = document.getElementById('new-color').value;
   if (!name || !key) return toast('กรอกชื่อและ key ด้วย', 'err');
   if (cfg.GAME_ROLES?.[key]) return toast('Key นี้มีอยู่แล้ว', 'err');
@@ -1553,9 +1588,9 @@ function addGame() {
   cfg.GAME_ROLES[key] = { name, emoji, color, roleId: '' };
   renderGameList();
   document.getElementById('new-emoji').value = '';
-  document.getElementById('new-name').value = '';
-  document.getElementById('new-key').value = '';
-  toast(`เพิ่มยศ ${name} แล้ว — กด 🔄 โหลด เพื่อเลือกยศจาก Discord`);
+  document.getElementById('new-name').value  = '';
+  document.getElementById('new-key').value   = '';
+  toast(`เพิ่มยศ ${name} แล้ว — คลิกที่ "คลิกผูกยศ" เพื่อผูกกับ Discord`);
 }
 
 // ── Load config from server ─────────────────────────────────
@@ -1659,18 +1694,15 @@ function applyToUI() {
   const mc = cfg.MEMBER_ROLE_COLOR || '#57F287';
   document.getElementById('r-member-color').value = mc;
   document.getElementById('r-member-color-text').value = mc;
-  // ถ้ามี discordRoles แล้ว ให้ set dropdown ทันที
-  const ms = document.getElementById('r-member-role-id');
-  if (ms) { ms.innerHTML = roleOptions(cfg.MEMBER_ROLE_ID || ''); updateMemberTag(); }
+  const mrid = document.getElementById('r-member-role-id');
+  if (mrid) mrid.value = cfg.MEMBER_ROLE_ID || '';
+  renderMemberRolePicker();
   renderGameList();
 
   // Channels
   document.getElementById('c-verify').value = cfg.VERIFY_CHANNEL_NAME || 'verify';
   document.getElementById('c-welcome').value = cfg.WELCOME_CHANNEL_NAME || 'WELCOME';
   document.getElementById('c-goodbye').value = cfg.GOODBYE_CHANNEL_NAME || 'GOODBYE';
-
-  // Game list
-  renderGameList();
 
   // Run previews
   updateWelcomePreview();
@@ -1706,7 +1738,6 @@ function collectFromUI() {
 
   cfg.MEMBER_ROLE_NAME = document.getElementById('r-member-name').value || 'Member';
   cfg.MEMBER_ROLE_COLOR = document.getElementById('r-member-color-text').value || document.getElementById('r-member-color').value;
-  cfg.MEMBER_ROLE_ID = document.getElementById('r-member-role-id')?.value || '';
 
   cfg.VERIFY_CHANNEL_NAME = document.getElementById('c-verify').value || 'verify';
   cfg.WELCOME_CHANNEL_NAME = document.getElementById('c-welcome').value || 'WELCOME';
@@ -1723,16 +1754,16 @@ function collectFromUI() {
     cfg.ROLE_BUTTONS[i].color = sel?.value || 'primary';
   });
 
-  // collect game edits
+  // collect game edits (roleId already updated live via applyRolePick)
   document.querySelectorAll('#game-list .game-item').forEach(row => {
     const key = row.dataset.key;
     if (!cfg.GAME_ROLES?.[key]) return;
     const inputs = row.querySelectorAll('input');
-    const sel = row.querySelector('.game-role-select');
     cfg.GAME_ROLES[key].emoji = inputs[0].value;
-    cfg.GAME_ROLES[key].name = inputs[1].value;
-    cfg.GAME_ROLES[key].roleId = sel?.value || '';
+    cfg.GAME_ROLES[key].name  = inputs[1].value;
+    // roleId is stored live
   });
+  cfg.MEMBER_ROLE_ID = document.getElementById('r-member-role-id')?.value || '';
 }
 
 // ── Save ────────────────────────────────────────────────────
