@@ -141,6 +141,15 @@ app.get("/api/roles", requireAuth, (req, res) => {
     .map((r) => ({ id: r.id, name: r.name, color: r.color, isAdmin: (BigInt(r.permissions.bitfield) & BigInt(0x8)) !== BigInt(0) }));
   res.json({ roles });
 });
+app.get("/api/channels", requireAuth, (req, res) => {
+  const guild = client.guilds.cache.get(req.session.guildId);
+  if (!guild) return res.json({ channels: [] });
+  const channels = guild.channels.cache
+    .filter((c) => c.type === 0) // text channels only
+    .sort((a, b) => a.rawPosition - b.rawPosition)
+    .map((c) => ({ id: c.id, name: c.name }));
+  res.json({ channels });
+});
 app.post("/api/upload", requireAuth, upload.single("image"), (req, res) => {
   if (!req.file) return res.json({ ok: false, error: "No file" });
   res.json({ ok: true, url: `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}` });
