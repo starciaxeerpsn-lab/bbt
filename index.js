@@ -107,7 +107,7 @@ app.get("/auth/callback", async (req, res) => {
     if (!matchedGuild) return res.redirect("/?error=not_admin");
 
     const token = await createSession({ userId: user.id, username: user.username, avatar: user.avatar, guildId: matchedGuild.id, guildName: matchedGuild.name });
-    res.cookie("session_token", token, { httpOnly: false, maxAge: 1000 * 60 * 60 * 24 * 30, sameSite: "lax" });
+    res.cookie("session_token", token, { httpOnly: false, maxAge: 1000 * 60 * 60 * 24 * 30, sameSite: "lax", secure: true });
     res.redirect("/index.html");
   } catch (err) {
     console.error("OAuth error:", err);
