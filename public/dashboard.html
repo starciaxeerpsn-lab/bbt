@@ -5,9 +5,7 @@
 <title>Bot Panel</title>
 <script>
   (function() {
-    // ถ้าอยู่ที่ index.html อยู่แล้ว ไม่ต้องทำอะไร
     if (window.location.pathname === '/index.html') return;
-
     var token = new URLSearchParams(window.location.search).get('token');
     if (token) {
       localStorage.setItem('session_token', token);
