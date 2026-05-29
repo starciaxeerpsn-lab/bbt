@@ -117,6 +117,7 @@ app.get("/auth/callback", async (req, res) => {
 
 app.get("/auth/logout", async (req, res) => {
   if (req.query.token) await deleteSession(req.query.token);
+  res.clearCookie("session_token", { path: "/" });
   res.redirect("/");
 });
 
