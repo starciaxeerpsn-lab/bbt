@@ -624,7 +624,13 @@ function getCookie(name) {
 }
 const TOKEN = getCookie('session_token') || localStorage.getItem('session_token');
 if (TOKEN) localStorage.setItem('session_token', TOKEN);
-if (!TOKEN) { window.location.replace('/'); }
+// ใช้ sessionStorage flag เพื่อกันวนซ้ำ: ถ้าไม่มี token ให้ redirect ไป login ได้แค่ครั้งเดียว
+if (!TOKEN) {
+  if (!sessionStorage.getItem('_redirecting')) {
+    sessionStorage.setItem('_redirecting', '1');
+    window.location.replace('/');
+  }
+}
 
 let cfg = {};
 let fetchedRoles = [];
@@ -1006,11 +1012,17 @@ async function handleUpload(input, urlId, zoneId, type) {
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
 // ── Logout ───────────────────────────────────────────────────
-document.getElementById('logout-btn').onclick = async (e) => {
-  e.preventDefault();
+function doLogout(e) {
+  if (e) e.preventDefault();
   localStorage.removeItem('session_token');
-  location.href = `/auth/logout?token=${TOKEN}`;
-};
+  sessionStorage.removeItem('_redirecting');
+  document.cookie = 'session_token=; Max-Age=0; path=/';
+  window.location.replace('/auth/logout?token=' + TOKEN);
+}
+const _logoutBtn = document.getElementById('logout-btn');
+if (_logoutBtn) {
+  _logoutBtn.addEventListener('click', doLogout);
+}
 
 // ── Init ─────────────────────────────────────────────────────
 (async () => {
