@@ -646,7 +646,22 @@ async function api(method, path, body) {
     method, headers: { 'Content-Type': 'application/json', 'x-session-token': TOKEN },
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (res.status === 401) { localStorage.removeItem('session_token'); document.cookie = 'session_token=; Max-Age=0'; window.location.replace('/'); return null; }
+  if (res.status === 401) {
+    localStorage.removeItem('session_token');
+    document.cookie = 'session_token=; Max-Age=0; path=/';
+    document.body.innerHTML = `
+      <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#09080f;font-family:Sarabun,sans-serif">
+        <div style="text-align:center;color:#ede8f5">
+          <div style="font-size:48px;margin-bottom:16px">🔒</div>
+          <h2 style="font-size:22px;margin-bottom:8px">Session หมดอายุ</h2>
+          <p style="color:#7a6a8a;margin-bottom:24px">กรุณาเข้าสู่ระบบใหม่อีกครั้ง</p>
+          <a href="/auth/logout" style="background:linear-gradient(135deg,#ff6eb4,#e0307a);color:#fff;padding:12px 28px;border-radius:10px;text-decoration:none;font-size:16px;font-weight:600">
+            🔄 เข้าสู่ระบบใหม่
+          </a>
+        </div>
+      </div>`;
+    return null;
+  }
   return res.json();
 }
 
