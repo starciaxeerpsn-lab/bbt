@@ -643,7 +643,22 @@ async function api(method, path, body) {
     method, headers: { 'Content-Type': 'application/json', 'x-session-token': TOKEN },
     body: body ? JSON.stringify(body) : undefined,
   });
-  if (res.status === 401) { localStorage.removeItem('session_token'); window.location.replace('/'); return null; }
+  if (res.status === 401) {
+    // ถ้าเพิ่ง redirect มา ให้ล้าง token แล้วไป login
+    // ป้องกัน loop โดยเช็คว่าเพิ่ง redirect มาหรือเปล่า
+    const lastRedirect = parseInt(sessionStorage.getItem('last_401_redirect') || '0');
+    const now = Date.now();
+    if (now - lastRedirect < 10000) {
+      // redirect ซ้ำภายใน 10 วินาที = loop → หยุด แสดง error แทน
+      console.error('401 loop detected — stopping redirect');
+      document.body.innerHTML = '<div style="color:#fff;font-family:sans-serif;padding:40px;text-align:center"><h2>❌ Session หมดอายุ</h2><p style="margin:16px 0;color:#aaa">กรุณา <a href="/auth/logout" style="color:#ff6eb4">คลิกที่นี่</a> เพื่อ login ใหม่</p></div>';
+      return null;
+    }
+    sessionStorage.setItem('last_401_redirect', now.toString());
+    localStorage.removeItem('session_token');
+    window.location.replace('/');
+    return null;
+  }
   return res.json();
 }
 
