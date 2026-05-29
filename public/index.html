@@ -618,9 +618,16 @@ body::before {
 <div class="toast" id="toast"></div>
 
 <script>
-const TOKEN = new URLSearchParams(location.search).get('token') || localStorage.getItem('session_token');
-if (!TOKEN) location.href = '/';
-else localStorage.setItem('session_token', TOKEN);
+// อ่าน token จาก localStorage เท่านั้น (dashboard.html จัดการ save ไว้แล้ว)
+const TOKEN = localStorage.getItem('session_token');
+if (!TOKEN) {
+  window.location.replace('/');
+  throw new Error('No session');
+}
+// ลบ token ออกจาก URL (ถ้ายังมี) โดยไม่ reload
+if (window.location.search) {
+  history.replaceState(null, '', window.location.pathname);
+}
 
 let cfg = {};
 let fetchedRoles = [];
