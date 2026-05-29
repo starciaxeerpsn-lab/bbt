@@ -3,985 +3,339 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Bot Panel</title>
+<title>Revolve Panel bot | Star Edition</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#08060f;
-  --surface:#0f0b1a;
-  --card:#150f22;
-  --card2:#1c1430;
-  --border:#2a1d3e;
-  --border2:#3d2a58;
-  --pk:#e040a0;
-  --pk2:#b8137a;
-  --pk3:#ff6ec7;
-  --pk-glow:rgba(224,64,160,.22);
-  --pk-dim:rgba(224,64,160,.1);
-  --pk-border:rgba(224,64,160,.28);
-  --green:#22c55e;
-  --green-dim:rgba(34,197,94,.12);
-  --green-border:rgba(34,197,94,.3);
-  --red:#f43f5e;
-  --red-dim:rgba(244,63,94,.1);
-  --text:#f0eaf8;
-  --text2:#b09ec8;
-  --text3:#6e5a8a;
-  --sb-w:235px;
+:root {
+  --bg: #050507;
+  --surface: #0d0d12;
+  --card: #14141d;
+  --card2: #1a1a26;
+  --border: #22222e;
+  --border2: #333344;
+  --pk: #ff2d95;
+  --pk2: #d41472;
+  --pk3: #ff7eb3;
+  --pk-glow: rgba(255, 45, 149, 0.25);
+  --pk-dim: rgba(255, 45, 149, 0.1);
+  --pk-border: rgba(255, 45, 149, 0.3);
+  --green: #22c55e;
+  --red: #f43f5e;
+  --text: #ffffff;
+  --text2: #b0b0cc;
+  --text3: #666677;
+  --sb-w: 260px;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
-body{background:var(--bg);color:var(--text);font-family:'Noto Sans Thai',sans-serif;font-size:14px;line-height:1.5;display:flex;min-height:100vh}
-body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:radial-gradient(ellipse 60% 40% at 0% 0%,rgba(200,30,140,.07) 0%,transparent 60%),
-             radial-gradient(ellipse 50% 50% at 100% 100%,rgba(120,0,100,.05) 0%,transparent 60%)}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans Thai', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Star Background */
+body::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: radial-gradient(1px 1px at 20px 30px, #fff, rgba(0,0,0,0)), radial-gradient(1px 1px at 50px 160px, var(--pk), rgba(0,0,0,0));
+  background-size: 250px 250px; opacity: 0.1; animation: stars 150s linear infinite;
+}
+@keyframes stars { from { background-position: 0 0; } to { background-position: 1000px 1000px; } }
 
 /* ════ SIDEBAR ════ */
-.sidebar{
-  position:sticky;top:0;height:100vh;width:var(--sb-w);flex-shrink:0;
-  background:var(--surface);border-right:1px solid var(--border);
-  display:flex;flex-direction:column;overflow-y:auto;z-index:10;
-}
-.sb-head{padding:18px 14px 14px;border-bottom:1px solid var(--border)}
-.sb-brand{display:flex;align-items:center;gap:10px;margin-bottom:11px}
-.sb-icon{
-  width:34px;height:34px;border-radius:10px;flex-shrink:0;
-  background:linear-gradient(135deg,var(--pk),var(--pk2));
-  display:flex;align-items:center;justify-content:center;font-size:16px;
-  box-shadow:0 0 14px var(--pk-glow);
-}
-.sb-name{font-family:'Space Grotesk',sans-serif;font-size:14.5px;font-weight:700;color:var(--text);letter-spacing:.2px}
-.sb-sub{font-size:11px;color:var(--text3);margin-top:1px}
-.sb-online{
-  display:inline-flex;align-items:center;gap:5px;
-  background:var(--green-dim);border:1px solid var(--green-border);
-  border-radius:20px;padding:3px 8px;font-size:11px;color:var(--green);font-weight:600;
-}
-.sb-dot{width:5px;height:5px;background:var(--green);border-radius:50%;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
-
-.sb-nav{flex:1;padding:8px;overflow-y:auto}
-.sb-sec{font-size:9.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1.4px;padding:14px 8px 5px}
-.sb-link{
-  display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;
-  color:var(--text2);font-size:13px;font-weight:500;text-decoration:none;
-  transition:all .14s;margin-bottom:1px;border:1px solid transparent;cursor:pointer;
-}
-.sb-link:hover{background:var(--card);color:var(--text)}
-.sb-link.on{
-  background:var(--pk-dim);border-color:var(--pk-border);
-  color:var(--pk3);
-}
-.sb-link.on .sb-ico{filter:drop-shadow(0 0 4px var(--pk))}
-.sb-ico{font-size:15px;width:18px;text-align:center;flex-shrink:0}
-
-.sb-foot{padding:10px 14px 14px;border-top:1px solid var(--border)}
-.sb-user{font-size:11.5px;color:var(--text3);margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.sb-logout{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text3);text-decoration:none;transition:color .14s;cursor:pointer}
-.sb-logout:hover{color:var(--red)}
+.sidebar { position: relative; height: 100vh; width: var(--sb-w); flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10; }
+.sb-head { padding: 24px 20px; border-bottom: 1px solid var(--border); }
+.sb-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.sb-icon { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, var(--pk), var(--pk2)); display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 0 15px var(--pk-glow); color: #fff; }
+.sb-name { font-family: 'Space Grotesk', sans-serif; font-size: 17px; font-weight: 700; }
+.sb-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+.sb-sec { font-size: 10px; font-weight: 800; color: var(--text3); text-transform: uppercase; letter-spacing: 1.5px; padding: 15px 12px 8px; }
+.sb-link { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 10px; color: var(--text2); font-size: 14px; font-weight: 500; text-decoration: none; transition: 0.2s; margin-bottom: 3px; cursor: pointer; }
+.sb-link:hover { background: var(--card); color: var(--text); }
+.sb-link.on { background: var(--pk-dim); color: var(--pk3); border: 1px solid var(--pk-border); }
+.sb-foot { padding: 20px; border-top: 1px solid var(--border); }
+.sb-logout { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text3); cursor: pointer; }
 
 /* ════ MAIN ════ */
-.main{flex:1;overflow-y:auto;padding:28px 30px 40px;position:relative;z-index:1;max-width:860px}
-.page{display:none;animation:rise .18s ease}
-.page.on{display:block}
-@keyframes rise{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.main { flex: 1; overflow-y: auto; padding: 40px 50px; position: relative; z-index: 1; }
+.page { display: none; animation: slideUp 0.3s ease; max-width: 900px; margin: 0 auto; }
+.page.on { display: block; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-.pg-head{margin-bottom:22px}
-.pg-title{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:9px}
-.pg-sub{font-size:12.5px;color:var(--text3);margin-top:4px}
+/* ════ WIZARD ════ */
+.wiz-steps { display: flex; gap: 10px; margin-bottom: 30px; }
+.wiz-step { flex: 1; height: 6px; background: var(--border); border-radius: 10px; position: relative; transition: 0.4s; }
+.wiz-step.active { background: var(--pk); box-shadow: 0 0 10px var(--pk-glow); }
+.wiz-step.done { background: var(--pk2); }
+.wiz-step-label { position: absolute; top: 12px; left: 0; font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text3); }
 
 /* ════ CARD ════ */
-.card{
-  background:var(--card);border:1px solid var(--border);border-radius:14px;
-  padding:18px 20px;margin-bottom:14px;
-}
-.card-head{
-  display:flex;align-items:center;gap:8px;margin-bottom:14px;
-  font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:var(--text3);
-}
-.ch-icon{
-  width:20px;height:20px;border-radius:5px;
-  background:var(--pk-dim);border:1px solid var(--pk-border);
-  display:flex;align-items:center;justify-content:center;font-size:11px;
-}
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 26px; margin-bottom: 20px; position: relative; }
+.card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--pk3); }
 
 /* ════ FORM ════ */
-.field{display:flex;flex-direction:column;gap:5px}
-.field label,.flabel{font-size:10.5px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px}
-.field input,.field select,.field textarea,
-.inp{
-  background:var(--bg);border:1px solid var(--border2);border-radius:8px;
-  color:var(--text);padding:8px 11px;font-family:'Noto Sans Thai',sans-serif;
-  font-size:13.5px;outline:none;transition:border-color .14s,box-shadow .14s;width:100%;
-}
-.field input:focus,.field select:focus,.field textarea:focus,.inp:focus{
-  border-color:var(--pk);box-shadow:0 0 0 3px var(--pk-glow);
-}
-.field textarea{resize:vertical;min-height:68px}
-.field select{
-  cursor:pointer;appearance:none;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%236e5a8a' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right 10px center;padding-right:28px;
-}
-.color-row{display:flex;gap:7px;align-items:center}
-.color-row input[type=text]{flex:1}
-.color-row input[type=color]{width:40px;flex-shrink:0;padding:3px 5px;height:36px}
-.field-hint,.fhint{font-size:11px;color:var(--text3);margin-top:2px}
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:13px}
-.s2{grid-column:1/-1}
+.field { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+.field label { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; }
+.inp, .field input, .field select, .field textarea { background: var(--bg); border: 1px solid var(--border2); border-radius: 12px; color: var(--text); padding: 14px 16px; font-family: inherit; font-size: 14px; outline: none; width: 100%; transition: 0.2s; }
+.inp:focus, .field select:focus { border-color: var(--pk); box-shadow: 0 0 0 4px var(--pk-glow); }
+
+.field select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ff2d95' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 15px center; padding-right: 40px; }
+
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.s2 { grid-column: span 2; }
 
 /* ════ TOGGLE ════ */
-.tr{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border)}
-.tr:last-child{border-bottom:none;padding-bottom:0}
-.tr-lbl{font-size:13.5px;font-weight:500;color:var(--text)}
-.tr-sub{font-size:11.5px;color:var(--text3);margin-top:1px}
-.sw{position:relative;width:38px;height:21px;flex-shrink:0;cursor:pointer}
-.sw input{position:absolute;opacity:0;width:0;height:0}
-.sw-t{position:absolute;inset:0;background:var(--border2);border-radius:11px;transition:.18s}
-.sw input:checked+.sw-t{background:var(--pk)}
-.sw-th{position:absolute;top:2.5px;left:2.5px;width:16px;height:16px;background:#fff;border-radius:50%;transition:.18s;pointer-events:none}
-.sw input:checked~.sw-th{left:20px}
+.tr { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.sw { position: relative; width: 44px; height: 24px; cursor: pointer; }
+.sw input { opacity: 0; width: 0; height: 0; }
+.sw-t { position: absolute; inset: 0; background: var(--border2); border-radius: 12px; transition: 0.3s; }
+.sw input:checked + .sw-t { background: var(--pk); }
+.sw-th { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; background: #fff; border-radius: 50%; transition: 0.3s; }
+.sw input:checked ~ .sw-th { left: 23px; }
 
 /* ════ BUTTONS ════ */
-.btn{
-  display:inline-flex;align-items:center;gap:6px;padding:8px 15px;
-  border-radius:8px;border:none;cursor:pointer;font-family:'Noto Sans Thai',sans-serif;
-  font-size:13px;font-weight:600;transition:all .14s;text-decoration:none;
-}
-.btn-pk{background:linear-gradient(135deg,var(--pk),var(--pk2));color:#fff;box-shadow:0 2px 14px var(--pk-glow)}
-.btn-pk:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(224,64,160,.4)}
-.btn-ok{background:var(--green-dim);border:1px solid var(--green-border);color:var(--green)}
-.btn-ok:hover{background:rgba(34,197,94,.2)}
-.btn-del{background:var(--red-dim);border:1px solid rgba(244,63,94,.22);color:var(--red)}
-.btn-del:hover{background:rgba(244,63,94,.2)}
-.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2)}
-.btn-ghost:hover{background:var(--card2);color:var(--text)}
-.btn-sm{padding:5px 11px;font-size:12px}
-.btn-row{display:flex;gap:9px;margin-top:18px;flex-wrap:wrap}
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 14px 28px; border-radius: 12px; border: none; cursor: pointer; font-weight: 700; transition: 0.2s; font-family: inherit; }
+.btn-pk { background: linear-gradient(135deg, var(--pk), var(--pk2)); color: #fff; box-shadow: 0 5px 15px var(--pk-glow); }
+.btn-ghost { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
+.btn-row { display: flex; justify-content: space-between; margin-top: 30px; }
 
-/* ════ DISCORD PREVIEW ════ */
-.dc-wrap{background:#111214;border-radius:10px;padding:14px}
-.dc-row{display:flex;gap:12px}
-.dc-av{width:36px;height:36px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--pk),var(--pk2));display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#fff}
-.dc-body{flex:1;min-width:0}
-.dc-name{font-size:13px;font-weight:700;color:#fff;display:flex;align-items:baseline;gap:5px}
-.dc-ts{font-size:10.5px;color:#4f545c;font-weight:400}
-.dc-embed{border-left:4px solid var(--pk);background:#1e1f22;border-radius:0 6px 6px 0;padding:9px 13px;margin-top:5px}
-.dc-etitle{font-size:13.5px;font-weight:700;color:#fff;margin-bottom:3px}
-.dc-edesc{font-size:12.5px;color:#c4c9d4;line-height:1.6;white-space:pre-wrap}
-.dc-mention{color:#5865f2;background:rgba(88,101,242,.12);border-radius:3px;padding:0 2px}
+/* ════ PREVIEW ════ */
+.dc-wrap { background: #1e1f22; border-radius: 14px; padding: 22px; }
+.dc-row { display: flex; gap: 12px; }
+.dc-av { width: 40px; height: 40px; border-radius: 50%; background: var(--pk); display: flex; align-items: center; justify-content: center; font-weight: 800; color: #fff; }
+.dc-body { flex: 1; }
+.dc-name { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+.dc-mention { color: #e9edff; background: rgba(88, 101, 242, 0.3); border-radius: 3px; padding: 0 2px; }
+.dc-embed { border-left: 4px solid var(--pk); background: #2b2d31; border-radius: 4px; padding: 14px 18px; margin-top: 10px; position: relative; min-height: 80px; }
+.dc-thumb { position: absolute; top: 14px; right: 14px; width: 48px; height: 48px; border-radius: 4px; background: #444; overflow: hidden; display: none; }
+.dc-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.dc-etitle { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+.dc-edesc { font-size: 14px; color: #dbdee1; line-height: 1.5; white-space: pre-wrap; }
+.dc-img { margin-top: 12px; border-radius: 8px; overflow: hidden; display: none; }
+.dc-img img { width: 100%; display: block; }
 
-/* ════ STATS ════ */
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-bottom:18px}
-.stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;position:relative;overflow:hidden}
-.stat::before{content:'';position:absolute;inset:-1px;border-radius:12px;background:linear-gradient(135deg,var(--pk-border),transparent 60%);opacity:.5;pointer-events:none}
-.stat-v{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:800;background:linear-gradient(135deg,var(--pk3),var(--pk));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.stat-l{font-size:10.5px;color:var(--text3);margin-top:3px;text-transform:uppercase;letter-spacing:.5px}
+/* Toast */
+.toast { position: fixed; bottom: 30px; right: 30px; z-index: 1000; padding: 14px 24px; border-radius: 14px; font-weight: 700; transform: translateY(100px); transition: 0.4s; background: var(--surface); border: 1px solid var(--pk); color: var(--pk3); }
+.toast.on { transform: translateY(0); }
 
-/* ════ ROLE DROPDOWN (new system) ════ */
-.role-dd-wrap{position:relative}
-.role-dd-trigger{
-  display:flex;align-items:center;justify-content:space-between;
-  background:var(--bg);border:1px solid var(--border2);border-radius:8px;
-  padding:8px 11px;cursor:pointer;transition:border-color .14s,box-shadow .14s;
-  font-size:13px;color:var(--text2);min-height:36px;user-select:none;
-}
-.role-dd-trigger:hover,.role-dd-trigger.open{border-color:var(--pk);box-shadow:0 0 0 3px var(--pk-glow)}
-.role-dd-trigger .selected-tags{display:flex;flex-wrap:wrap;gap:4px;flex:1}
-.role-dd-trigger .placeholder{color:var(--text3);font-size:12.5px}
-.role-tag{
-  display:inline-flex;align-items:center;gap:4px;
-  padding:2px 8px 2px 7px;border-radius:5px;font-size:11.5px;font-weight:700;
-  background:var(--pk-dim);border:1px solid var(--pk-border);color:var(--pk3);
-  cursor:default;
-}
-.role-tag-x{cursor:pointer;opacity:.6;font-size:13px;line-height:1;margin-left:1px}
-.role-tag-x:hover{opacity:1}
-.dd-arrow{flex-shrink:0;margin-left:6px;color:var(--text3);font-size:10px;transition:transform .14s}
-.role-dd-trigger.open .dd-arrow{transform:rotate(180deg)}
+/* Role DD */
+.role-dd-wrap { position: relative; }
+.role-dd-trigger { display: flex; align-items: center; justify-content: space-between; background: var(--bg); border: 1px solid var(--border2); border-radius: 12px; padding: 12px 16px; cursor: pointer; min-height: 50px; }
+.role-dd-menu { position: absolute; top: calc(100% + 10px); left: 0; right: 0; z-index: 100; background: var(--card2); border: 1px solid var(--border2); border-radius: 14px; padding: 10px; box-shadow: 0 15px 50px rgba(0,0,0,0.6); display: none; max-height: 250px; overflow-y: auto; }
+.role-dd-menu.on { display: block; }
+.role-opt { padding: 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 10px; }
+.role-opt:hover { background: var(--pk-dim); }
+.r-dot { width: 10px; height: 10px; border-radius: 50%; }
 
-.role-dd-menu{
-  position:absolute;top:calc(100% + 5px);left:0;right:0;z-index:200;
-  background:var(--card2);border:1px solid var(--border2);border-radius:10px;
-  padding:6px;box-shadow:0 8px 32px rgba(0,0,0,.5),0 0 0 1px var(--pk-border);
-  max-height:220px;overflow-y:auto;display:none;
-}
-.role-dd-menu.open{display:block;animation:ddIn .12s ease}
-@keyframes ddIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
-.role-dd-search{
-  width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;
-  color:var(--text);padding:6px 9px;font-family:'Noto Sans Thai',sans-serif;font-size:12.5px;
-  outline:none;margin-bottom:5px;transition:border-color .14s;
-}
-.role-dd-search:focus{border-color:var(--pk)}
-.role-dd-opt{
-  display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:7px;
-  cursor:pointer;transition:background .1s;font-size:13px;color:var(--text2);
-}
-.role-dd-opt:hover{background:var(--pk-dim);color:var(--text)}
-.role-dd-opt.sel{background:var(--pk-dim);color:var(--pk3)}
-.role-dd-opt.sel::after{content:'✓';margin-left:auto;font-size:11px;color:var(--pk)}
-.rdo-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.role-dd-empty{font-size:12px;color:var(--text3);padding:8px;text-align:center}
-
-/* ════ CATEGORY BUILDER (new) ════ */
-.cat-block{
-  background:var(--card2);border:1px solid var(--border);border-radius:12px;
-  padding:16px;margin-bottom:12px;
-}
-.cat-top{display:flex;align-items:center;gap:9px;margin-bottom:14px}
-.cat-name-inp{
-  flex:1;background:transparent;border:none;
-  border-bottom:1px solid var(--border2);color:var(--text);
-  font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;
-  outline:none;padding-bottom:4px;transition:border-color .14s;
-}
-.cat-name-inp:focus{border-color:var(--pk)}
-.role-rows{display:flex;flex-direction:column;gap:8px}
-.role-row-card{
-  background:var(--card);border:1px solid var(--border);border-radius:9px;
-  padding:10px 12px;display:grid;
-  grid-template-columns:48px 1fr 1fr 44px 34px;
-  gap:8px;align-items:center;
-}
-.rrc-label{font-size:9.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;text-align:center}
-
-/* ════ MEMBER ROLE SELECTOR ════ */
-.member-dd-section{margin-top:14px}
-.member-dd-label{font-size:10.5px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;display:block}
-.selected-member-role{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:4px 10px;border-radius:6px;font-size:12.5px;font-weight:700;
-  background:var(--green-dim);border:1px solid var(--green-border);color:var(--green);
-  margin-top:8px;
-}
-
-/* ════ TIP ════ */
-.tip{
-  background:rgba(224,64,160,.07);border:1px solid rgba(224,64,160,.18);
-  border-radius:8px;padding:11px 13px;font-size:12.5px;color:var(--text2);
-  line-height:1.85;margin-bottom:13px;
-}
-.tip b{color:var(--text)}
-
-/* ════ TOAST ════ */
-.toast{
-  position:fixed;bottom:22px;right:22px;z-index:9999;
-  padding:10px 16px;border-radius:9px;font-size:13px;font-weight:600;
-  opacity:0;transform:translateY(7px);transition:all .2s;pointer-events:none;
-  display:flex;align-items:center;gap:7px;
-}
-.toast.on{opacity:1;transform:none}
-.toast.ok{background:#0d1f14;border:1px solid rgba(34,197,94,.4);color:var(--green)}
-.toast.err{background:#1f0d10;border:1px solid rgba(244,63,94,.4);color:var(--red)}
-.toast.info{background:#12081e;border:1px solid var(--pk-border);color:var(--pk3)}
-
-code{background:var(--card2);padding:2px 6px;border-radius:5px;font-family:monospace;font-size:12px;color:var(--pk3)}
-
-/* scrollbar */
-::-webkit-scrollbar{width:5px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:9px}
-::-webkit-scrollbar-thumb:hover{background:var(--pk2)}
 </style>
 </head>
 <body>
 
-<!-- ══════════ SIDEBAR ══════════ -->
 <aside class="sidebar">
   <div class="sb-head">
-    <div class="sb-brand">
-      <div class="sb-icon">✦</div>
-      <div>
-        <div class="sb-name">Bot Panel</div>
-        <div class="sb-sub" id="guild-name">กำลังโหลด…</div>
-      </div>
-    </div>
-    <div class="sb-online"><div class="sb-dot"></div><span id="bot-status-text">Online</span></div>
+    <div class="sb-brand"><div class="sb-icon">✦</div><div><div class="sb-name">Revolve Panel bot</div><div id="guild-name" style="font-size:11px; color:var(--text3)">Loading...</div></div></div>
   </div>
   <nav class="sb-nav">
-    <div class="sb-sec">หน้าหลัก</div>
-    <a class="sb-link on" onclick="nav('overview')" href="#"><span class="sb-ico">🏠</span>ภาพรวม</a>
-    <div class="sb-sec">ระบบ Verify</div>
-    <a class="sb-link" onclick="nav('verify')" href="#"><span class="sb-ico">✅</span>Verify Embed</a>
-    <a class="sb-link" onclick="nav('roles')" href="#"><span class="sb-ico">🎭</span>กดรับยศ</a>
-    <div class="sb-sec">ข้อความอัตโนมัติ</div>
-    <a class="sb-link" onclick="nav('welcome')" href="#"><span class="sb-ico">👋</span>Welcome</a>
-    <a class="sb-link" onclick="nav('goodbye')" href="#"><span class="sb-ico">🚪</span>Goodbye</a>
-    <div class="sb-sec">ตั้งค่า</div>
-    <a class="sb-link" onclick="nav('channels')" href="#"><span class="sb-ico">📢</span>ห้อง (Channels)</a>
+    <div class="sb-sec">Dashboard</div>
+    <a class="sb-link on" onclick="nav('overview')">🏠 ภาพรวม</a>
+    <div class="sb-sec">Verification</div>
+    <a class="sb-link" onclick="nav('verify-wizard')">✨ สร้างระบบ Verify</a>
+    <div class="sb-sec">Automation</div>
+    <a class="sb-link" onclick="nav('welcome-wizard')">👋 Welcome Message</a>
+    <a class="sb-link" onclick="nav('goodbye-wizard')">🚪 Goodbye Message</a>
   </nav>
-  <div class="sb-foot">
-    <div class="sb-user">👤 <span id="ov-user">–</span></div>
-    <a href="#" id="logout-btn" class="sb-logout">↩ ออกจากระบบ</a>
-  </div>
+  <div class="sb-foot"><div id="ov-user" style="font-size:12px; margin-bottom:10px">Admin</div><a id="logout-btn" class="sb-logout">↩ ออกจากระบบ</a></div>
 </aside>
 
-<!-- ══════════ MAIN ══════════ -->
 <main class="main">
-
-  <!-- ─── OVERVIEW ─── -->
   <div id="pg-overview" class="page on">
-    <div class="pg-head">
-      <div class="pg-title">🏠 ภาพรวม</div>
-      <div class="pg-sub">สถานะและข้อมูลทั่วไปของบอท</div>
-    </div>
-    <div class="stats">
-      <div class="stat"><div class="stat-v" id="ov-guilds">–</div><div class="stat-l">เซิร์ฟเวอร์</div></div>
-      <div class="stat"><div class="stat-v" id="ov-cats">–</div><div class="stat-l">หมวดหมู่</div></div>
-      <div class="stat"><div class="stat-v" id="ov-roles">–</div><div class="stat-l">ยศทั้งหมด</div></div>
-    </div>
-    <div class="card">
-      <div class="card-head"><div class="ch-icon">⚡</div>คำสั่งด่วน</div>
-      <p style="color:var(--text2);font-size:13.5px;line-height:2">
-        ใช้ <code>/setup</code> ใน Discord เพื่อส่ง Verify Embed ลงห้องที่เลือก<br>
-        ใช้ <code>/dashboard</code> เพื่อรับลิงก์ Panel ใน DM ของคุณ
-      </p>
-    </div>
-    <div class="card">
-      <div class="card-head"><div class="ch-icon">🤖</div>สถานะบอท</div>
-      <div style="font-size:13.5px;color:var(--text2)">Tag: <span id="ov-tag" style="color:var(--text);font-weight:700">–</span></div>
-    </div>
+    <div class="pg-head"><div class="pg-title">🏠 ภาพรวม</div></div>
+    <div class="card"><p style="color:var(--text2)">ยินดีต้อนรับสู่ Revolve Panel! เลือกเมนูเพื่อเริ่มตั้งค่าบอทของคุณ</p></div>
   </div>
 
-  <!-- ─── VERIFY ─── -->
-  <div id="pg-verify" class="page">
-    <div class="pg-head">
-      <div class="pg-title">✅ Verify Embed</div>
-      <div class="pg-sub">ข้อความและปุ่มที่แสดงในห้อง verify</div>
-    </div>
-    <div class="card">
-      <div class="card-head"><div class="ch-icon">✏️</div>ข้อความ Embed</div>
-      <div class="g2">
-        <div class="field"><label>หัวข้อ (Title)</label><input type="text" id="v-title" placeholder="🌸 ยืนยันตัวตน" oninput="prevVerify()"></div>
-        <div class="field"><label>สี Embed</label><div class="color-row"><input type="text" id="v-color-text" placeholder="#e040a0" maxlength="7" oninput="syncTxt('v-color-text','v-color');prevVerify()"><input type="color" id="v-color" value="#e040a0" oninput="syncPick(this,'v-color-text');prevVerify()"></div></div>
-        <div class="field s2"><label>รายละเอียด</label><textarea id="v-desc" placeholder="กดปุ่มด้านล่างเพื่อกรอกข้อมูลและรับยศ!" oninput="prevVerify()"></textarea></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-head"><div class="ch-icon">🔘</div>ปุ่ม</div>
-      <div class="g2">
-        <div class="field"><label>ข้อความบนปุ่ม</label><input type="text" id="v-btn-label" placeholder="✅ ยืนยันตัวตน" oninput="prevVerify()"></div>
-        <div class="field"><label>สีปุ่ม</label><select id="v-btn-color" onchange="prevVerify()"><option value="Primary">🔵 Primary</option><option value="Success">🟢 Success</option><option value="Danger">🔴 Danger</option><option value="Secondary">⚪ Secondary</option></select></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-head"><div class="ch-icon">🖼️</div>รูปภาพ</div>
-      <div class="g2">
-        <div class="field"><label>Thumbnail (มุมขวา)</label><select id="v-thumb" onchange="prevVerify()"><option value="">(ไม่มี)</option><option value="[server]">🖼️ Icon เซิร์ฟเวอร์</option><option value="[user]">👤 Avatar สมาชิก</option></select></div>
-        <div class="field"><label>URL รูปล่าง Embed</label><input type="text" id="v-image" placeholder="https://..." oninput="prevVerify()"></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-head"><div class="ch-icon">👁</div>ตัวอย่าง Preview</div>
-      <div class="dc-wrap"><div class="dc-row"><div class="dc-av">BOT</div><div class="dc-body"><div class="dc-name">Bot <span class="dc-ts">วันนี้ 00:00</span></div><div class="dc-embed" id="vp-embed"><div class="dc-etitle" id="vp-title">🌸 ยืนยันตัวตน</div><div class="dc-edesc" id="vp-desc">กดปุ่มด้านล่างเพื่อรับยศ</div></div></div></div></div>
-    </div>
-    <div class="btn-row"><button class="btn btn-pk" onclick="save()">💾 บันทึก</button><button class="btn btn-ghost" onclick="load()">↺ รีเซ็ต</button></div>
+  <div id="pg-verify-wizard" class="page">
+    <div class="pg-head"><div class="pg-title">✨ ระบบ Verify</div></div>
+    <div class="wiz-container" id="wiz-container-verify"><div class="wiz-steps"><div class="wiz-step active"><div class="wiz-step-label">1. ตกแต่ง</div></div><div class="wiz-step"><div class="wiz-step-label">2. ห้อง</div></div><div class="wiz-step"><div class="wiz-step-label">3. ยศ</div></div><div class="wiz-step"><div class="wiz-step-label">4. ยืนยัน</div></div></div><div class="wiz-body"></div></div>
   </div>
 
-  <!-- ─── ROLES (กดรับยศ) ─── -->
-  <div id="pg-roles" class="page">
-    <div class="pg-head">
-      <div class="pg-title">🎭 กดรับยศ</div>
-      <div class="pg-sub">ตั้งค่าปุ่มให้ member กดเลือกยศตอน verify</div>
-    </div>
-
-    <!-- ยศ Member หลัก -->
-    <div class="card">
-      <div class="card-head"><div class="ch-icon">👑</div>ยศ Member หลัก</div>
-      <p style="font-size:12px;color:var(--text3);margin-bottom:14px">ยศที่ทุกคนจะได้รับอัตโนมัติทันทีหลัง verify เสร็จ</p>
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-        <button class="btn btn-ok btn-sm" onclick="loadAllRoles()">🔄 โหลดยศจาก Discord</button>
-        <div id="m-role-badge" style="display:none" class="selected-member-role"></div>
-      </div>
-      <input type="hidden" id="m-role-id">
-      <!-- Dropdown เลือกยศ Member หลัก -->
-      <div class="member-dd-section">
-        <span class="member-dd-label">เลือกยศ Member หลัก</span>
-        <div class="role-dd-wrap" id="member-dd-wrap">
-          <div class="role-dd-trigger" id="member-dd-trigger" onclick="toggleDD('member')">
-            <div class="selected-tags" id="member-dd-display"><span class="placeholder">— โหลดยศก่อน แล้วเลือก —</span></div>
-            <span class="dd-arrow">▼</span>
-          </div>
-          <div class="role-dd-menu" id="member-dd-menu">
-            <input class="role-dd-search" type="text" placeholder="🔍 ค้นหายศ…" oninput="filterDD('member',this.value)" id="member-dd-search">
-            <div id="member-dd-opts"><div class="role-dd-empty">กด "โหลดยศ" ก่อน</div></div>
-          </div>
-        </div>
-      </div>
-      <div class="g2" style="margin-top:14px">
-        <div class="field"><label>ชื่อ fallback</label><input type="text" id="m-role-name" placeholder="Member"><div class="fhint">ใช้เมื่อไม่ได้เลือก Role ID</div></div>
-        <div class="field"><label>สีสร้างยศใหม่</label><div class="color-row"><input type="text" id="m-color-text" placeholder="#e040a0" maxlength="7" oninput="syncTxt('m-color-text','m-color')"><input type="color" id="m-color" value="#e040a0" oninput="syncPick(this,'m-color-text')"></div></div>
-      </div>
-    </div>
-
-    <!-- หมวดหมู่ยศ -->
-    <div class="card">
-      <div class="card-head"><div class="ch-icon">🎭</div>หมวดหมู่ยศ (ปุ่มให้เลือกตอน verify)</div>
-      <div class="tip">
-        <b>วิธีใช้:</b><br>
-        1️⃣ กด <b>โหลดยศจาก Discord</b> ด้านบนก่อน<br>
-        2️⃣ กด <b>+ เพิ่มหมวดหมู่</b> เพื่อสร้างกลุ่ม เช่น "🎮 เกมที่เล่น"<br>
-        3️⃣ กด <b>+ เพิ่มยศ</b> แล้ว <b>คลิก Dropdown "ยศ Discord"</b> เพื่อเลือกยศได้เลย
-      </div>
-    </div>
-
-    <div id="cat-list"></div>
-    <button class="btn btn-ok" onclick="addCat()" style="margin-bottom:20px">＋ เพิ่มหมวดหมู่ใหม่</button>
-    <div class="btn-row"><button class="btn btn-pk" onclick="save()">💾 บันทึก</button><button class="btn btn-ghost" onclick="load()">↺ รีเซ็ต</button></div>
+  <div id="pg-welcome-wizard" class="page">
+    <div class="pg-head"><div class="pg-title">👋 ระบบ Welcome</div></div>
+    <div class="wiz-container" id="wiz-container-welcome"><div class="wiz-steps"><div class="wiz-step active"><div class="wiz-step-label">1. ตกแต่ง</div></div><div class="wiz-step"><div class="wiz-step-label">2. ห้อง</div></div><div class="wiz-step"><div class="wiz-step-label">3. ยืนยัน</div></div></div><div class="wiz-body"></div></div>
   </div>
 
-  <!-- ─── WELCOME ─── -->
-  <div id="pg-welcome" class="page">
-    <div class="pg-head">
-      <div class="pg-title">👋 ข้อความ Welcome</div>
-      <div class="pg-sub">ข้อความที่บอทส่งอัตโนมัติเมื่อมีสมาชิกใหม่</div>
-    </div>
-    <div class="card">
-      <div class="card-head"><div class="ch-icon">✏️</div>ข้อความ</div>
-      <div class="g2">
-        <div class="field"><label>หัวข้อ</label><input type="text" id="w-title" placeholder="ยินดีต้อนรับ!" oninput="prevWelcome()"></div>
-        <div class="field"><label>สี Embed</label><div class="color-row"><input type="text" id="w-color-text" placeholder="#e040a0" maxlength="7" oninput="syncTxt('w-color-text','w-color');prevWelcome()"><input type="color" id="w-color" value="#e040a0" oninput="syncPick(this,'w-color-text');prevWelcome()"></div></div>
-        <div class="field s2"><label>ข้อความ</label><textarea id="w-msg" placeholder="ยินดีต้อนรับ {user} เข้าสู่เซิร์ฟเวอร์! 🎉" oninput="prevWelcome()"></textarea><div class="fhint">ใช้ <code>{user}</code> แทนชื่อ Discord</div></div>
-        <div class="field"><label>URL รูปภาพ</label><input type="text" id="w-image" placeholder="https://..." oninput="prevWelcome()"></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-head"><div class="ch-icon">⚙️</div>ตัวเลือก</div>
-      <div class="tr"><div><div class="tr-lbl">@mention สมาชิก</div><div class="tr-sub">บอทจะ @tag ชื่อ Discord ในข้อความ</div></div><label class="sw"><input type="checkbox" id="w-mention" onchange="prevWelcome()"><div class="sw-t"></div><div class="sw-th"></div></label></div>
-      <div class="tr"><div><div class="tr-lbl">แสดง Avatar Thumbnail</div><div class="tr-sub">รูปโปรไฟล์สมาชิกที่มุมขวา Embed</div></div><label class="sw"><input type="checkbox" id="w-avatar"><div class="sw-t"></div><div class="sw-th"></div></label></div>
-    </div>
-    <div class="card">
-      <div class="card-head"><div class="ch-icon">👁</div>Preview</div>
-      <div class="dc-wrap"><div class="dc-row"><div class="dc-av">BOT</div><div class="dc-body"><div class="dc-name">Bot <span class="dc-ts">วันนี้ 00:00</span></div><div id="wp-mention" style="font-size:12.5px;margin-top:3px;display:none"><span class="dc-mention">@สมาชิกใหม่</span></div><div class="dc-embed" id="wp-embed"><div class="dc-etitle" id="wp-title">ยินดีต้อนรับ!</div><div class="dc-edesc" id="wp-desc"></div></div></div></div></div>
-    </div>
-    <div class="btn-row"><button class="btn btn-pk" onclick="save()">💾 บันทึก</button><button class="btn btn-ghost" onclick="load()">↺ รีเซ็ต</button></div>
+  <div id="pg-goodbye-wizard" class="page">
+    <div class="pg-head"><div class="pg-title">🚪 ระบบ Goodbye</div></div>
+    <div class="wiz-container" id="wiz-container-goodbye"><div class="wiz-steps"><div class="wiz-step active"><div class="wiz-step-label">1. ตกแต่ง</div></div><div class="wiz-step"><div class="wiz-step-label">2. ห้อง</div></div><div class="wiz-step"><div class="wiz-step-label">3. ยืนยัน</div></div></div><div class="wiz-body"></div></div>
   </div>
-
-  <!-- ─── GOODBYE ─── -->
-  <div id="pg-goodbye" class="page">
-    <div class="pg-head">
-      <div class="pg-title">🚪 ข้อความ Goodbye</div>
-      <div class="pg-sub">ข้อความที่บอทส่งเมื่อสมาชิกออกจากเซิร์ฟเวอร์</div>
-    </div>
-    <div class="card">
-      <div class="card-head"><div class="ch-icon">⚙️</div>เปิด/ปิด</div>
-      <div class="tr" style="border:none;padding:0"><div><div class="tr-lbl">เปิดใช้งาน Goodbye</div><div class="tr-sub">ถ้าปิด บอทจะไม่ส่งข้อความเมื่อสมาชิกออก</div></div><label class="sw"><input type="checkbox" id="gb-enabled" onchange="prevGoodbye()"><div class="sw-t"></div><div class="sw-th"></div></label></div>
-    </div>
-    <div class="card">
-      <div class="card-head"><div class="ch-icon">✏️</div>ข้อความ</div>
-      <div class="g2">
-        <div class="field"><label>หัวข้อ</label><input type="text" id="gb-title" placeholder="ลาก่อน..." oninput="prevGoodbye()"></div>
-        <div class="field"><label>สี Embed</label><div class="color-row"><input type="text" id="gb-color-text" placeholder="#f43f5e" maxlength="7" oninput="syncTxt('gb-color-text','gb-color');prevGoodbye()"><input type="color" id="gb-color" value="#f43f5e" oninput="syncPick(this,'gb-color-text');prevGoodbye()"></div></div>
-        <div class="field s2"><label>ข้อความ</label><textarea id="gb-msg" placeholder="{user} ได้ออกจากเซิร์ฟเวอร์แล้ว" oninput="prevGoodbye()"></textarea><div class="fhint">ใช้ <code>{user}</code> แทนชื่อ Discord</div></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-head"><div class="ch-icon">⚙️</div>ตัวเลือก</div>
-      <div class="tr" style="border:none;padding:0"><div><div class="tr-lbl">แสดง Avatar Thumbnail</div></div><label class="sw"><input type="checkbox" id="gb-avatar"><div class="sw-t"></div><div class="sw-th"></div></label></div>
-    </div>
-    <div class="card">
-      <div class="card-head"><div class="ch-icon">👁</div>Preview</div>
-      <div class="dc-wrap"><div class="dc-row"><div class="dc-av" style="background:linear-gradient(135deg,#f43f5e,#be123c)">BOT</div><div class="dc-body"><div class="dc-name">Bot <span class="dc-ts">วันนี้ 00:00</span></div><div class="dc-embed" id="gbp-embed" style="border-left-color:#f43f5e"><div class="dc-etitle" id="gbp-title">ลาก่อน...</div><div class="dc-edesc" id="gbp-desc"></div></div></div></div></div>
-    </div>
-    <div class="btn-row"><button class="btn btn-pk" onclick="save()">💾 บันทึก</button><button class="btn btn-ghost" onclick="load()">↺ รีเซ็ต</button></div>
-  </div>
-
-  <!-- ─── CHANNELS ─── -->
-  <div id="pg-channels" class="page">
-    <div class="pg-head">
-      <div class="pg-title">📢 ห้อง (Channels)</div>
-      <div class="pg-sub">เลือกห้องที่บอทจะส่งข้อความในแต่ละระบบ</div>
-    </div>
-    <div class="card">
-      <div class="card-head"><div class="ch-icon">🔄</div>รายการห้อง</div>
-      <div style="display:flex;align-items:center;gap:11px;margin-bottom:15px;flex-wrap:wrap">
-        <button class="btn btn-ok btn-sm" onclick="loadChannels()">🔄 โหลดห้องจาก Discord</button>
-        <span id="ch-hint" style="font-size:12px;color:var(--text3)">กดเพื่อดึงรายการห้องจาก Discord</span>
-      </div>
-      <div class="g3">
-        <div class="field"><label>📌 ห้อง Verify</label><select id="c-verify"><option value="">— โหลดก่อน —</option></select><div class="fhint">ห้องที่ /setup จะส่ง Embed</div></div>
-        <div class="field"><label>👋 ห้อง Welcome</label><select id="c-welcome"><option value="">— โหลดก่อน —</option></select><div class="fhint">ห้องส่งข้อความต้อนรับ</div></div>
-        <div class="field"><label>🚪 ห้อง Goodbye</label><select id="c-goodbye"><option value="">— โหลดก่อน —</option></select><div class="fhint">ห้องส่งข้อความลาออก</div></div>
-      </div>
-    </div>
-    <div class="btn-row"><button class="btn btn-pk" onclick="save()">💾 บันทึก</button><button class="btn btn-ghost" onclick="load()">↺ รีเซ็ต</button></div>
-  </div>
-
 </main>
 
-<div class="toast" id="toast"></div>
+<div id="toast" class="toast"></div>
 
 <script>
-/* ══════════════════════════════════════════
-   AUTH
-══════════════════════════════════════════ */
-(function(){
-  try{var t=new URLSearchParams(window.location.search).get('token');if(t){localStorage.setItem('session_token',t);history.replaceState(null,'','/index.html');}}catch(e){}
-})();
-function gc(n){var m=document.cookie.match(new RegExp('(^| )'+n+'=([^;]+)'));return m?m[2]:null;}
-var TOKEN=localStorage.getItem('session_token')||gc('session_token');
-if(!TOKEN){
-  document.addEventListener('DOMContentLoaded',function(){
-    document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#08060f"><div style="text-align:center;color:#f0eaf8;font-family:\'Noto Sans Thai\',sans-serif"><div style="font-size:48px;margin-bottom:16px">🔒</div><p style="margin-bottom:22px;font-size:16px;color:#b09ec8">กรุณาเข้าสู่ระบบก่อน</p><a href="/auth/login" style="background:linear-gradient(135deg,#e040a0,#b8137a);color:#fff;padding:11px 26px;border-radius:9px;text-decoration:none;font-size:14px;font-weight:700">เข้าสู่ระบบด้วย Discord</a></div></div>';
-  });
-  throw new Error('no token');
+let cfg = {};
+let roles = [];
+let channels = [];
+let TOKEN = new URLSearchParams(window.location.search).get('token') || '';
+
+const wizStates = { verify: { step: 1, total: 4 }, welcome: { step: 1, total: 3 }, goodbye: { step: 1, total: 3 } };
+
+function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('on'); setTimeout(() => t.classList.remove('on'), 3000); }
+
+function nav(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  document.getElementById('pg-' + id).classList.add('on');
+  document.querySelectorAll('.sb-link').forEach(l => l.classList.remove('on'));
+  event.currentTarget.classList.add('on');
+  if(id.includes('wizard')) renderWizard(id.split('-')[0]);
 }
 
-/* ══════════════════════════════════════════
-   STATE
-══════════════════════════════════════════ */
-var cfg={},fetchedRoles=[],memberDDSingle=true; // single-select for member role
-
-/* ══════════════════════════════════════════
-   NAV
-══════════════════════════════════════════ */
-function nav(id){
-  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('on');});
-  document.querySelectorAll('.sb-link').forEach(function(a){a.classList.remove('on');});
-  var pg=document.getElementById('pg-'+id);if(pg)pg.classList.add('on');
-  document.querySelectorAll('.sb-link').forEach(function(a){
-    if(a.getAttribute('onclick')&&a.getAttribute('onclick').indexOf("'"+id+"'")>-1)a.classList.add('on');
-  });
-  closeAllDD();
+async function api(method, path, body) {
+  try {
+    const res = await fetch(path + (TOKEN ? '?token='+TOKEN : ''), { method, headers: body ? {'Content-Type': 'application/json'} : {}, body: body ? JSON.stringify(body) : null });
+    return await res.json();
+  } catch(e) { return null; }
 }
 
-/* ══════════════════════════════════════════
-   API
-══════════════════════════════════════════ */
-async function api(method,path,body){
-  var r=await fetch(path,{method:method,headers:{'Content-Type':'application/json','x-session-token':TOKEN},body:body?JSON.stringify(body):undefined});
-  if(r.status===401){
-    localStorage.removeItem('session_token');document.cookie='session_token=; Max-Age=0; path=/';
-    document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#08060f"><div style="text-align:center;color:#f0eaf8;font-family:\'Noto Sans Thai\',sans-serif"><div style="font-size:48px;margin-bottom:16px">🔒</div><p style="margin-bottom:22px;font-size:16px">Session หมดอายุ</p><a href="/auth/login" style="background:linear-gradient(135deg,#e040a0,#b8137a);color:#fff;padding:11px 26px;border-radius:9px;text-decoration:none;font-size:14px;font-weight:700">เข้าสู่ระบบ</a></div></div>';
-    throw new Error('401');
-  }
-  return r.json();
-}
+function renderWizard(type) {
+  const container = document.querySelector(`#wiz-container-${type} .wiz-body`);
+  const step = wizStates[type].step;
+  const steps = document.querySelectorAll(`#wiz-container-${type} .wiz-step`);
+  steps.forEach((s, i) => { s.classList.remove('active', 'done'); if (i + 1 < step) s.classList.add('done'); if (i + 1 === step) s.classList.add('active'); });
 
-/* ══════════════════════════════════════════
-   TOAST
-══════════════════════════════════════════ */
-function toast(msg,type){
-  type=type||'ok';
-  var el=document.getElementById('toast');
-  el.textContent=msg;el.className='toast '+type+' on';
-  clearTimeout(el._t);el._t=setTimeout(function(){el.classList.remove('on');},2600);
-}
+  let html = '';
+  if (step === 1) {
+    const prefix = type === 'verify' ? 'v' : (type === 'welcome' ? 'w' : 'gb');
+    const title = cfg[prefix.toUpperCase() + '_TITLE'] || '';
+    const desc = cfg[prefix.toUpperCase() + (type === 'verify' ? '_DESC' : '_MESSAGE')] || '';
+    const color = cfg[prefix.toUpperCase() + '_COLOR'] || '#ff2d95';
+    const image = cfg[prefix.toUpperCase() + '_IMAGE'] || '';
+    const thumbType = cfg[prefix.toUpperCase() + '_THUMB_TYPE'] || 'none';
+    const thumbUrl = cfg[prefix.toUpperCase() + '_THUMB_URL'] || '';
+    const mention = cfg.MENTION_USER || false;
 
-/* ══════════════════════════════════════════
-   COLOR SYNC
-══════════════════════════════════════════ */
-function syncTxt(tId,pId){var v=document.getElementById(tId).value;if(/^#[0-9a-fA-F]{6}$/.test(v))document.getElementById(pId).value=v;}
-function syncPick(el,tId){document.getElementById(tId).value=el.value;}
-
-/* ══════════════════════════════════════════
-   LOAD / FILL
-══════════════════════════════════════════ */
-async function load(){
-  cfg=await api('GET','/api/config')||{};
-  fill();renderCats();toast('โหลดข้อมูลแล้ว','info');
-}
-
-function fill(){
-  function s(id,val){var el=document.getElementById(id);if(!el)return;if(el.type==='checkbox')el.checked=!!val;else el.value=val||'';}
-  s('v-title',cfg.VERIFY_EMBED_TITLE);s('v-desc',cfg.VERIFY_EMBED_DESC);
-  s('v-color-text',cfg.VERIFY_EMBED_COLOR);s('v-color',cfg.VERIFY_EMBED_COLOR);
-  s('v-btn-label',cfg.VERIFY_BUTTON_LABEL);s('v-btn-color',cfg.VERIFY_BUTTON_COLOR);
-  s('v-thumb',cfg.VERIFY_THUMBNAIL||'');s('v-image',cfg.VERIFY_IMAGE||'');
-  s('w-title',cfg.WELCOME_TITLE);s('w-msg',cfg.WELCOME_MESSAGE);
-  s('w-color-text',cfg.WELCOME_COLOR);s('w-color',cfg.WELCOME_COLOR);
-  s('w-image',cfg.WELCOME_IMAGE);s('w-mention',cfg.MENTION_USER);s('w-avatar',cfg.WELCOME_SHOW_AVATAR);
-  s('gb-title',cfg.GOODBYE_TITLE);s('gb-msg',cfg.GOODBYE_MESSAGE);
-  s('gb-color-text',cfg.GOODBYE_COLOR);s('gb-color',cfg.GOODBYE_COLOR);
-  s('gb-enabled',cfg.GOODBYE_ENABLED);s('gb-avatar',cfg.GOODBYE_SHOW_AVATAR);
-  s('m-role-id',cfg.MEMBER_ROLE_ID);s('m-role-name',cfg.MEMBER_ROLE_NAME);
-  s('m-color-text',cfg.MEMBER_ROLE_COLOR);s('m-color',cfg.MEMBER_ROLE_COLOR);
-
-  // Update member badge
-  if(cfg.MEMBER_ROLE_ID&&cfg.MEMBER_ROLE_NAME){
-    showMemberBadge(cfg.MEMBER_ROLE_NAME);
-  }
-
-  // channels
-  var chKeys=['c-verify','c-welcome','c-goodbye'];
-  var chVals=[cfg.VERIFY_CHANNEL_NAME,cfg.WELCOME_CHANNEL_NAME,cfg.GOODBYE_CHANNEL_NAME];
-  chKeys.forEach(function(id,i){
-    var val=chVals[i];var el=document.getElementById(id);if(!el)return;
-    if(el.tagName==='SELECT'){
-      var found=false;
-      for(var j=0;j<el.options.length;j++){if(el.options[j].value===val){el.options[j].selected=true;found=true;break;}}
-      if(!found&&val){var o=document.createElement('option');o.value=val;o.textContent='# '+val;o.selected=true;el.appendChild(o);}
-    }else el.value=val||'';
-  });
-  prevVerify();prevWelcome();prevGoodbye();
-}
-
-function showMemberBadge(name){
-  var b=document.getElementById('m-role-badge');
-  if(b){b.textContent='✅ '+name;b.style.display='inline-flex';}
-}
-
-/* ══════════════════════════════════════════
-   SAVE
-══════════════════════════════════════════ */
-async function save(){
-  function g(id){return document.getElementById(id)?.value||'';}
-  function gc2(id){return document.getElementById(id)?.checked||false;}
-  cfg.VERIFY_EMBED_TITLE=g('v-title');cfg.VERIFY_EMBED_DESC=g('v-desc');
-  cfg.VERIFY_EMBED_COLOR=g('v-color-text')||g('v-color');
-  cfg.VERIFY_BUTTON_LABEL=g('v-btn-label');cfg.VERIFY_BUTTON_COLOR=g('v-btn-color');
-  cfg.VERIFY_THUMBNAIL=g('v-thumb');cfg.VERIFY_IMAGE=g('v-image');
-  cfg.WELCOME_TITLE=g('w-title');cfg.WELCOME_MESSAGE=g('w-msg');
-  cfg.WELCOME_COLOR=g('w-color-text')||g('w-color');
-  cfg.WELCOME_IMAGE=g('w-image');cfg.MENTION_USER=gc2('w-mention');cfg.WELCOME_SHOW_AVATAR=gc2('w-avatar');
-  cfg.GOODBYE_TITLE=g('gb-title');cfg.GOODBYE_MESSAGE=g('gb-msg');
-  cfg.GOODBYE_COLOR=g('gb-color-text')||g('gb-color');
-  cfg.GOODBYE_ENABLED=gc2('gb-enabled');cfg.GOODBYE_SHOW_AVATAR=gc2('gb-avatar');
-  cfg.VERIFY_CHANNEL_NAME=g('c-verify');cfg.WELCOME_CHANNEL_NAME=g('c-welcome');cfg.GOODBYE_CHANNEL_NAME=g('c-goodbye');
-  cfg.MEMBER_ROLE_ID=g('m-role-id');cfg.MEMBER_ROLE_NAME=g('m-role-name');
-  cfg.MEMBER_ROLE_COLOR=g('m-color-text')||g('m-color');
-  var res=await api('POST','/api/config',cfg);
-  if(res&&res.ok)toast('✅ บันทึกแล้ว!');
-  else toast('❌ บันทึกไม่สำเร็จ','err');
-}
-
-/* ══════════════════════════════════════════
-   STATUS
-══════════════════════════════════════════ */
-async function loadStatus(){
-  var s=await api('GET','/api/status');if(!s)return;
-  document.getElementById('bot-status-text').textContent=s.online?'Online':'Offline';
-  document.getElementById('ov-tag').textContent=s.tag;
-  document.getElementById('ov-guilds').textContent=s.guilds;
-  document.getElementById('ov-user').textContent=s.user&&s.user.username?s.user.username:'–';
-  document.getElementById('guild-name').textContent=s.user&&s.user.guildName?s.user.guildName:'';
-  var cats=cfg.ROLE_CATEGORIES||[];
-  document.getElementById('ov-cats').textContent=cats.length;
-  document.getElementById('ov-roles').textContent=cats.reduce(function(a,c){return a+(c.roles?c.roles.length:0);},0);
-}
-
-/* ══════════════════════════════════════════
-   CHANNELS
-══════════════════════════════════════════ */
-async function loadChannels(){
-  var d=await api('GET','/api/channels');var chs=d&&d.channels?d.channels:[];
-  var ids=['c-verify','c-welcome','c-goodbye'];
-  var cur={};ids.forEach(function(id){var el=document.getElementById(id);if(el)cur[id]=el.value;});
-  ids.forEach(function(id){
-    var sel=document.getElementById(id);if(!sel)return;
-    var prev=cur[id];sel.innerHTML='<option value="">— เลือกห้อง —</option>';
-    chs.forEach(function(ch){var o=document.createElement('option');o.value=ch.name;o.textContent='# '+ch.name;if(ch.name===prev)o.selected=true;sel.appendChild(o);});
-  });
-  document.getElementById('ch-hint').textContent='โหลดแล้ว '+chs.length+' ห้อง';
-  toast('โหลด '+chs.length+' ห้อง','info');
-}
-
-/* ══════════════════════════════════════════
-   LOAD ROLES — แล้วสร้าง dropdown
-══════════════════════════════════════════ */
-async function loadAllRoles(){
-  var d=await api('GET','/api/roles');
-  fetchedRoles=(d&&d.roles?d.roles:[]).filter(function(r){return !r.isAdmin;});
-  // ── Member dropdown (single select) ──
-  buildDD('member',fetchedRoles,true,function(selectedIds){
-    if(selectedIds.length===0){
-      document.getElementById('m-role-id').value='';
-      var b=document.getElementById('m-role-badge');if(b)b.style.display='none';
-    } else {
-      var r=fetchedRoles.find(function(x){return x.id===selectedIds[0];});
-      if(r){
-        document.getElementById('m-role-id').value=r.id;
-        document.getElementById('m-role-name').value=r.name;
-        var hex=r.color?'#'+r.color.toString(16).padStart(6,'0'):'#e040a0';
-        document.getElementById('m-color-text').value=hex;
-        document.getElementById('m-color').value=hex;
-        showMemberBadge(r.name);
-        toast('✅ เลือก '+r.name);
-      }
-    }
-  });
-  // pre-select if already set
-  if(cfg.MEMBER_ROLE_ID){
-    setDDSelection('member',[cfg.MEMBER_ROLE_ID]);
-  }
-  // ── ทุก cat dropdown ──
-  renderCats();
-  toast('โหลด '+fetchedRoles.length+' ยศแล้ว','info');
-}
-
-/* ══════════════════════════════════════════
-   DROPDOWN SYSTEM
-══════════════════════════════════════════ */
-// ddState[key] = { roles, single, onChange, selected: Set of ids }
-var ddState={};
-
-function buildDD(key,roles,single,onChange){
-  ddState[key]={roles:roles,single:single,onChange:onChange,selected:new Set()};
-  renderDDOpts(key,'');
-  updateDDDisplay(key);
-}
-
-function toggleDD(key){
-  closeAllDD(key);
-  var menu=document.getElementById(key+'-dd-menu');
-  var trigger=document.getElementById(key+'-dd-trigger');
-  if(!menu||!trigger)return;
-  var isOpen=menu.classList.contains('open');
-  if(isOpen){menu.classList.remove('open');trigger.classList.remove('open');}
-  else{menu.classList.add('open');trigger.classList.add('open');
-    var s=document.getElementById(key+'-dd-search');if(s){s.value='';s.focus();}
-    renderDDOpts(key,'');
-  }
-}
-
-function closeAllDD(exceptKey){
-  Object.keys(ddState).forEach(function(k){
-    if(k===exceptKey)return;
-    var m=document.getElementById(k+'-dd-menu');var t=document.getElementById(k+'-dd-trigger');
-    if(m)m.classList.remove('open');if(t)t.classList.remove('open');
-  });
-}
-
-function filterDD(key,q){
-  renderDDOpts(key,q.toLowerCase());
-}
-
-function renderDDOpts(key,q){
-  var st=ddState[key];if(!st)return;
-  var el=document.getElementById(key+'-dd-opts');if(!el)return;
-  var filtered=st.roles.filter(function(r){return !q||r.name.toLowerCase().indexOf(q)>-1;});
-  if(!filtered.length){el.innerHTML='<div class="role-dd-empty">ไม่พบยศ</div>';return;}
-  el.innerHTML='';
-  filtered.forEach(function(r){
-    var hex=r.color?'#'+r.color.toString(16).padStart(6,'0'):'#e040a0';
-    var isSel=st.selected.has(r.id);
-    var div=document.createElement('div');
-    div.className='role-dd-opt'+(isSel?' sel':'');
-    div.innerHTML='<span class="rdo-dot" style="background:'+hex+'"></span><span style="color:'+hex+';font-weight:600">'+esc(r.name)+'</span>';
-    div.onclick=function(){selectDDOpt(key,r);};
-    el.appendChild(div);
-  });
-}
-
-function selectDDOpt(key,role){
-  var st=ddState[key];if(!st)return;
-  if(st.single){
-    st.selected.clear();
-    st.selected.add(role.id);
-    // close menu
-    var m=document.getElementById(key+'-dd-menu');var t=document.getElementById(key+'-dd-trigger');
-    if(m)m.classList.remove('open');if(t)t.classList.remove('open');
+    html = `
+      <div class="wiz-content on">
+        <div class="card">
+          <div class="card-head">🎨 ตกแต่งข้อความ</div>
+          <div class="g2">
+            <div class="field"><label>หัวข้อ</label><input type="text" id="${prefix}-title" value="${title}" oninput="updatePreview('${type}')"></div>
+            <div class="field"><label>สี Embed</label><input type="color" id="${prefix}-color" value="${color}" oninput="updatePreview('${type}')"></div>
+            <div class="field s2"><label>รายละเอียด</label><textarea id="${prefix}-desc" rows="3" oninput="updatePreview('${type}')">${desc}</textarea></div>
+            <div class="field s2"><label>รูปภาพหลัก (ล่างสุด)</label><input type="text" id="${prefix}-image" value="${image}" oninput="updatePreview('${type}')" placeholder="URL รูปภาพ/GIF"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head">🖼️ รูปมุมขวาบน (Thumbnail)</div>
+          <div class="g2">
+            <div class="field s2">
+              <label>ประเภทรูป</label>
+              <select id="${prefix}-thumb-type" onchange="toggleThumbUrl('${prefix}'); updatePreview('${type}')">
+                <option value="none" ${thumbType==='none'?'selected':''}>❌ ไม่แสดง</option>
+                ${type !== 'verify' ? `<option value="user" ${thumbType==='user'?'selected':''}>👤 รูปโปรไฟล์สมาชิก ({user})</option>` : ''}
+                <option value="custom" ${thumbType==='custom'?'selected':''}>🎨 รูปภาพ/GIF ของฉันเอง</option>
+              </select>
+            </div>
+            <div class="field s2" id="${prefix}-thumb-url-wrap" style="display:${thumbType==='custom'?'block':'none'}">
+              <label>URL รูปภาพมุมขวา</label>
+              <input type="text" id="${prefix}-thumb-url" value="${thumbUrl}" oninput="updatePreview('${type}')" placeholder="https://...">
+            </div>
+          </div>
+        </div>
+        ${type !== 'verify' ? `<div class="card"><div class="tr"><div class="tr-lbl">@mention สมาชิกในข้อความ</div><label class="sw"><input type="checkbox" id="${prefix}-mention" ${mention?'checked':''} onchange="updatePreview('${type}')"><div class="sw-t"></div><div class="sw-th"></div></label></div></div>` : ''}
+        <div class="card">
+          <div class="card-head">👁 Preview</div>
+          <div class="dc-wrap">
+            <div class="dc-row">
+              <div class="dc-av">BOT</div>
+              <div class="dc-body">
+                <div class="dc-name">Revolve Bot</div>
+                <div id="${prefix}-prev-mention" style="display:${mention?'block':'none'}"><span class="dc-mention">@สมาชิกใหม่</span></div>
+                <div class="dc-embed" id="${prefix}-prev-embed" style="border-left-color:${color}">
+                  <div class="dc-thumb" id="${prefix}-prev-thumb"></div>
+                  <div class="dc-etitle" id="${prefix}-prev-title">${title}</div>
+                  <div class="dc-edesc" id="${prefix}-prev-desc">${desc.replace(/{user}/g, '@สมาชิกใหม่')}</div>
+                  <div class="dc-img" id="${prefix}-prev-img"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="btn-row"><div></div><button class="btn btn-pk" onclick="changeStep('${type}', 2)">ถัดไป ➔</button></div>
+      </div>`;
+  } else if (step === 2) {
+    const prefix = type === 'verify' ? 'c-verify' : (type === 'welcome' ? 'c-welcome' : 'c-goodbye');
+    html = `<div class="wiz-content on"><div class="card"><div class="card-head">📢 เลือกห้อง</div><button class="btn btn-ghost btn-sm" onclick="fetchChannels('${type}')" style="margin-bottom:15px">🔄 ดึงรายชื่อห้อง</button><div class="field"><label>เลือกห้อง</label><select id="${prefix}-select"><option value="">— เลือกห้อง —</option>${channels.map(ch => `<option value="${ch.name}" ${cfg[prefix.replace('c-','').toUpperCase()+'_CHANNEL_NAME'] === ch.name ? 'selected' : ''}># ${ch.name}</option>`).join('')}</select></div></div><div class="btn-row"><button class="btn btn-ghost" onclick="changeStep('${type}', 1)">⬅ ย้อนกลับ</button><button class="btn btn-pk" onclick="changeStep('${type}', 3)">ถัดไป ➔</button></div></div>`;
+  } else if (step === 3 && type === 'verify') {
+    html = `<div class="wiz-content on"><div class="card"><div class="card-head">🎭 ยศที่ได้รับ</div><button class="btn btn-ghost btn-sm" onclick="fetchRoles()" style="margin-bottom:15px">🔄 โหลดยศ</button><div class="field"><label>เลือกยศ</label><div class="role-dd-wrap"><div class="role-dd-trigger" onclick="toggleDD('role-menu')"><div class="selected-tags" id="role-display">${cfg.MEMBER_ROLE_NAME ? `<div class="role-tag">${cfg.MEMBER_ROLE_NAME}</div>` : '— เลือกยศ —'}</div><span>▼</span></div><div class="role-dd-menu" id="role-menu">${roles.map(r => `<div class="role-opt" onclick="selectRole('${r.id}', '${r.name}', '${r.color}')"><span class="r-dot" style="background:#${r.color.toString(16).padStart(6,'0')}"></span>${r.name}</div>`).join('')}</div></div></div></div><div class="btn-row"><button class="btn btn-ghost" onclick="changeStep('${type}', 2)">⬅ ย้อนกลับ</button><button class="btn btn-pk" onclick="changeStep('${type}', 4)">ถัดไป ➔</button></div></div>`;
   } else {
-    if(st.selected.has(role.id))st.selected.delete(role.id);
-    else st.selected.add(role.id);
+    html = `<div class="wiz-content on"><div class="card" style="text-align:center"><div style="font-size:50px; margin-bottom:15px">✨</div><div class="card-head" style="justify-content:center">พร้อมบันทึก!</div></div><div class="btn-row"><button class="btn btn-ghost" onclick="changeStep('${type}', ${step - 1})">⬅ ย้อนกลับ</button><button class="btn btn-pk" onclick="saveSystem('${type}')">💾 บันทึก</button></div></div>`;
   }
-  updateDDDisplay(key);
-  renderDDOpts(key,'');
-  st.onChange(Array.from(st.selected));
+  container.innerHTML = html;
+  if(step === 1) updatePreview(type);
 }
 
-function setDDSelection(key,ids){
-  var st=ddState[key];if(!st)return;
-  st.selected=new Set(ids);
-  updateDDDisplay(key);
+function toggleThumbUrl(prefix) { const type = document.getElementById(`${prefix}-thumb-type`).value; document.getElementById(`${prefix}-thumb-url-wrap`).style.display = type === 'custom' ? 'block' : 'none'; }
+
+function updatePreview(type) {
+  const prefix = type === 'verify' ? 'v' : (type === 'welcome' ? 'w' : 'gb');
+  const t = document.getElementById(`${prefix}-title`).value;
+  const d = document.getElementById(`${prefix}-desc`).value;
+  const c = document.getElementById(`${prefix}-color`).value;
+  const i = document.getElementById(`${prefix}-image`).value;
+  const tt = document.getElementById(`${prefix}-thumb-type`).value;
+  const tu = document.getElementById(`${prefix}-thumb-url`).value;
+  
+  document.getElementById(`${prefix}-prev-title`).textContent = t;
+  document.getElementById(`${prefix}-prev-desc`).textContent = d.replace(/{user}/g, '@สมาชิกใหม่');
+  document.getElementById(`${prefix}-prev-embed`).style.borderLeftColor = c;
+  
+  const thumb = document.getElementById(`${prefix}-prev-thumb`);
+  if(tt === 'none') thumb.style.display = 'none';
+  else { thumb.style.display = 'block'; thumb.innerHTML = `<img src="${tt==='user'?'https://cdn.discordapp.com/embed/avatars/0.png':tu}">`; }
+
+  const img = document.getElementById(`${prefix}-prev-img`);
+  if(i) { img.style.display = 'block'; img.innerHTML = `<img src="${i}">`; } else img.style.display = 'none';
+
+  if(type !== 'verify') document.getElementById(`${prefix}-prev-mention`).style.display = document.getElementById(`${prefix}-mention`).checked ? 'block' : 'none';
 }
 
-function removeDDTag(key,id,evt){
-  if(evt)evt.stopPropagation();
-  var st=ddState[key];if(!st)return;
-  st.selected.delete(id);
-  updateDDDisplay(key);
-  renderDDOpts(key,'');
-  st.onChange(Array.from(st.selected));
+function changeStep(type, step) {
+  if (step > wizStates[type].step && wizStates[type].step === 2 && !document.getElementById(`c-${type}-select`).value) { toast('⚠️ กรุณาเลือกห้อง'); return; }
+  wizStates[type].step = step; renderWizard(type);
 }
 
-function updateDDDisplay(key){
-  var st=ddState[key];if(!st)return;
-  var el=document.getElementById(key+'-dd-display');if(!el)return;
-  if(st.selected.size===0){
-    el.innerHTML='<span class="placeholder">— เลือกยศ —</span>';return;
-  }
-  el.innerHTML='';
-  st.selected.forEach(function(id){
-    var r=st.roles.find(function(x){return x.id===id;});if(!r)return;
-    var hex=r.color?'#'+r.color.toString(16).padStart(6,'0'):'#e040a0';
-    var tag=document.createElement('span');
-    tag.className='role-tag';
-    tag.style.background=hex+'18';tag.style.borderColor=hex+'44';tag.style.color=hex;
-    tag.innerHTML=esc(r.name)+'<span class="role-tag-x" onclick="removeDDTag(\''+key+'\',\''+id+'\',event)">×</span>';
-    el.appendChild(tag);
-  });
+async function fetchChannels(type) { toast('กำลังโหลด...'); const data = await api('GET', '/api/channels'); channels = data?.channels || []; renderWizard(type); }
+async function fetchRoles() { toast('กำลังโหลด...'); const data = await api('GET', '/api/roles'); roles = (data?.roles || []).filter(r => !r.isAdmin); renderWizard('verify'); }
+
+function selectRole(id, name, color) { cfg.MEMBER_ROLE_ID = id; cfg.MEMBER_ROLE_NAME = name; document.getElementById('role-display').innerHTML = `<div class="role-tag">${name}</div>`; document.getElementById('role-menu').classList.remove('on'); }
+function toggleDD(id) { document.getElementById(id).classList.toggle('on'); }
+
+async function saveSystem(type) {
+  const prefix = type === 'verify' ? 'v' : (type === 'welcome' ? 'w' : 'gb');
+  cfg[type.toUpperCase()+'_TITLE'] = document.getElementById(`${prefix}-title`).value;
+  cfg[type==='verify'?'V_DESC':type.toUpperCase()+'_MESSAGE'] = document.getElementById(`${prefix}-desc`).value;
+  cfg[type.toUpperCase()+'_COLOR'] = document.getElementById(`${prefix}-color`).value;
+  cfg[type.toUpperCase()+'_IMAGE'] = document.getElementById(`${prefix}-image`).value;
+  cfg[type.toUpperCase()+'_THUMB_TYPE'] = document.getElementById(`${prefix}-thumb-type`).value;
+  cfg[type.toUpperCase()+'_THUMB_URL'] = document.getElementById(`${prefix}-thumb-url`).value;
+  if(type!=='verify') cfg.MENTION_USER = document.getElementById(`${prefix}-mention`).checked;
+  cfg[type.toUpperCase()+'_CHANNEL_NAME'] = document.getElementById(`c-${type}-select`).value;
+
+  const res = await api('POST', '/api/config', cfg);
+  if(res) { toast('✅ สำเร็จ!'); wizStates[type].step = 1; nav('overview'); }
 }
 
-// close dropdown on outside click
-document.addEventListener('click',function(e){
-  var inside=e.target.closest('[id$="-dd-wrap"]')||e.target.closest('[id$="-dd-menu"]');
-  if(!inside)closeAllDD();
-});
-
-/* ══════════════════════════════════════════
-   CATEGORY / ROLE BUILDER
-══════════════════════════════════════════ */
-function renderCats(){
-  var el=document.getElementById('cat-list');el.innerHTML='';
-  (cfg.ROLE_CATEGORIES||[]).forEach(function(cat,ci){
-    var div=document.createElement('div');div.className='cat-block';
-    div.innerHTML=
-      '<div class="cat-top">'
-      +'<input class="cat-name-inp" type="text" value="'+esc(cat.name)+'" placeholder="ชื่อหมวดหมู่" onchange="cfg.ROLE_CATEGORIES['+ci+'].name=this.value">'
-      +'<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--text2);flex-shrink:0">'
-      +'<label class="sw" style="margin:0"><input type="checkbox"'+(cat.multi?' checked':'')+' onchange="cfg.ROLE_CATEGORIES['+ci+'].multi=this.checked"><div class="sw-t"></div><div class="sw-th"></div></label>'
-      +'<span>หลายยศ</span></label>'
-      +'<button class="btn btn-del btn-sm" style="flex-shrink:0" onclick="removeCat('+ci+')">🗑 ลบ</button>'
-      +'</div>'
-      +'<div class="role-rows" id="cat-rows-'+ci+'"></div>'
-      +'<button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="addRole('+ci+')">＋ เพิ่มยศ</button>';
-    el.appendChild(div);
-    renderRoleRows(ci);
-  });
-}
-
-function renderRoleRows(ci){
-  var el=document.getElementById('cat-rows-'+ci);if(!el)return;
-  el.innerHTML='';
-
-  // header labels
-  var hdr=document.createElement('div');
-  hdr.style.cssText='display:grid;grid-template-columns:48px 1fr 1fr 44px 34px;gap:8px;padding:0 4px 4px';
-  hdr.innerHTML='<div class="rrc-label">Emoji</div><div class="rrc-label">ชื่อปุ่ม</div><div class="rrc-label">ยศ Discord</div><div class="rrc-label">สี</div><div></div>';
-  el.appendChild(hdr);
-
-  (cfg.ROLE_CATEGORIES[ci]&&cfg.ROLE_CATEGORIES[ci].roles||[]).forEach(function(r,ri){
-    var hex=r.color||'#e040a0';
-    var ddKey='cat-'+ci+'-'+ri;
-
-    var card=document.createElement('div');card.className='role-row-card';
-
-    // emoji
-    var emojiCell=document.createElement('div');
-    emojiCell.innerHTML='<input class="inp" type="text" value="'+esc(r.emoji||'')+'" maxlength="4" placeholder="🎮" style="text-align:center;font-size:16px;padding:5px;width:100%" onchange="cfg.ROLE_CATEGORIES['+ci+'].roles['+ri+'].emoji=this.value">';
-    card.appendChild(emojiCell);
-
-    // label
-    var labelCell=document.createElement('div');
-    labelCell.innerHTML='<input class="inp" type="text" value="'+esc(r.label||'')+'" placeholder="ชื่อปุ่ม" onchange="cfg.ROLE_CATEGORIES['+ci+'].roles['+ri+'].label=this.value">';
-    card.appendChild(labelCell);
-
-    // role dropdown (single)
-    var ddCell=document.createElement('div');ddCell.style.position='relative';
-    ddCell.innerHTML='<div class="role-dd-wrap" id="'+ddKey+'-dd-wrap">'
-      +'<div class="role-dd-trigger" id="'+ddKey+'-dd-trigger" onclick="toggleDD(\''+ddKey+'\')">'
-      +'<div class="selected-tags" id="'+ddKey+'-dd-display"><span class="placeholder">'+(r.roleName?'✅ '+esc(r.roleName):'— เลือกยศ —')+'</span></div>'
-      +'<span class="dd-arrow">▼</span>'
-      +'</div>'
-      +'<div class="role-dd-menu" id="'+ddKey+'-dd-menu">'
-      +'<input class="role-dd-search" type="text" placeholder="🔍 ค้นหา…" oninput="filterDD(\''+ddKey+'\',this.value)" id="'+ddKey+'-dd-search">'
-      +'<div id="'+ddKey+'-dd-opts">'+(fetchedRoles.length?'':'<div class="role-dd-empty">กด "โหลดยศ" ก่อน</div>')+'</div>'
-      +'</div></div>';
-    card.appendChild(ddCell);
-
-    // build dropdown state
-    var selectedId=r.roleId||'';
-    buildDD(ddKey,fetchedRoles,true,(function(ci2,ri2){
-      return function(ids){
-        if(ids.length===0){
-          cfg.ROLE_CATEGORIES[ci2].roles[ri2].roleId='';
-          cfg.ROLE_CATEGORIES[ci2].roles[ri2].roleName='';
-        } else {
-          var picked=fetchedRoles.find(function(x){return x.id===ids[0];});
-          if(picked){
-            cfg.ROLE_CATEGORIES[ci2].roles[ri2].roleId=picked.id;
-            cfg.ROLE_CATEGORIES[ci2].roles[ri2].roleName=picked.name;
-            if(!cfg.ROLE_CATEGORIES[ci2].roles[ri2].color||cfg.ROLE_CATEGORIES[ci2].roles[ri2].color==='#e040a0'){
-              var h=picked.color?'#'+picked.color.toString(16).padStart(6,'0'):'#e040a0';
-              cfg.ROLE_CATEGORIES[ci2].roles[ri2].color=h;
-              var cp=card.querySelector('input[type=color]');if(cp)cp.value=h;
-            }
-            toast('✅ ผูก "'+picked.name+'"');
-          }
-        }
-      };
-    })(ci,ri));
-    if(selectedId)setDDSelection(ddKey,[selectedId]);
-    // re-render opts with fetched roles
-    renderDDOpts(ddKey,'');
-
-    // color
-    var colorCell=document.createElement('div');
-    colorCell.innerHTML='<input type="color" value="'+hex+'" style="width:100%;height:34px;border:1px solid var(--border);border-radius:7px;cursor:pointer;background:var(--bg);padding:2px 3px" onchange="cfg.ROLE_CATEGORIES['+ci+'].roles['+ri+'].color=this.value">';
-    card.appendChild(colorCell);
-
-    // remove
-    var delCell=document.createElement('div');
-    delCell.innerHTML='<button class="btn btn-del btn-sm" style="padding:5px 7px;width:100%" onclick="removeRole('+ci+','+ri+')">✕</button>';
-    card.appendChild(delCell);
-
-    el.appendChild(card);
-  });
-}
-
-function addCat(){
-  if(!cfg.ROLE_CATEGORIES)cfg.ROLE_CATEGORIES=[];
-  cfg.ROLE_CATEGORIES.push({id:'cat_'+Date.now(),name:'✨ หมวดหมู่ใหม่',multi:true,roles:[]});
-  renderCats();
-}
-function removeCat(ci){cfg.ROLE_CATEGORIES.splice(ci,1);renderCats();}
-function addRole(ci){
-  if(!cfg.ROLE_CATEGORIES[ci].roles)cfg.ROLE_CATEGORIES[ci].roles=[];
-  cfg.ROLE_CATEGORIES[ci].roles.push({id:'r_'+Date.now(),emoji:'',label:'',roleId:'',roleName:'',color:'#e040a0'});
-  renderRoleRows(ci);
-}
-function removeRole(ci,ri){cfg.ROLE_CATEGORIES[ci].roles.splice(ri,1);renderRoleRows(ci);}
-
-/* ══════════════════════════════════════════
-   PREVIEWS
-══════════════════════════════════════════ */
-function prevVerify(){
-  var title=document.getElementById('v-title')?.value||'🌸 ยืนยันตัวตน';
-  var desc=document.getElementById('v-desc')?.value||'กดปุ่มด้านล่าง';
-  var color=document.getElementById('v-color-text')?.value||'#e040a0';
-  document.getElementById('vp-title').textContent=title;
-  document.getElementById('vp-desc').textContent=desc;
-  document.getElementById('vp-embed').style.borderLeftColor=color;
-}
-function prevWelcome(){
-  var title=document.getElementById('w-title')?.value||'ยินดีต้อนรับ!';
-  var msg=(document.getElementById('w-msg')?.value||'').replace(/\{user\}/g,'@สมาชิกใหม่');
-  var color=document.getElementById('w-color-text')?.value||'#e040a0';
-  var mention=document.getElementById('w-mention')?.checked;
-  document.getElementById('wp-title').textContent=title;
-  document.getElementById('wp-desc').innerHTML=msg.replace(/@สมาชิกใหม่/g,'<span class="dc-mention">@สมาชิกใหม่</span>');
-  document.getElementById('wp-embed').style.borderLeftColor=color;
-  document.getElementById('wp-mention').style.display=mention?'block':'none';
-}
-function prevGoodbye(){
-  var title=document.getElementById('gb-title')?.value||'ลาก่อน...';
-  var msg=(document.getElementById('gb-msg')?.value||'').replace(/\{user\}/g,'ชื่อดิส');
-  var color=document.getElementById('gb-color-text')?.value||'#f43f5e';
-  document.getElementById('gbp-title').textContent=title;
-  document.getElementById('gbp-desc').textContent=msg;
-  document.getElementById('gbp-embed').style.borderLeftColor=color;
-}
-
-/* ══════════════════════════════════════════
-   HELPERS
-══════════════════════════════════════════ */
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
-
-document.getElementById('logout-btn').addEventListener('click',function(e){
-  e.preventDefault();
-  var t=TOKEN;localStorage.removeItem('session_token');document.cookie='session_token=; Max-Age=0; path=/';
-  window.location.href='/auth/logout'+(t?'?token='+t:'');
-});
-
-/* ══════════════════════════════════════════
-   INIT
-══════════════════════════════════════════ */
-(async function(){
-  await load();
-  await loadStatus();
+(async () => {
+  cfg = await api('GET', '/api/config') || {};
+  const s = await api('GET', '/api/status');
+  if(s) { document.getElementById('guild-name').textContent = s.guildName; document.getElementById('ov-user').textContent = s.user; }
 })();
 </script>
 </body>
