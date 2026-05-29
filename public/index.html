@@ -317,24 +317,7 @@ body::before {
           </div>
         </div>
       </div>
-      <div class="card">
-        <div class="card-title"><span>📢</span> ห้อง Verify <span style="font-size:11px;color:var(--muted);font-weight:400">— ห้องที่ embed จะถูกส่งไปเมื่อใช้ /setup</span></div>
-        <div class="form-grid">
-          <div class="field">
-            <label>ชื่อห้อง Verify (ตรงกับ Discord)</label>
-            <input type="text" id="cv-verify" placeholder="verify" oninput="document.getElementById('c-verify').value=this.value">
-          </div>
-          <div class="field">
-            <label>ห้อง Welcome</label>
-            <input type="text" id="cv-welcome" placeholder="WELCOME" oninput="document.getElementById('c-welcome').value=this.value">
-          </div>
-          <div class="field">
-            <label>ห้อง Goodbye</label>
-            <input type="text" id="cv-goodbye" placeholder="GOODBYE" oninput="document.getElementById('c-goodbye').value=this.value">
-          </div>
-        </div>
-        <div class="hint" style="margin-top:8px;font-size:11px;color:var(--muted)">⚠️ ชื่อต้องตรงกับห้องใน Discord รวมถึงตัวพิมพ์ใหญ่-เล็กด้วย</div>
-      </div>
+
       <div class="card">
         <div class="card-title"><span>🔘</span> ปุ่ม</div>
         <div class="form-grid">
@@ -432,11 +415,15 @@ body::before {
 
       <!-- หมวดหมู่ยศ -->
       <div class="card" style="margin-top:18px">
-        <div class="card-title"><span>🎭</span> หมวดหมู่ยศ <span style="font-size:11px;color:var(--muted);font-weight:400">— ปุ่มให้เลือกตอน verify (optional)</span></div>
-        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
-          <span style="font-size:12px;color:var(--muted)" id="roles-hint">โหลดยศแล้วคลิกเลือกผูกกับแต่ละปุ่ม</span>
+        <div class="card-title"><span>🎭</span> หมวดหมู่ยศ <span style="font-size:11px;color:var(--muted);font-weight:400">— ปุ่มให้ member กดเลือกตอน verify (optional)</span></div>
+        <div style="background:rgba(255,110,180,.06);border:1px solid rgba(255,110,180,.15);border-radius:8px;padding:12px;margin-bottom:14px;font-size:13px;color:var(--muted);line-height:1.7">
+          <b style="color:var(--text)">วิธีใช้:</b><br>
+          1️⃣ กด <b style="color:var(--success)">โหลดยศ</b> ด้านบนเพื่อดึงยศจาก Discord<br>
+          2️⃣ กด <b style="color:var(--accent)">＋ เพิ่มหมวดหมู่</b> เพื่อสร้างกลุ่มปุ่ม เช่น "🎮 เกมที่เล่น"<br>
+          3️⃣ ในแต่ละหมวดกด <b>＋ เพิ่มยศ</b> แล้วกดช่อง <b style="color:var(--success)">เลือกยศ →</b> แล้วคลิกยศจากรายการด้านบน
         </div>
-        <div class="roles-fetched" id="roles-fetched-list"></div>
+        <div class="roles-fetched" id="roles-fetched-list" style="margin-bottom:4px"></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px" id="roles-hint"></div>
       </div>
 
       <div id="cat-list"></div>
@@ -588,26 +575,37 @@ body::before {
     <div id="page-channels" class="page">
       <div class="page-header">
         <div class="page-title">📢 ห้อง (Channels)</div>
-        <div class="page-sub">ชื่อห้องต้องตรงกับ Discord ทุกตัวอักษร</div>
+        <div class="page-sub">เลือกห้องที่ต้องการใช้งาน</div>
       </div>
       <div class="card">
-        <div class="card-title"><span>📢</span> ชื่อห้อง</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">ตั้งค่าเดียวกับใน Verify Embed ด้านบน สามารถแก้ได้ที่นี่หรือหน้า Verify Embed</div>
-        <div class="form-grid cols3">
+        <div class="card-title"><span>🔄</span> โหลดห้องจาก Discord</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+          <button class="btn btn-success btn-sm" onclick="fetchChannels()">🔄 โหลดห้องทั้งหมด</button>
+          <span style="font-size:12px;color:var(--muted)" id="ch-hint">กดเพื่อดึงรายการห้องจาก Discord</span>
+        </div>
+        <div class="form-grid cols3" style="margin-top:4px">
           <div class="field">
-            <label>ห้อง Verify</label>
-            <input type="text" id="c-verify" placeholder="verify">
+            <label>📌 ห้อง Verify</label>
+            <select id="c-verify" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:9px 11px;font-family:'Sarabun',sans-serif;font-size:14px;outline:none">
+              <option value="">— กดโหลดห้องก่อน —</option>
+            </select>
+            <span style="font-size:11px;color:var(--muted);margin-top:3px">ห้องที่ /setup จะส่ง embed ไป</span>
           </div>
           <div class="field">
-            <label>ห้อง Welcome</label>
-            <input type="text" id="c-welcome" placeholder="WELCOME">
+            <label>🎉 ห้อง Welcome</label>
+            <select id="c-welcome" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:9px 11px;font-family:'Sarabun',sans-serif;font-size:14px;outline:none">
+              <option value="">— กดโหลดห้องก่อน —</option>
+            </select>
+            <span style="font-size:11px;color:var(--muted);margin-top:3px">ห้องส่งข้อความต้อนรับ</span>
           </div>
           <div class="field">
-            <label>ห้อง Goodbye</label>
-            <input type="text" id="c-goodbye" placeholder="GOODBYE">
+            <label>🚪 ห้อง Goodbye</label>
+            <select id="c-goodbye" style="background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:9px 11px;font-family:'Sarabun',sans-serif;font-size:14px;outline:none">
+              <option value="">— กดโหลดห้องก่อน —</option>
+            </select>
+            <span style="font-size:11px;color:var(--muted);margin-top:3px">ห้องส่งข้อความลาออก</span>
           </div>
         </div>
-        <div class="hint">⚠️ ชื่อต้องตรงกับห้องใน Discord รวมถึงตัวพิมพ์ใหญ่-เล็กด้วย</div>
       </div>
       <div class="btn-row">
         <button class="btn btn-primary" onclick="saveConfig()">💾 บันทึก</button>
@@ -734,12 +732,22 @@ function populateFields() {
   set('gb-avatar', cfg.GOODBYE_SHOW_AVATAR);
 
   // Channels
-  set('c-verify', cfg.VERIFY_CHANNEL_NAME);
-  set('c-welcome', cfg.WELCOME_CHANNEL_NAME);
-  set('c-goodbye', cfg.GOODBYE_CHANNEL_NAME);
-  set('cv-verify', cfg.VERIFY_CHANNEL_NAME);
-  set('cv-welcome', cfg.WELCOME_CHANNEL_NAME);
-  set('cv-goodbye', cfg.GOODBYE_CHANNEL_NAME);
+  // Channels — set value on select or input
+  ['c-verify','c-welcome','c-goodbye'].forEach((id, i) => {
+    const val = [cfg.VERIFY_CHANNEL_NAME, cfg.WELCOME_CHANNEL_NAME, cfg.GOODBYE_CHANNEL_NAME][i];
+    const el = document.getElementById(id);
+    if (!el) return;
+    // if dropdown has the option already, select it; otherwise add it
+    if (el.tagName === 'SELECT') {
+      let found = false;
+      for (const opt of el.options) { if (opt.value === val) { opt.selected = true; found = true; break; } }
+      if (!found && val) {
+        const opt = document.createElement('option');
+        opt.value = val; opt.textContent = '# ' + val; opt.selected = true;
+        el.appendChild(opt);
+      }
+    } else { el.value = val || ''; }
+  });
 
   // Member
   set('m-role-id', cfg.MEMBER_ROLE_ID);
@@ -812,6 +820,29 @@ async function loadStatus() {
 }
 
 // ── Fetch Roles ──────────────────────────────────────────────
+async function fetchChannels() {
+  const data = await api('GET', '/api/channels');
+  const channels = data?.channels || [];
+  const ids = ['c-verify', 'c-welcome', 'c-goodbye'];
+  const current = {};
+  ids.forEach(id => { const el = document.getElementById(id); if (el) current[id] = el.value; });
+  ids.forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const prev = current[id];
+    sel.innerHTML = '<option value="">— เลือกห้อง —</option>';
+    channels.forEach(ch => {
+      const opt = document.createElement('option');
+      opt.value = ch.name;
+      opt.textContent = '# ' + ch.name;
+      if (ch.name === prev) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  });
+  document.getElementById('ch-hint').textContent = `โหลดแล้ว ${channels.length} ห้อง — เลือกจาก dropdown ได้เลย`;
+  toast(`โหลด ${channels.length} ห้องแล้ว`);
+}
+
 async function fetchRoles() {
   const spin = document.getElementById('fetch-spin');
   if (spin) spin.style.display = 'inline-block';
