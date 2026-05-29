@@ -47,8 +47,8 @@ body{background:var(--bg);color:var(--tx);font-family:'Noto Sans Thai',sans-seri
 /* SIDEBAR */
 .sb{position:sticky;top:0;height:100vh;width:var(--sbw);flex-shrink:0;background:var(--bg2);border-right:1px solid var(--b1);display:flex;flex-direction:column;z-index:20;overflow:hidden}
 .sb::after{content:'';position:absolute;top:0;left:0;bottom:0;width:1px;background:linear-gradient(180deg,var(--pk) 0%,transparent 60%);pointer-events:none}
-.sb-logo-area{padding:0;text-align:center;border-bottom:1px solid var(--b1);background:#0d0d0d}
-.sb-logo-img{width:150px;height:auto;display:block;margin:0 auto;padding:16px 0 8px;mix-blend-mode:screen;filter:contrast(1.05) saturate(1.1) drop-shadow(0 0 16px rgba(255,61,120,.6))}
+.sb-logo-area{padding:0;text-align:center;border-bottom:1px solid var(--b1);background:#000}
+.sb-logo-img{width:150px;height:auto;display:block;margin:0 auto;padding:16px 0 8px;mix-blend-mode:screen;filter:contrast(1.1) saturate(1.2) drop-shadow(0 0 16px rgba(255,61,120,.7))}
 .sb-guild{font-family:'Space Mono',monospace;font-size:9px;color:var(--tx3);text-align:center;letter-spacing:2px;padding-bottom:12px;text-transform:uppercase}
 .sb-status{display:flex;justify-content:center;padding:8px 14px;border-bottom:1px solid var(--b1)}
 .sb-online{display:inline-flex;align-items:center;gap:6px;background:var(--gr-dim);border:1px solid var(--gr-border);border-radius:20px;padding:3px 11px;font-size:11px;color:var(--gr);font-weight:700;font-family:'Space Mono',monospace}
@@ -156,7 +156,6 @@ body{background:var(--bg);color:var(--tx);font-family:'Noto Sans Thai',sans-seri
 .dc-mention{color:#5865f2;background:rgba(88,101,242,.15);border-radius:3px;padding:0 2px}
 
 /* DROPDOWN */
-.role-dd-wrap{position:relative;z-index:100}
 .role-dd-wrap{position:relative}
 .role-dd-trigger{display:flex;align-items:center;justify-content:space-between;background:var(--bg3);border:1px solid var(--b2);border-radius:8px;padding:9px 13px;cursor:pointer;transition:all .15s;font-size:13px;color:var(--tx2);min-height:38px;user-select:none;gap:8px}
 .role-dd-trigger:hover,.role-dd-trigger.open{border-color:var(--pk);box-shadow:0 0 0 3px var(--pk-glow)}
@@ -167,7 +166,7 @@ body{background:var(--bg);color:var(--tx);font-family:'Noto Sans Thai',sans-seri
 .tag-x:hover{opacity:.9}
 .dd-arrow{flex-shrink:0;color:var(--tx3);font-size:10px;transition:transform .15s}
 .role-dd-trigger.open .dd-arrow{transform:rotate(180deg)}
-.role-dd-menu{position:absolute;top:calc(100% + 5px);left:0;right:0;z-index:9999;background:var(--card2);border:1px solid var(--b2);border-radius:10px;padding:6px;box-shadow:0 16px 40px rgba(0,0,0,.7),0 0 0 1px var(--pk-border);max-height:200px;overflow-y:auto;display:none}
+.role-dd-menu{position:fixed;z-index:9999;background:var(--card2);border:1px solid var(--b2);border-radius:10px;padding:6px;box-shadow:0 16px 40px rgba(0,0,0,.9),0 0 0 1px var(--pk-border);max-height:200px;overflow-y:auto;display:none;min-width:200px}
 .role-dd-menu.open{display:block;animation:ddIn .12s ease}
 @keyframes ddIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 .role-dd-search{width:100%;background:var(--bg3);border:1px solid var(--b1);border-radius:7px;color:var(--tx);padding:7px 11px;font-family:'Noto Sans Thai',sans-serif;font-size:12.5px;outline:none;margin-bottom:6px;transition:border-color .15s}
@@ -267,7 +266,6 @@ code{background:var(--card2);padding:2px 7px;border-radius:5px;font-family:'Spac
     <div class="sb-sec">Verify</div>
     <a class="sb-link" onclick="nav('verify')" href="#"><span class="sb-ico">✅</span>Verify Embed</a>
     <a class="sb-link" onclick="nav('roles')" href="#"><span class="sb-ico">🎭</span>กดรับยศ</a>
-    
     <div class="sb-sec">ข้อความ</div>
     <a class="sb-link" onclick="nav('welcome')" href="#"><span class="sb-ico">👋</span>Welcome</a>
     <a class="sb-link" onclick="nav('goodbye')" href="#"><span class="sb-ico">🚪</span>Goodbye</a>
@@ -309,7 +307,7 @@ code{background:var(--card2);padding:2px 7px;border-radius:5px;font-family:'Spac
     <div class="card" id="ov-routing-card">
       <div class="card-title"><div class="ct-ico">🗺️</div>Channel Routing Summary</div>
       <div id="ov-routing-body" style="font-size:12.5px;color:var(--tx3);font-family:'Space Mono',monospace">
-        ยังไม่มีข้อมูล — ตั้งค่าในหมวดหมู่ยศ หรือที่ <b style="color:var(--pk3);cursor:pointer" onclick="nav('routing')">Channel Routing</b>
+        ยังไม่มีข้อมูล — ตั้งค่าที่ <b style="color:var(--pk3);cursor:pointer" onclick="nav('routing')">Channel Routing</b>
       </div>
     </div>
   </div>
@@ -385,7 +383,7 @@ code{background:var(--card2);padding:2px 7px;border-radius:5px;font-family:'Spac
   <!-- ROLES -->
   <div id="pg-roles" class="page">
     <div class="pg-head">
-      <div><div class="pg-title">🎭 กดรับยศ</div><div class="pg-sub">จัดการหมวดหมู่ยศ — ตั้งห้องของแต่ละหมวดได้เลยด้านล่างนี้</div></div>
+      <div><div class="pg-title">🎭 กดรับยศ</div><div class="pg-sub">จัดการหมวดหมู่ยศ — ตั้งห้องของแต่ละหมวดได้ในหมวดนั้นเลย</div></div>
       <div class="pg-actions">
         <button class="btn btn-cy btn-sm" onclick="nav('routing')">🗺️ ตั้งห้อง</button>
         <button class="btn btn-ghost btn-sm" onclick="loadAllRoles(true)" id="reload-roles-btn">🔄 โหลดยศใหม่</button>
@@ -426,7 +424,7 @@ code{background:var(--card2);padding:2px 7px;border-radius:5px;font-family:'Spac
       <div class="info-box">
         <span class="step-num">1</span> กด <b>＋ เพิ่มหมวดหมู่</b> — เช่น "🎮 เกมที่เล่น" หรือ "🌍 ภูมิภาค"<br>
         <span class="step-num">2</span> กด <b>＋ เพิ่มยศ</b> แล้วเลือกยศ Discord จาก Dropdown<br>
-        <span class="step-num">3</span> ตั้งค่า <b>ห้อง Verify / Welcome / Goodbye</b> ในกล่องด้านล่างชื่อหมวดหมู่<br>
+        <span class="step-num">3</span> ตั้งค่า <b>ห้อง</b> ในกล่องสีเทาด้านบนรายการยศของแต่ละหมวด<br>
         <span class="step-num">4</span> กด <b>💾 บันทึก</b> ด้านล่าง
       </div>
     </div>
@@ -744,9 +742,8 @@ function populateChannelSelects(){
       if(ch.name===prev)o.selected=true;sel.appendChild(o);
     });
   });
-  // Re-render routing and inline cat channels
   renderRoutingPage();
-  (cfg.ROLE_CATEGORIES||[]).forEach((_,ci)=>renderCatChannels(ci));
+  (cfg.ROLE_CATEGORIES||[]).forEach(function(_,ci){renderCatCh(ci);});
 }
 
 /* ROLES */
@@ -905,31 +902,27 @@ function renderCats(){
       +'<button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="addRole('+ci+')">＋ เพิ่มยศ</button>';
     el.appendChild(div);
     renderRoleRows(ci);
-    renderCatChannels(ci);
+    renderCatCh(ci);
   });
   updateOverviewStats();
 }
 
-function renderCatChannels(ci){
-  var el=document.getElementById('cat-channels-'+ci);if(!el)return;
-  var cat=cfg.ROLE_CATEGORIES&&cfg.ROLE_CATEGORIES[ci];if(!cat)return;
-  function chSel(fieldId,cur,icon,label){
-    var opts='<option value="">— ใช้ Global —</option>';
-    channelList.forEach(ch=>{opts+='<option value="'+esc(ch.name)+'"'+(ch.name===cur?' selected':'')+'>＃ '+esc(ch.name)+'</option>';});
-    return '<div><div style="font-size:9px;font-weight:800;color:var(--pk3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;font-family:Space Mono,monospace">'+icon+' '+label+'</div>'
-      +'<select class="inp" id="cc-'+ci+'-'+fieldId+'" onchange="updateCatChannel('+ci+',''+fieldId+'')">'+opts+'</select></div>';
+function renderCatCh(ci){
+  var el=document.getElementById('cat-ch-'+ci);if(!el)return;
+  var cat=(cfg.ROLE_CATEGORIES||[])[ci];if(!cat)return;
+  function chField(fid,cur,icon,lbl){
+    var o='<option value="">— ใช้ Global —</option>';
+    channelList.forEach(function(c){o+='<option value="'+esc(c.name)+'"'+(c.name===cur?' selected':'')+'>＃ '+esc(c.name)+'</option>';});
+    return '<div><div style="font-size:9px;font-weight:800;color:var(--pk3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;font-family:Space Mono,monospace">'+icon+' '+lbl+'</div><select class="inp" onchange="catChChange('+ci+',\''+fid+'\',this.value)">'+o+'</select></div>';
   }
-  el.innerHTML=chSel('verify',cat.verifyChannel||'','📌','ห้อง Verify')+chSel('welcome',cat.welcomeChannel||'','👋','ห้อง Welcome')+chSel('goodbye',cat.goodbyeChannel||'','🚪','ห้อง Goodbye');
+  el.innerHTML=chField('verify',cat.verifyChannel||'','📌','Verify')+chField('welcome',cat.welcomeChannel||'','👋','Welcome')+chField('goodbye',cat.goodbyeChannel||'','🚪','Goodbye');
 }
-
-function updateCatChannel(ci,field){
+function catChChange(ci,fid,val){
   if(!cfg.ROLE_CATEGORIES||!cfg.ROLE_CATEGORIES[ci])return;
-  var val=document.getElementById('cc-'+ci+'-'+field)?.value||'';
-  if(field==='verify')cfg.ROLE_CATEGORIES[ci].verifyChannel=val;
-  else if(field==='welcome')cfg.ROLE_CATEGORIES[ci].welcomeChannel=val;
-  else if(field==='goodbye')cfg.ROLE_CATEGORIES[ci].goodbyeChannel=val;
-  markUnsaved();
-  renderRoutingSummary();
+  if(fid==='verify')cfg.ROLE_CATEGORIES[ci].verifyChannel=val;
+  else if(fid==='welcome')cfg.ROLE_CATEGORIES[ci].welcomeChannel=val;
+  else if(fid==='goodbye')cfg.ROLE_CATEGORIES[ci].goodbyeChannel=val;
+  markUnsaved();renderRoutingSummary();
 }
 
 function renderRoleRows(ci){
@@ -982,15 +975,28 @@ function prevWelcome(){var title=document.getElementById('w-title')?.value||'ย
 function prevGoodbye(){var title=document.getElementById('gb-title')?.value||'ลาก่อน...';var msg=(document.getElementById('gb-msg')?.value||'').replace(/\{user\}/g,'ชื่อดิส');var color=document.getElementById('gb-color-text')?.value||'#ef4444';var mention=document.getElementById('gb-mention')?.checked;document.getElementById('gbp-title').textContent=title;document.getElementById('gbp-desc').textContent=msg;document.getElementById('gbp-embed').style.borderLeftColor=color;document.getElementById('gbp-mention').style.display=mention?'block':'none';}
 
 /* DROPDOWN */
-.role-dd-wrap{position:relative;z-index:100}
 function buildDD(key,roles,single,onChange){ddState[key]={roles,single,onChange,selected:new Set()};renderDDOpts(key,'');updateDDDisplay(key);}
-function toggleDD(key,evt){if(evt)evt.stopPropagation();closeAllDD(key);var menu=document.getElementById(key+'-dd-menu');var trigger=document.getElementById(key+'-dd-trigger');if(!menu||!trigger)return;var isOpen=menu.classList.contains('open');if(isOpen){menu.classList.remove('open');trigger.classList.remove('open');}else{menu.classList.add('open');trigger.classList.add('open');var s=document.getElementById(key+'-dd-search');if(s){s.value='';s.focus();}renderDDOpts(key,'');}}
+function toggleDD(key,evt){if(evt){evt.stopPropagation();}closeAllDD(key);var menu=document.getElementById(key+'-dd-menu');var trigger=document.getElementById(key+'-dd-trigger');if(!menu||!trigger)return;var isOpen=menu.classList.contains('open');if(isOpen){menu.classList.remove('open');trigger.classList.remove('open');}else{var rect=trigger.getBoundingClientRect();menu.style.top=(rect.bottom+4)+'px';menu.style.left=rect.left+'px';menu.style.width=rect.width+'px';menu.classList.add('open');trigger.classList.add('open');var s=document.getElementById(key+'-dd-search');if(s){s.value='';s.focus();}renderDDOpts(key,'');}}
 function closeAllDD(exceptKey){Object.keys(ddState).forEach(k=>{if(k===exceptKey)return;var m=document.getElementById(k+'-dd-menu');var t=document.getElementById(k+'-dd-trigger');if(m)m.classList.remove('open');if(t)t.classList.remove('open');});}
 function filterDD(key,q){renderDDOpts(key,q.toLowerCase());}
 function renderDDOpts(key,q){var st=ddState[key];if(!st)return;var el=document.getElementById(key+'-dd-opts');if(!el)return;var filtered=st.roles.filter(r=>!q||r.name.toLowerCase().includes(q));if(!filtered.length){el.innerHTML='<div class="dd-empty">ไม่พบยศ</div>';return;}el.innerHTML='';filtered.forEach(r=>{var hex=r.color?'#'+r.color.toString(16).padStart(6,'0'):'#ff3d78';var isSel=st.selected.has(r.id);var div=document.createElement('div');div.className='role-dd-opt'+(isSel?' sel':'');div.innerHTML='<span class="rdo-dot" style="background:'+hex+'"></span><span style="color:'+hex+';font-weight:700">'+esc(r.name)+'</span>';div.onclick=()=>selectDDOpt(key,r);el.appendChild(div);});}
 function selectDDOpt(key,role){var st=ddState[key];if(!st)return;if(st.single){st.selected.clear();st.selected.add(role.id);var m=document.getElementById(key+'-dd-menu');var t=document.getElementById(key+'-dd-trigger');if(m)m.classList.remove('open');if(t)t.classList.remove('open');}else{if(st.selected.has(role.id))st.selected.delete(role.id);else st.selected.add(role.id);}updateDDDisplay(key);renderDDOpts(key,'');st.onChange(Array.from(st.selected));}
-function setDDSelection(key,ids){var st=ddState[key];if(!st)return;st.selected=new Set(ids);updateDDDisplay(key);renderDDOpts(key,'');}
-function updateDDDisplay(key){var st=ddState[key];if(!st)return;var el=document.getElementById(key+'-dd-display');if(!el)return;var sel=Array.from(st.selected).map(id=>{var r=st.roles.find(x=>x.id===id);return r;}).filter(Boolean);if(!sel.length){el.innerHTML='<span class="placeholder-txt">— เลือกยศ —</span>';return;}el.innerHTML=sel.map(r=>{var hex=r.color?'#'+r.color.toString(16).padStart(6,'0'):'#ff3d78';return '<span class="role-tag" style="color:'+hex+';border-color:'+hex+'44;background:'+hex+'18"><span class="rdo-dot" style="background:'+hex+'"></span>'+r.name+'</span>';}).join('');}
+function setDDSelection(key,ids){
+  var st=ddState[key];if(!st)return;
+  st.selected=new Set(ids);
+  updateDDDisplay(key);
+  renderDDOpts(key,'');
+}
+function updateDDDisplay(key){
+  var st=ddState[key];if(!st)return;
+  var el=document.getElementById(key+'-dd-display');if(!el)return;
+  var sel=Array.from(st.selected).map(id=>{return st.roles.find(x=>x.id===id);}).filter(Boolean);
+  if(!sel.length){el.innerHTML='<span class="placeholder-txt">— เลือกยศ —</span>';return;}
+  el.innerHTML=sel.map(r=>{
+    var hex=r.color?'#'+r.color.toString(16).padStart(6,'0'):'#ff3d78';
+    return '<span class="role-tag" style="color:'+hex+';border-color:'+hex+'44;background:'+hex+'18"><span class="rdo-dot" style="background:'+hex+'"></span>'+esc(r.name)+'</span>';
+  }).join('');
+}
 
 document.addEventListener('DOMContentLoaded',function(){
   document.getElementById('logout-btn').onclick=function(e){
