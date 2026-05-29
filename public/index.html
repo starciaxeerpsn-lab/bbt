@@ -634,7 +634,17 @@
             <div class="toggle-thumb"></div>
           </label>
         </div>
-
+        <div class="toggle-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+          <div>
+            <div class="toggle-label">รูป Thumbnail (มุมขวา embed)</div>
+            <div class="toggle-desc">แสดง avatar สมาชิก, icon เซิร์ฟเวอร์ หรือปิด</div>
+          </div>
+          <select id="w-thumb-preset" onchange="updateWelcomePreview()" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 10px;font-family:'Sarabun',sans-serif;font-size:13px">
+            <option value="">(ไม่มี thumbnail)</option>
+            <option value="[user]">👤 [user] — รูป avatar ของสมาชิกใหม่</option>
+            <option value="[server]">🖼️ [server] — รูป icon ของเซิร์ฟเวอร์</option>
+          </select>
+        </div>
       </div>
 
       <div class="card">
@@ -723,7 +733,17 @@
             <div class="toggle-thumb"></div>
           </label>
         </div>
-
+        <div class="toggle-row" style="flex-direction:column;align-items:flex-start;gap:8px">
+          <div>
+            <div class="toggle-label">รูป Thumbnail (มุมขวา embed)</div>
+            <div class="toggle-desc">แสดง avatar สมาชิก, icon เซิร์ฟเวอร์ หรือปิด</div>
+          </div>
+          <select id="gb-thumb-preset" onchange="updateGoodbyePreview()" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:8px 10px;font-family:'Sarabun',sans-serif;font-size:13px">
+            <option value="">(ไม่มี thumbnail)</option>
+            <option value="[user]">👤 [user] — รูป avatar ของสมาชิกที่ออก</option>
+            <option value="[server]">🖼️ [server] — รูป icon ของเซิร์ฟเวอร์</option>
+          </select>
+        </div>
       </div>
 
       <div class="card">
@@ -943,25 +963,7 @@
               <button onclick="clearVerifyImage()" style="display:block;margin-top:4px;background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px">✕ ลบรูป</button>
             </div>
           </div>
-          <div class="field" style="grid-column:1/-1">
-            <label>รูป Thumbnail (มุมขวา)</label>
-            <div style="display:flex;gap:8px;margin-bottom:8px">
-              <select id="ve-thumb-preset" onchange="applyThumbPreset()" style="flex:1">
-                <option value="">(ไม่มี thumbnail)</option>
-                <option value="[user]">👤 [user] — รูป avatar ของคนที่เข้ามา</option>
-                <option value="[server]">🖼️ [server] — รูป icon ของเซิร์ฟเวอร์</option>
-                <option value="custom">🔗 URL รูปเอง / อัปโหลด</option>
-              </select>
-            </div>
-            <div id="ve-thumb-custom-wrap" style="display:none;display:flex;gap:8px;align-items:center">
-              <input type="text" id="ve-thumb" placeholder="https://..." style="flex:1" oninput="updateVerifyPreview()">
-              <label style="cursor:pointer;background:var(--btn-ghost-bg,#2b2d31);border:1px solid var(--border);padding:7px 14px;border-radius:6px;font-size:13px;white-space:nowrap">
-                📁 อัปโหลด
-                <input type="file" accept="image/*" style="display:none" onchange="uploadVerifyThumb(this)">
-              </label>
-            </div>
-            <div style="margin-top:6px;font-size:11px;color:var(--muted)" id="ve-thumb-hint"></div>
-          </div>
+          <input type="hidden" id="ve-thumb" value="">
         </div>
       </div>
 
@@ -974,13 +976,19 @@
           </div>
           <div class="field" style="grid-column:1/-1">
             <label>สีปุ่ม</label>
-            <input type="hidden" id="ve-btn-color" value="Primary">
-            <div class="dc-btn-picker" id="ve-btn-picker">
-              <div class="dc-btn-opt primary selected" data-val="Primary" onclick="pickBtnColor('Primary',this)">🔵 Primary</div>
-              <div class="dc-btn-opt success" data-val="Success" onclick="pickBtnColor('Success',this)">🟢 Success</div>
-              <div class="dc-btn-opt danger" data-val="Danger" onclick="pickBtnColor('Danger',this)">🔴 Danger</div>
-              <div class="dc-btn-opt secondary" data-val="Secondary" onclick="pickBtnColor('Secondary',this)">⚪ Secondary</div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:4px">
+              <div class="dc-btn-picker" id="ve-btn-picker">
+                <div class="dc-btn-opt primary selected" data-val="Primary" onclick="pickBtnColor('Primary',this)">🔵 Primary</div>
+                <div class="dc-btn-opt success" data-val="Success" onclick="pickBtnColor('Success',this)">🟢 Success</div>
+                <div class="dc-btn-opt danger" data-val="Danger" onclick="pickBtnColor('Danger',this)">🔴 Danger</div>
+                <div class="dc-btn-opt secondary" data-val="Secondary" onclick="pickBtnColor('Secondary',this)">⚪ Secondary</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;padding-left:10px;border-left:1px solid var(--border)">
+                <span style="font-size:12px;color:var(--muted)">หรือสีเอง:</span>
+                <input type="color" id="ve-btn-custom-color" value="#5865f2" oninput="pickBtnCustomColor(this.value)" style="width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:6px;padding:2px">
+              </div>
             </div>
+            <input type="hidden" id="ve-btn-color" value="Primary">
           </div>
         </div>
       </div>
@@ -1247,6 +1255,14 @@ function clearVerifyImage() {
 }
 
 
+function pickBtnCustomColor(hexColor) {
+  // ปิด highlight ปุ่ม preset ทั้งหมด
+  document.querySelectorAll('#ve-btn-picker .dc-btn-opt').forEach(b => b.classList.remove('selected'));
+  // เก็บค่าสีเป็น hex ลงใน hidden input
+  document.getElementById('ve-btn-color').value = hexColor;
+  updateVerifyPreview();
+}
+
 function pickBtnColor(val, el) {
   document.getElementById('ve-btn-color').value = val;
   document.querySelectorAll('#ve-btn-picker .dc-btn-opt').forEach(b => b.classList.remove('selected'));
@@ -1264,7 +1280,10 @@ function updateVerifyPreview() {
   const thumb = document.getElementById('ve-thumb')?.value || '';
 
   const colorMap = { Primary:'#5865f2', Success:'#57f287', Danger:'#ed4245', Secondary:'#4e5058' };
-  const textMap = { Primary:'white', Success:'#000', Danger:'white', Secondary:'white' };
+  const textMap  = { Primary:'white',   Success:'#000',    Danger:'white',   Secondary:'white' };
+  // รองรับ hex color เองด้วย
+  const resolvedBtnColor = colorMap[btnColor] || btnColor;
+  const resolvedBtnText  = textMap[btnColor]  || 'white';
 
   const ep = document.getElementById('verify-embed-preview');
   if (ep) ep.style.borderLeftColor = color;
@@ -1275,8 +1294,8 @@ function updateVerifyPreview() {
   const btn = document.getElementById('ve-prev-btn');
   if (btn) {
     btn.textContent = btnLabel;
-    btn.style.background = colorMap[btnColor] || '#5865f2';
-    btn.style.color = textMap[btnColor] || 'white';
+    btn.style.background = resolvedBtnColor;
+    btn.style.color = resolvedBtnText;
   }
   // image
   const imgWrap = document.getElementById('ve-prev-image-wrap');
@@ -1591,6 +1610,8 @@ function applyToUI() {
   document.getElementById('w-color').value = wc;
   document.getElementById('w-color-text').value = wc;
   document.getElementById('w-mention').checked = cfg.MENTION_USER !== false;
+  if (document.getElementById('w-thumb-preset')) document.getElementById('w-thumb-preset').value = cfg.WELCOME_THUMBNAIL || '';
+  if (document.getElementById('gb-thumb-preset')) document.getElementById('gb-thumb-preset').value = cfg.GOODBYE_THUMBNAIL || '';
   document.getElementById('w-show-avatar').checked = cfg.WELCOME_SHOW_AVATAR !== false;
   document.getElementById('w-img-url').value = cfg.WELCOME_IMAGE || '';
   if (cfg.WELCOME_IMAGE) {
@@ -1680,6 +1701,8 @@ function collectFromUI() {
   cfg.VERIFY_BUTTON_COLOR = document.getElementById('ve-btn-color').value;
   cfg.VERIFY_IMAGE = document.getElementById('ve-image').value;
   cfg.VERIFY_THUMBNAIL = document.getElementById('ve-thumb').value;
+  cfg.WELCOME_THUMBNAIL = document.getElementById('w-thumb-preset')?.value || '';
+  cfg.GOODBYE_THUMBNAIL = document.getElementById('gb-thumb-preset')?.value || '';
 
   cfg.MEMBER_ROLE_NAME = document.getElementById('r-member-name').value || 'Member';
   cfg.MEMBER_ROLE_COLOR = document.getElementById('r-member-color-text').value || document.getElementById('r-member-color').value;
