@@ -43,9 +43,15 @@ async function getSession(token) {
   if (!token) return null;
   try {
     const raw = await redis.get(`session:${token}`);
-    if (!raw) return null;
+    if (!raw) {
+      console.log(`[session] not found for token: ${token?.slice(0,8)}...`);
+      return null;
+    }
     return typeof raw === "string" ? JSON.parse(raw) : raw;
-  } catch { return null; }
+  } catch (err) {
+    console.error("[session] redis error:", err.message);
+    return null;
+  }
 }
 async function deleteSession(token) { await redis.del(`session:${token}`); }
 
