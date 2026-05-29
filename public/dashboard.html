@@ -4,14 +4,13 @@
 <meta charset="UTF-8">
 <title>Bot Panel</title>
 <script>
-  // รับ token จาก URL แล้วบันทึกลง localStorage จากนั้น redirect ไป index.html
-  // *** ไม่มี meta refresh เด็ดขาด ***
   (function() {
-    var params = new URLSearchParams(window.location.search);
-    var token = params.get('token');
+    // ถ้าอยู่ที่ index.html อยู่แล้ว ไม่ต้องทำอะไร
+    if (window.location.pathname === '/index.html') return;
+
+    var token = new URLSearchParams(window.location.search).get('token');
     if (token) {
       localStorage.setItem('session_token', token);
-      // ใช้ replace เพื่อไม่ให้ browser history วนย้อนกลับมา
       window.location.replace('/index.html');
     } else {
       var saved = localStorage.getItem('session_token');
