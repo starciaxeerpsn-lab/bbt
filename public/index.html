@@ -284,6 +284,7 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
 <div id="loading-overlay">
   <div class="loader-ring"></div>
   <div class="loader-txt" id="loading-txt">กำลังโหลด BBT Panel...</div>
+  <div style="font-size:11px;color:var(--text3);margin-top:-8px;text-align:center;max-width:260px;line-height:1.6" id="loading-sub">Render free tier อาจใช้เวลา 20-30 วินาทีในการ wake up</div>
 </div>
 
 <aside class="sidebar">
@@ -421,12 +422,16 @@ var activeEditorId=null;
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function uid(){return 'p_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,6);}
 function toast(msg,type){type=type||'';var t=document.getElementById('toast');t.textContent=msg;t.className='toast on'+(type?' '+type:'');clearTimeout(t._tmr);t._tmr=setTimeout(function(){t.className='toast';},3200);}
-async function api(method,path,body){
+async function api(method,path,body,timeoutMs){
+  timeoutMs=timeoutMs||20000;
+  var ctrl=new AbortController();
+  var tid=setTimeout(function(){ctrl.abort();},timeoutMs);
   try{
-    var res=await fetch(path+(TOKEN?'?token='+TOKEN:''),{method:method,headers:{'Content-Type':'application/json','x-session-token':TOKEN},body:body?JSON.stringify(body):null});
+    var res=await fetch(path+(TOKEN?'?token='+TOKEN:''),{method:method,headers:{'Content-Type':'application/json','x-session-token':TOKEN},body:body?JSON.stringify(body):null,signal:ctrl.signal});
+    clearTimeout(tid);
     if(res.status===401){localStorage.removeItem('session_token');document.cookie='session_token=; Max-Age=0; path=/';window.location='/auth/login';return null;}
     return await res.json();
-  }catch(e){return null;}
+  }catch(e){clearTimeout(tid);return null;}
 }
 
 // ── NAV ──
@@ -1147,16 +1152,37 @@ document.getElementById('logout-btn').addEventListener('click',function(){
 function _hideLoading(){
   var ov=document.getElementById('loading-overlay');
   if(!ov)return;
+  if(window._loadingMsgInterval)clearInterval(window._loadingMsgInterval);
   ov.classList.add('hidden');
   setTimeout(function(){if(ov.parentNode)ov.parentNode.removeChild(ov);},500);
 }
-// Safety fallback: hide loading after 12s no matter what
-var _loadingTimeout=setTimeout(_hideLoading, 12000);
+// Safety fallback: force hide after 25s
+var _loadingTimeout=setTimeout(function(){
+  var ltxt=document.getElementById('loading-txt');
+  if(ltxt)ltxt.textContent='หมดเวลาเชื่อมต่อ — กรุณารีเฟรช';
+  setTimeout(_hideLoading,2500);
+}, 25000);
+// Animated loading messages
+(function(){
+  var msgs=['กำลังโหลด BBT Panel...','กำลังเชื่อมต่อเซิร์ฟเวอร์...','Server กำลัง wake up (Render free tier)...','รอสักครู่ อาจใช้เวลา 10-30 วิ...','ใกล้เสร็จแล้ว...'];
+  var i=0;
+  window._loadingMsgInterval=setInterval(function(){
+    var ltxt=document.getElementById('loading-txt');
+    if(!ltxt)return clearInterval(window._loadingMsgInterval);
+    i++;
+    if(i<msgs.length)ltxt.textContent=msgs[i];
+  },5000);
+})();
 
 (async function(){
   try{
   var ltxt=document.getElementById('loading-txt');if(ltxt)ltxt.textContent='กำลังโหลด BBT Panel...';
-  var initData=await api('GET','/api/init');
+  var initData=await api('GET','/api/init',null,18000);
+  if(!initData){
+    if(ltxt)ltxt.textContent='ลองใหม่อีกครั้ง...';
+    await new Promise(function(r){setTimeout(r,2000);});
+    initData=await api('GET','/api/init',null,18000);
+  }
   if(initData){
     cfg=initData.config||{};
     var statusData=initData.status||{};var u=statusData.user||{};
