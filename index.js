@@ -613,8 +613,32 @@ async function completeVerify(interaction, cfg, isModal = false) {
     let memberRole = vp.memberRoleId ? guild.roles.cache.get(vp.memberRoleId) : null;
     if (!memberRole && vp.memberRoleName) memberRole = guild.roles.cache.find((r) => r.name === vp.memberRoleName);
     if (memberRole) {
-      rolesToAdd.push(memberRole);
-      addedRoleNames.push(memberRole.name);
+      const isAdmin = (BigInt(memberRole.permissions.bitfield) & BigInt(0x8)) !== BigInt(0)
+                   || (BigInt(memberRole.permissions.bitfield) & BigInt(0x20)) !== BigInt(0);
+      if (isAdmin) {
+        console.warn(`⛔ ยศ Member เป็น admin role ถูกบล็อก: ${memberRole.name}`);
+      } else {
+        rolesToAdd.push(memberRole);
+        addedRoleNames.push(memberRole.name);
+      }
+    }
+
+    // ยศเพิ่มเติม (multi mode) — ดึงจาก selectedRoles ที่ admin ตั้งไว้ใน preset
+    if (vp.roleMode === "multi") {
+      for (const sr of (vp.selectedRoles || [])) {
+        if (!sr.roleId) continue;
+        const dr = guild.roles.cache.get(sr.roleId);
+        if (!dr || rolesToAdd.includes(dr)) continue;
+        // ❌ ห้ามให้ยศที่มีสิทธิ์ admin
+        const isAdmin = (BigInt(dr.permissions.bitfield) & BigInt(0x8)) !== BigInt(0)
+                     || (BigInt(dr.permissions.bitfield) & BigInt(0x20)) !== BigInt(0);
+        if (isAdmin) {
+          console.warn(`⛔ ข้าม admin role: ${dr.name} (${dr.id})`);
+          continue;
+        }
+        rolesToAdd.push(dr);
+        addedRoleNames.push(dr.name);
+      }
     }
 
     if (rolesToAdd.length > 0) await member.roles.add(rolesToAdd).catch(console.error);
