@@ -1144,7 +1144,17 @@ document.getElementById('logout-btn').addEventListener('click',function(){
 });
 
 // ── INIT ──
+function _hideLoading(){
+  var ov=document.getElementById('loading-overlay');
+  if(!ov)return;
+  ov.classList.add('hidden');
+  setTimeout(function(){if(ov.parentNode)ov.parentNode.removeChild(ov);},500);
+}
+// Safety fallback: hide loading after 12s no matter what
+var _loadingTimeout=setTimeout(_hideLoading, 12000);
+
 (async function(){
+  try{
   var ltxt=document.getElementById('loading-txt');if(ltxt)ltxt.textContent='กำลังโหลด BBT Panel...';
   var initData=await api('GET','/api/init');
   if(initData){
@@ -1160,6 +1170,7 @@ document.getElementById('logout-btn').addEventListener('click',function(){
     if(initData.roles&&initData.roles.length){fetchedRoles=initData.roles;rolesLoaded=true;}
     if(initData.channels&&initData.channels.length){channels=initData.channels;channelsLoaded=true;}
   } else {
+    if(ltxt)ltxt.textContent='เชื่อมต่อแบบเก่า...';
     var r2=await Promise.all([api('GET','/api/config'),api('GET','/api/status')]);
     cfg=r2[0]||{};var s2=r2[1]||{};var u2=s2.user||{};
     document.getElementById('guild-name').textContent=u2.guildName||'—';
@@ -1182,8 +1193,13 @@ document.getElementById('logout-btn').addEventListener('click',function(){
   }
 
   refreshOverview();
-  var ov=document.getElementById('loading-overlay');ov.classList.add('hidden');
-  setTimeout(function(){if(ov.parentNode)ov.parentNode.removeChild(ov);},500);
+  }catch(err){
+    console.error('BBT Panel init error:',err);
+    toast('โหลดข้อมูลล้มเหลว — กรุณารีเฟรช','err');
+  }finally{
+    clearTimeout(_loadingTimeout);
+    _hideLoading();
+  }
 })();
 </script>
 </body>
