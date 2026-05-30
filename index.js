@@ -170,6 +170,45 @@ app.get("/api/channels", requireAuth, (req, res) => {
     .map((c) => ({ id: c.id, name: c.name }));
   res.json({ channels });
 });
+app.post("/api/send-embed", requireAuth, async (req, res) => {
+  try {
+    const { presetId } = req.body;
+    const cfg = loadConfig();
+    const preset = (cfg.VERIFY_PRESETS || []).find((p) => p.id === presetId);
+    if (!preset) return res.json({ ok: false, error: "ไม่พบ preset" });
+
+    const guild = client.guilds.cache.get(req.session.guildId);
+    if (!guild) return res.json({ ok: false, error: "ไม่พบ server" });
+
+    const ch = guild.channels.cache.find((c) => c.name === preset.channelName);
+    if (!ch) return res.json({ ok: false, error: `ไม่พบห้อง "${preset.channelName}" — ตรวจสอบชื่อห้องอีกครั้ง` });
+
+    const embed = new EmbedBuilder()
+      .setColor(hexToInt(preset.embedColor || "#ff6eb4"))
+      .setTitle(preset.embedTitle || "🌸 ยืนยันตัวตน")
+      .setDescription(preset.embedDesc || "กดปุ่มด้านล่างเพื่อกรอกข้อมูลและรับยศของคุณ!");
+
+    const thumb = preset.embedThumbnail || "";
+    if (thumb === "[server]" && guild.iconURL()) embed.setThumbnail(guild.iconURL());
+    else if (thumb && thumb !== "[user]") embed.setThumbnail(thumb);
+    if (preset.embedImage) embed.setImage(preset.embedImage);
+
+    const customId = `open_verify_modal:${preset.name}`;
+    const btn = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(customId)
+        .setLabel(preset.embedButtonLabel || "✅ ยืนยันตัวตน")
+        .setStyle(resolveButtonStyle(preset.embedButtonColor || "Primary"))
+    );
+
+    await ch.send({ embeds: [embed], components: [btn] });
+    res.json({ ok: true, channel: preset.channelName });
+  } catch (err) {
+    console.error("❌ /api/send-embed:", err);
+    res.json({ ok: false, error: err.message });
+  }
+});
+
 app.post("/api/upload", requireAuth, upload.single("image"), (req, res) => {
   if (!req.file) return res.json({ ok: false, error: "No file" });
   res.json({ ok: true, url: `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}` });
