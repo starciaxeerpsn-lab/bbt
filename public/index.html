@@ -18,18 +18,9 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden}
 body{background:var(--bg);color:var(--text);font-family:'Noto Sans Thai',sans-serif;font-size:14px;line-height:1.5;display:flex}
-body::before{
-  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background-image:
-    radial-gradient(1px 1px at 40px 60px,rgba(255,45,149,.5),transparent),
-    radial-gradient(1px 1px at 120px 200px,rgba(255,255,255,.25),transparent),
-    radial-gradient(1px 1px at 200px 80px,rgba(255,45,149,.3),transparent),
-    radial-gradient(1px 1px at 300px 160px,rgba(255,255,255,.2),transparent),
-    radial-gradient(1px 1px at 80px 300px,rgba(255,45,149,.4),transparent),
-    radial-gradient(1px 1px at 450px 120px,rgba(255,255,255,.3),transparent),
-    radial-gradient(1px 1px at 350px 280px,rgba(255,45,149,.35),transparent);
-  background-size:500px 400px;opacity:.6;animation:stars 120s linear infinite;
-}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:radial-gradient(1px 1px at 40px 60px,rgba(255,45,149,.5),transparent),radial-gradient(1px 1px at 120px 200px,rgba(255,255,255,.25),transparent),radial-gradient(1px 1px at 200px 80px,rgba(255,45,149,.3),transparent),radial-gradient(1px 1px at 300px 160px,rgba(255,255,255,.2),transparent),radial-gradient(1px 1px at 80px 300px,rgba(255,45,149,.4),transparent),radial-gradient(1px 1px at 450px 120px,rgba(255,255,255,.3),transparent),radial-gradient(1px 1px at 350px 280px,rgba(255,45,149,.35),transparent);
+  background-size:500px 400px;opacity:.6;animation:stars 120s linear infinite;}
 @keyframes stars{from{background-position:0 0}to{background-position:1200px 800px}}
 /* SIDEBAR */
 .sidebar{position:relative;height:100vh;width:var(--sb-w);flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:10}
@@ -51,7 +42,6 @@ body::before{
 .sb-link:hover{background:var(--card);color:var(--text)}
 .sb-link.on{background:var(--pk-dim);color:var(--pk3);border-color:var(--pk-border)}
 .sb-link-ico{font-size:15px;width:20px;text-align:center}
-.sb-badge{margin-left:auto;background:var(--pk);color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:10px}
 .sb-foot{padding:16px 18px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:10px}
 .sb-user{display:flex;align-items:center;gap:8px}
 .sb-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--pk),var(--pk2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
@@ -60,7 +50,7 @@ body::before{
 .sb-logout:hover{color:var(--red);background:rgba(244,63,94,.08)}
 /* MAIN */
 .main{flex:1;overflow-y:auto;padding:36px 44px 60px;position:relative;z-index:1}
-.page{display:none;animation:fadeUp .25s ease;max-width:860px;margin:0 auto}
+.page{display:none;animation:fadeUp .25s ease;max-width:900px;margin:0 auto}
 .page.on{display:block}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 .pg-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:10px}
@@ -74,7 +64,7 @@ body::before{
 .card-head-icon{font-size:15px}
 /* FORM */
 .field{display:flex;flex-direction:column;gap:7px;margin-bottom:16px}
-.field label,.field-label{font-size:10.5px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px}
+.field label{font-size:10.5px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px}
 .inp,.field input,.field select,.field textarea{background:var(--bg);border:1px solid var(--border2);border-radius:11px;color:var(--text);padding:12px 14px;font-family:inherit;font-size:14px;outline:none;width:100%;transition:.18s;resize:vertical}
 .inp:focus,.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--pk);box-shadow:0 0 0 3px var(--pk-glow)}
 .field input[type="color"]{padding:6px 8px;height:44px;cursor:pointer}
@@ -112,12 +102,16 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
 .btn-sm{padding:8px 14px;font-size:12px;border-radius:9px}
 .btn-xs{padding:5px 10px;font-size:11.5px;border-radius:7px}
 .btn-row{display:flex;justify-content:space-between;align-items:center;margin-top:24px;gap:10px;flex-wrap:wrap}
-/* WIZARD */
-.wiz-steps{display:flex;gap:8px;margin-bottom:26px}.wiz-steps.hidden{display:none}
-.wiz-step{flex:1;height:5px;background:var(--border);border-radius:10px;position:relative;transition:.35s}
-.wiz-step.active{background:var(--pk);box-shadow:0 0 8px var(--pk-glow)}
-.wiz-step.done{background:var(--pk2)}
-.wiz-step-label{position:absolute;top:10px;left:0;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text3);white-space:nowrap}
+/* OVERVIEW STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;display:flex;align-items:center;gap:14px;transition:.2s}
+.stat-card:hover{border-color:var(--border2);transform:translateY(-1px)}
+.stat-icon{font-size:22px;width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stat-icon.pk{background:var(--pk-dim);border:1px solid var(--pk-border)}
+.stat-icon.blue{background:rgba(88,101,242,.1);border:1px solid rgba(88,101,242,.2)}
+.stat-icon.green{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.15)}
+.stat-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;line-height:1}
+.stat-lbl{font-size:11px;color:var(--text2);margin-top:4px}
 /* DISCORD PREVIEW */
 .dc-wrap{background:#1e1f22;border-radius:12px;padding:18px 20px}
 .dc-row{display:flex;gap:12px}
@@ -125,7 +119,7 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
 .dc-body{flex:1;min-width:0}
 .dc-name{font-size:14px;font-weight:700;color:#fff;margin-bottom:3px;font-family:'Syne',sans-serif}
 .dc-mention{color:#e0e3ff;background:rgba(88,101,242,.28);border-radius:3px;padding:0 3px;font-size:13px}
-.dc-embed{border-left:4px solid var(--pk);background:#2b2d31;border-radius:4px;padding:14px 16px;margin-top:8px;position:relative;min-height:60px}
+.dc-embed{border-left:4px solid var(--pk);background:#2b2d31;border-radius:4px;padding:14px 16px;margin-top:8px;position:relative;min-height:40px}
 .dc-thumb{position:absolute;top:12px;right:12px;width:46px;height:46px;border-radius:4px;overflow:hidden;display:none}
 .dc-thumb img{width:100%;height:100%;object-fit:cover}
 .dc-etitle{font-size:15px;font-weight:700;color:#fff;margin-bottom:5px}
@@ -138,17 +132,40 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
 .dc-btn-secondary{background:#4e5058;color:#fff}
 .dc-btn-success{background:#248046;color:#fff}
 .dc-btn-danger{background:#da373c;color:#fff}
-/* OVERVIEW STATS */
-.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;display:flex;align-items:center;gap:14px;transition:.2s}
-.stat-card:hover{border-color:var(--border2);transform:translateY(-1px)}
-.stat-icon{font-size:22px;width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.stat-icon.pk{background:var(--pk-dim);border:1px solid var(--pk-border)}
-.stat-icon.blue{background:rgba(88,101,242,.1);border:1px solid rgba(88,101,242,.2)}
-.stat-icon.green{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.15)}
-.stat-val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;line-height:1}
-.stat-lbl{font-size:11px;color:var(--text2);margin-top:4px}
-/* ROLE CATEGORIES */
+/* PRESET GALLERY */
+.preset-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:20px}
+.preset-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;cursor:pointer;transition:.2s;position:relative;overflow:hidden}
+.preset-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--pk-border),transparent);pointer-events:none;transition:.2s}
+.preset-card:hover{border-color:var(--pk-border);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.preset-card:hover::before{background:linear-gradient(90deg,transparent,var(--pk),transparent)}
+.preset-card-accent{position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:var(--radius) 0 0 var(--radius)}
+.preset-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px}
+.preset-card-name{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;letter-spacing:-.2px;line-height:1.2}
+.preset-card-badge{font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;white-space:nowrap;flex-shrink:0}
+.badge-verify{background:var(--pk-dim);color:var(--pk3);border:1px solid var(--pk-border)}
+.badge-welcome{background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+.badge-goodbye{background:rgba(245,158,11,.1);color:var(--yellow);border:1px solid rgba(245,158,11,.2)}
+.preset-card-desc{font-size:12px;color:var(--text3);line-height:1.5;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.preset-card-meta{display:flex;flex-wrap:wrap;gap:6px}
+.preset-meta-chip{font-size:10.5px;color:var(--text3);background:var(--card2);border:1px solid var(--border);padding:2px 8px;border-radius:6px;display:flex;align-items:center;gap:4px}
+.preset-card-actions{display:flex;gap:6px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.preset-add-card{background:transparent;border:2px dashed var(--border2);border-radius:var(--radius);padding:32px 18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:.2s;color:var(--text3)}
+.preset-add-card:hover{border-color:var(--pk3);color:var(--pk3);background:var(--pk-dim)}
+.preset-add-icon{font-size:28px}
+.preset-add-label{font-size:13px;font-weight:700}
+/* EDITOR PANEL */
+.editor-panel{display:none;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:0;overflow:hidden;margin-bottom:18px;animation:fadeUp .2s ease}
+.editor-panel.open{display:block}
+.editor-header{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--border);background:var(--card2);flex-wrap:wrap;gap:10px}
+.editor-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:800}
+.editor-body{padding:24px}
+.editor-tabs{display:flex;gap:4px;padding:16px 24px 0;border-bottom:1px solid var(--border);background:var(--card2)}
+.editor-tab{padding:10px 18px;font-size:12.5px;font-weight:700;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:.15s;border-radius:8px 8px 0 0}
+.editor-tab:hover{color:var(--text2)}
+.editor-tab.on{color:var(--pk3);border-bottom-color:var(--pk)}
+.editor-tab-body{display:none;padding:24px}
+.editor-tab-body.on{display:block}
+/* ROLE CATEGORIES inside editor */
 .cat-list{display:flex;flex-direction:column;gap:12px;margin-bottom:14px}
 .cat-item{background:var(--card2);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;position:relative}
 .cat-item::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--pk),transparent 80%);border-radius:12px 0 0 12px}
@@ -156,13 +173,14 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
 .cat-name-inp{flex:1;min-width:120px;background:var(--bg);border:1px solid var(--border2);border-radius:9px;color:var(--text);padding:8px 12px;font-family:inherit;font-size:13px;outline:none;font-weight:700}
 .cat-name-inp:focus{border-color:var(--pk);box-shadow:0 0 0 3px var(--pk-glow)}
 .cat-badge{font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--border2);color:var(--text2);white-space:nowrap}
-/* ROLE TABLE */
 .role-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
 .role-table thead td{color:var(--text3);font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:0 6px 8px}
 .role-table tbody tr:not(:last-child){border-bottom:1px solid var(--border)}
 .role-table tbody td{padding:6px}
 .role-cell-input{background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:7px 10px;font-family:inherit;font-size:13px;outline:none;width:100%;transition:.15s}
 .role-cell-input:focus{border-color:var(--pk);box-shadow:0 0 0 2px var(--pk-glow)}
+.add-cat-row{display:flex;gap:10px;margin-top:14px;align-items:flex-end;flex-wrap:wrap;padding-top:14px;border-top:1px solid var(--border)}
+.add-cat-row .field{margin-bottom:0;flex:1}
 /* SEARCHABLE DROPDOWN */
 .role-dd-wrap{position:relative;z-index:auto}
 .role-dd-trigger{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--border2);border-radius:11px;padding:9px 12px;cursor:pointer;min-height:42px;transition:.18s;gap:6px;user-select:none}
@@ -179,13 +197,12 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
 .role-dd-opt{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;transition:.1s;font-size:13px;color:var(--text2)}
 .role-dd-opt:hover{background:var(--pk-dim);color:var(--text)}
 .role-dd-opt.sel{background:var(--pk-dim);color:var(--pk3)}
-.role-dd-opt.sel::after{content:'✓';margin-left:auto;font-size:11px;color:var(--pk);font-weight:800}
 .r-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
 .dd-empty{font-size:12px;color:var(--text3);padding:10px;text-align:center}
 .role-tag{background:var(--pk-dim);border:1px solid var(--pk-border);color:var(--pk3);border-radius:6px;padding:2px 8px;font-size:12px;font-weight:700}
-/* PICK BANNER */
-.pick-banner{display:none;align-items:center;gap:10px;padding:12px 18px;border-radius:12px;background:var(--pk-dim);border:1px solid var(--pk-border);color:var(--pk3);font-size:13px;margin-bottom:14px}
-.pick-banner.show{display:flex}
+.role-pick-btn{background:var(--card);border:1px dashed var(--border2);color:var(--text3);border-radius:8px;padding:7px 12px;font-size:12px;cursor:pointer;width:100%;text-align:left;transition:.15s;font-family:inherit}
+.role-pick-btn:hover{border-color:var(--pk3);color:var(--pk3)}
+.role-pick-btn.has-role{border-style:solid;border-color:rgba(34,197,94,.3);color:var(--green);background:rgba(34,197,94,.05)}
 /* CHIP POOL */
 .roles-pool-head{font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px}
 .roles-pool{display:flex;flex-wrap:wrap;gap:6px;min-height:32px}
@@ -193,10 +210,16 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
 .role-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid;cursor:pointer;transition:.15s}
 .role-chip:hover{transform:scale(1.04);filter:brightness(1.15)}
 .role-chip.picked{outline:2px solid var(--pk);outline-offset:2px}
-/* ADD CAT ROW */
-.add-cat-row{display:flex;gap:10px;margin-top:14px;align-items:flex-end;flex-wrap:wrap;padding-top:14px;border-top:1px solid var(--border)}
-.add-cat-row .field{margin-bottom:0;flex:1}
-
+/* PICK BANNER */
+.pick-banner{display:none;align-items:center;gap:10px;padding:12px 18px;border-radius:12px;background:var(--pk-dim);border:1px solid var(--pk-border);color:var(--pk3);font-size:13px;margin-bottom:14px}
+.pick-banner.show{display:flex}
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;z-index:8000;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--pk-border);border-radius:20px;padding:32px;max-width:480px;width:90%;position:relative;box-shadow:0 24px 60px rgba(0,0,0,.8)}
+.modal h3{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:8px}
+.modal p{font-size:13px;color:var(--text2);margin-bottom:24px;line-height:1.7}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end}
 /* TOAST */
 .toast{position:fixed;bottom:24px;right:24px;z-index:9999;padding:12px 22px;border-radius:12px;font-weight:700;font-size:13px;transform:translateY(80px) scale(.95);transition:.3s cubic-bezier(.34,1.56,.64,1);background:var(--surface);border:1px solid var(--pk);color:var(--pk3);box-shadow:0 8px 30px rgba(0,0,0,.5);pointer-events:none}
 .toast.on{transform:translateY(0) scale(1)}
@@ -209,41 +232,16 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
 .loader-ring{width:42px;height:42px;border:3px solid var(--border);border-top-color:var(--pk);border-radius:50%;animation:spin .8s linear infinite;box-shadow:0 0 20px var(--pk-glow)}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loader-txt{font-size:13px;color:var(--text2);font-family:'DM Mono',monospace;letter-spacing:1px}
-
-/* CMD CARDS */
-.cmd-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.cmd-card{background:var(--card2);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;transition:.18s}
-.cmd-card:hover{border-color:var(--pk-border)}
-.cmd-icon{width:36px;height:36px;border-radius:10px;background:var(--pk-dim);border:1px solid var(--pk-border);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-.cmd-name{font-family:'DM Mono',monospace;font-size:13.5px;font-weight:700;color:var(--pk3)}
-.cmd-desc{font-size:12px;color:var(--text3);margin-top:3px;line-height:1.5}
-/* EMBED INFO */
-.embed-info{background:var(--card2);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start}
-.embed-info:last-child{margin-bottom:0}
-.embed-info-bar{width:4px;border-radius:4px;flex-shrink:0;align-self:stretch}
-.embed-info-body{flex:1;min-width:0}
-.embed-info-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
-.embed-info-desc{font-size:12px;color:var(--text3);line-height:1.6}
-/* ROLE PICK BTN */
-.role-pick-btn{background:var(--card);border:1px dashed var(--border2);color:var(--text3);border-radius:8px;padding:7px 12px;font-size:12px;cursor:pointer;width:100%;text-align:left;transition:.15s;font-family:inherit}
-.role-pick-btn:hover{border-color:var(--pk3);color:var(--pk3)}
-.role-pick-btn.has-role{border-style:solid;border-color:rgba(34,197,94,.3);color:var(--green);background:rgba(34,197,94,.05)}
-/* SKELETON */
-@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
-.skeleton{background:linear-gradient(90deg,var(--border) 25%,var(--border2) 50%,var(--border) 75%);background-size:800px 100%;animation:shimmer 1.5s infinite;border-radius:8px}
-/* MISC */
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:10px}
 </style>
 </head>
 <body>
 
-<!-- LOADING -->
 <div id="loading-overlay">
   <div class="loader-ring"></div>
   <div class="loader-txt" id="loading-txt">กำลังโหลด BBT Panel...</div>
 </div>
 
-<!-- SIDEBAR -->
 <aside class="sidebar">
   <div class="sb-head">
     <div class="sb-brand">
@@ -262,12 +260,10 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
     <div class="sb-sec">Dashboard</div>
     <a class="sb-link on" onclick="nav('overview',this)"><span class="sb-link-ico">&#127968;</span> ภาพรวม</a>
     <div class="sb-sec">Verification</div>
-    <a class="sb-link" onclick="nav('verify',this)"><span class="sb-link-ico">&#9989;</span> ระบบ Verify</a>
-    <a class="sb-link" onclick="nav('roles',this)"><span class="sb-link-ico">&#127917;</span> ยศหมวดหมู่</a>
-
+    <a class="sb-link" onclick="nav('verify',this)"><span class="sb-link-ico">&#9989;</span> Verify Presets</a>
     <div class="sb-sec">Automation</div>
-    <a class="sb-link" onclick="nav('welcome',this)"><span class="sb-link-ico">&#128075;</span> Welcome</a>
-    <a class="sb-link" onclick="nav('goodbye',this)"><span class="sb-link-ico">&#128682;</span> Goodbye</a>
+    <a class="sb-link" onclick="nav('welcome',this)"><span class="sb-link-ico">&#128075;</span> Welcome Presets</a>
+    <a class="sb-link" onclick="nav('goodbye',this)"><span class="sb-link-ico">&#128682;</span> Goodbye Presets</a>
   </nav>
   <div class="sb-foot">
     <div class="sb-user">
@@ -281,7 +277,6 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
   </div>
 </aside>
 
-<!-- MAIN -->
 <main class="main">
 
   <!-- OVERVIEW -->
@@ -290,9 +285,9 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
       <div><div class="pg-title">&#127968; ภาพรวม</div><div class="pg-sub">สถานะบอทและสรุปการตั้งค่า</div></div>
     </div>
     <div class="stats-grid">
-      <div class="stat-card"><div class="stat-icon pk">&#9989;</div><div><div class="stat-val" id="ov-verify-ch">—</div><div class="stat-lbl">ห้อง Verify</div></div></div>
-      <div class="stat-card"><div class="stat-icon blue">&#128075;</div><div><div class="stat-val" id="ov-welcome-ch">—</div><div class="stat-lbl">ห้อง Welcome</div></div></div>
-      <div class="stat-card"><div class="stat-icon green">&#127917;</div><div><div class="stat-val" id="ov-roles-count">—</div><div class="stat-lbl">ยศที่ตั้งค่าแล้ว</div></div></div>
+      <div class="stat-card"><div class="stat-icon pk">&#9989;</div><div><div class="stat-val" id="ov-verify-count">—</div><div class="stat-lbl">Verify Presets</div></div></div>
+      <div class="stat-card"><div class="stat-icon blue">&#128075;</div><div><div class="stat-val" id="ov-welcome-count">—</div><div class="stat-lbl">Welcome Presets</div></div></div>
+      <div class="stat-card"><div class="stat-icon green">&#128682;</div><div><div class="stat-val" id="ov-goodbye-count">—</div><div class="stat-lbl">Goodbye Presets</div></div></div>
     </div>
     <div class="card">
       <div class="card-head"><span class="card-head-icon">&#129302;</span> สถานะบอท</div>
@@ -301,110 +296,60 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
         <div><div style="font-size:11px;color:var(--text3);margin-bottom:4px">SERVER</div><div style="font-family:'DM Mono',monospace;font-size:14px" id="ov-guilds">—</div></div>
       </div>
     </div>
-
     <div class="card">
       <div class="card-head"><span class="card-head-icon">&#8505;&#65039;</span> วิธีใช้งาน</div>
       <p style="color:var(--text2);line-height:2.2;font-size:13.5px">
-        1. ตั้งค่า <strong style="color:var(--pk3)">ระบบ Verify</strong> → ออกแบบ embed, เลือกห้อง และยศ Member<br>
-        2. ตั้งค่า <strong style="color:var(--pk3)">ยศหมวดหมู่</strong> → กำหนดปุ่มให้สมาชิกเลือกยศ<br>
-        3. ตั้งค่า <strong style="color:var(--pk3)">Welcome / Goodbye</strong> → ข้อความต้อนรับและลาจาก<br>
-        4. พิมพ์ <code>/setup</code> ในห้อง Verify เพื่อส่ง embed
+        1. สร้าง <strong style="color:var(--pk3)">Verify Preset</strong> → ตั้งชื่อ ออกแบบ embed เลือกห้อง ยศ Member และยศหมวดหมู่<br>
+        2. พิมพ์ <code>/setup &lt;ชื่อ preset&gt;</code> ในห้องที่ต้องการส่ง embed<br>
+        3. สร้าง <strong style="color:var(--pk3)">Welcome / Goodbye Preset</strong> → บอทจะส่งข้อความอัตโนมัติตามห้องที่กำหนด
       </p>
     </div>
   </div>
 
-  <!-- VERIFY -->
+  <!-- VERIFY PRESETS -->
   <div id="pg-verify" class="page">
-    <div class="pg-head"><div><div class="pg-title">&#9989; ระบบ Verify</div><div class="pg-sub">ออกแบบ embed และปุ่มที่แสดงตอนสมาชิกเข้า server</div></div></div>
-    <div id="wiz-verify">
-      <div class="wiz-steps">
-        <div class="wiz-step active"><div class="wiz-step-label">1. ตกแต่ง</div></div>
-        <div class="wiz-step"><div class="wiz-step-label">2. ห้อง &amp; ยศ</div></div>
-        <div class="wiz-step"><div class="wiz-step-label">3. ยืนยัน</div></div>
-      </div>
-      <div class="wiz-body" id="wiz-body-verify"></div>
-    </div>
-  </div>
-
-  <!-- ROLES -->
-  <div id="pg-roles" class="page">
     <div class="pg-head">
-      <div><div class="pg-title">&#127917; ยศหมวดหมู่</div><div class="pg-sub">กำหนดกลุ่มยศให้สมาชิกเลือกตอน Verify</div></div>
-      <div class="pg-actions">
-        <button class="btn btn-ghost btn-sm" onclick="loadAllRoles(true)" id="reload-roles-btn">&#128260; โหลดยศใหม่</button>
-      </div>
+      <div><div class="pg-title">&#9989; Verify Presets</div><div class="pg-sub">สร้าง embed สำหรับรับยศได้หลายอัน ใช้ <code>/setup &lt;ชื่อ&gt;</code> เพื่อส่ง</div></div>
     </div>
-    <div class="card">
-      <div class="card-head"><span class="card-head-icon">&#128203;</span> ยศจาก Discord</div>
-      <p style="font-size:12.5px;color:var(--text3);margin-bottom:10px">โหลดยศก่อนเพื่อเลือกผูกกับปุ่ม</p>
-      <div class="pick-banner" id="pick-banner">
-        <span>&#127919;</span>
-        <span id="pick-banner-text">เลือกยศ...</span>
-        <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="cancelPick()">&#10005; ยกเลิก</button>
-      </div>
-      <div>
-        <div class="roles-pool-head">คลิกยศเพื่อผูกกับปุ่ม (กด "คลิกเพื่อเลือกยศ" ในตารางก่อน)</div>
-        <div class="roles-pool" id="roles-chips-area"><span class="roles-empty">กด "โหลดยศใหม่" ก่อน</span></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-head"><span class="card-head-icon">&#127917;</span> หมวดหมู่ยศทั้งหมด</div>
-      <div class="cat-list" id="cat-list"><p style="color:var(--text3);font-size:13px">ยังไม่มีหมวดหมู่ เพิ่มด้านล่าง</p></div>
-      <div class="add-cat-row">
-        <div class="field">
-          <label>ชื่อหมวดหมู่</label>
-          <input type="text" id="new-cat-name" placeholder="เช่น 🎮 เกมที่เล่น">
-        </div>
-        <div class="field" style="flex:0 0 170px">
-          <label>โหมดการเลือก</label>
-          <select id="new-cat-multi">
-            <option value="true">&#9989; เลือกได้หลาย</option>
-            <option value="false">&#128280; เลือกได้อันเดียว</option>
-          </select>
-        </div>
-        <div style="padding-bottom:16px">
-          <button class="btn btn-gr btn-sm" onclick="addCategory()">+ เพิ่มหมวดหมู่</button>
-        </div>
-      </div>
-    </div>
-    <div class="btn-row">
-      <div></div>
-      <button class="btn btn-pk" onclick="saveRoles()">&#128190; บันทึกยศ</button>
-    </div>
+    <div id="verify-editor" class="editor-panel"></div>
+    <div id="verify-gallery" class="preset-gallery"></div>
   </div>
 
-  <!-- WELCOME -->
+  <!-- WELCOME PRESETS -->
   <div id="pg-welcome" class="page">
-    <div class="pg-head"><div><div class="pg-title">&#128075; Welcome</div><div class="pg-sub">ข้อความต้อนรับเมื่อสมาชิกผ่าน Verify</div></div></div>
-    <div id="wiz-welcome">
-      <div class="wiz-steps">
-        <div class="wiz-step active"><div class="wiz-step-label">1. ตกแต่ง</div></div>
-        <div class="wiz-step"><div class="wiz-step-label">2. ห้อง</div></div>
-        <div class="wiz-step"><div class="wiz-step-label">3. ยืนยัน</div></div>
-      </div>
-      <div class="wiz-body" id="wiz-body-welcome"></div>
+    <div class="pg-head">
+      <div><div class="pg-title">&#128075; Welcome Presets</div><div class="pg-sub">ข้อความต้อนรับเมื่อสมาชิกผ่าน Verify</div></div>
     </div>
+    <div id="welcome-editor" class="editor-panel"></div>
+    <div id="welcome-gallery" class="preset-gallery"></div>
   </div>
 
-  <!-- GOODBYE -->
+  <!-- GOODBYE PRESETS -->
   <div id="pg-goodbye" class="page">
-    <div class="pg-head"><div><div class="pg-title">&#128682; Goodbye</div><div class="pg-sub">ข้อความเมื่อสมาชิกออกจาก server</div></div></div>
-    <div id="wiz-goodbye">
-      <div class="wiz-steps">
-        <div class="wiz-step active"><div class="wiz-step-label">1. ตกแต่ง</div></div>
-        <div class="wiz-step"><div class="wiz-step-label">2. ห้อง</div></div>
-        <div class="wiz-step"><div class="wiz-step-label">3. ยืนยัน</div></div>
-      </div>
-      <div class="wiz-body" id="wiz-body-goodbye"></div>
+    <div class="pg-head">
+      <div><div class="pg-title">&#128682; Goodbye Presets</div><div class="pg-sub">ข้อความเมื่อสมาชิกออกจาก server</div></div>
     </div>
+    <div id="goodbye-editor" class="editor-panel"></div>
+    <div id="goodbye-gallery" class="preset-gallery"></div>
   </div>
 
 </main>
 
 <div id="toast" class="toast"></div>
 
+<!-- DELETE CONFIRM MODAL -->
+<div class="modal-bg" id="delete-modal">
+  <div class="modal">
+    <h3>&#128465; ลบ Preset?</h3>
+    <p id="delete-modal-msg">คุณแน่ใจว่าต้องการลบ preset นี้? ไม่สามารถกู้คืนได้</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closeDeleteModal()">ยกเลิก</button>
+      <button class="btn btn-danger btn-sm" id="delete-modal-confirm">&#128465; ลบเลย</button>
+    </div>
+  </div>
+</div>
+
 <script>
-// ── TOKEN ──────────────────────────────────────────────────
 (function(){
   try{var t=new URLSearchParams(window.location.search).get('token');if(t){localStorage.setItem('session_token',t);history.replaceState(null,'',window.location.pathname);}}catch(e){}
 })();
@@ -418,798 +363,570 @@ if(!TOKEN){
   });
 }
 
-// ── STATE ──────────────────────────────────────────────────
+// ── STATE ──
 var cfg={};
 var fetchedRoles=[];
 var channels=[];
-var activePicker=null;
-var wizStep={verify:1,welcome:1,goodbye:1};
-var channelsLoaded=false;
 var rolesLoaded=false;
+var channelsLoaded=false;
+var activePicker=null; // {presetId, ci, ri}
+var activeEditorType=null;
+var activeEditorId=null;
 
-// ── UTILS ──────────────────────────────────────────────────
+// ── UTILS ──
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
-function uid(){return 'cat_'+Math.random().toString(36).slice(2,8);}
-
-function toast(msg,type){
-  type=type||'';
-  var t=document.getElementById('toast');
-  t.textContent=msg; t.className='toast on'+(type?' '+type:'');
-  clearTimeout(t._tmr); t._tmr=setTimeout(function(){t.className='toast';},3200);
-}
-
-// ── API ────────────────────────────────────────────────────
+function uid(){return 'p_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,6);}
+function toast(msg,type){type=type||'';var t=document.getElementById('toast');t.textContent=msg;t.className='toast on'+(type?' '+type:'');clearTimeout(t._tmr);t._tmr=setTimeout(function(){t.className='toast';},3200);}
 async function api(method,path,body){
   try{
-    var res=await fetch(path+(TOKEN?'?token='+TOKEN:''),{
-      method:method,
-      headers:{'Content-Type':'application/json','x-session-token':TOKEN},
-      body:body?JSON.stringify(body):null
-    });
+    var res=await fetch(path+(TOKEN?'?token='+TOKEN:''),{method:method,headers:{'Content-Type':'application/json','x-session-token':TOKEN},body:body?JSON.stringify(body):null});
     if(res.status===401){localStorage.removeItem('session_token');document.cookie='session_token=; Max-Age=0; path=/';window.location='/auth/login';return null;}
     return await res.json();
   }catch(e){return null;}
 }
 
-// ── NAV ────────────────────────────────────────────────────
+// ── NAV ──
 function nav(id,el){
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('on');});
-  var pg=document.getElementById('pg-'+id);
-  if(pg) pg.classList.add('on');
+  var pg=document.getElementById('pg-'+id);if(pg)pg.classList.add('on');
   document.querySelectorAll('.sb-link').forEach(function(l){l.classList.remove('on');});
-  if(el) el.classList.add('on');
+  if(el)el.classList.add('on');
   else document.querySelectorAll('.sb-link').forEach(function(l){if(l.getAttribute('onclick')&&l.getAttribute('onclick').indexOf("'"+id+"'")>=0)l.classList.add('on');});
-  if(['verify','welcome','goodbye'].includes(id)){
-    var hasSaved=(id==='verify'&&cfg.VERIFY_EMBED_TITLE)||(id==='welcome'&&cfg.WELCOME_TITLE)||(id==='goodbye'&&cfg.GOODBYE_TITLE);
-    if(hasSaved) renderEmbedOverview(id);
-    else renderWiz(id,1);
-  }
-  if(id==='roles'){drawCats();if(rolesLoaded)_renderRolePool();}
+  if(id==='verify'||id==='welcome'||id==='goodbye') renderGallery(id);
   if(id==='overview') refreshOverview();
-  closeAllDropdowns();
 }
 
-// ── OVERVIEW ───────────────────────────────────────────────
+// ── OVERVIEW ──
 function refreshOverview(){
-  document.getElementById('ov-verify-ch').textContent=cfg.VERIFY_CHANNEL_NAME||'—';
-  document.getElementById('ov-welcome-ch').textContent=cfg.WELCOME_CHANNEL_NAME||'—';
-  var total=(cfg.ROLE_CATEGORIES||[]).reduce(function(s,c){return s+(c.roles?c.roles.length:0);},0);
-  document.getElementById('ov-roles-count').textContent=total||'—';
+  var vp=(cfg.VERIFY_PRESETS||[]).length;
+  var wp=(cfg.WELCOME_PRESETS||[]).length;
+  var gp=(cfg.GOODBYE_PRESETS||[]).length;
+  document.getElementById('ov-verify-count').textContent=vp||'—';
+  document.getElementById('ov-welcome-count').textContent=wp||'—';
+  document.getElementById('ov-goodbye-count').textContent=gp||'—';
   document.getElementById('ov-tag').textContent=cfg._botTag||'—';
   document.getElementById('ov-guilds').textContent=cfg._guildName||'—';
   var d=document.getElementById('ov-status-dot');if(d)d.classList.toggle('off',!cfg._online);
 }
 
+// ── GALLERY ──
+function renderGallery(type){
+  var isV=type==='verify',isW=type==='welcome';
+  var key=isV?'VERIFY_PRESETS':isW?'WELCOME_PRESETS':'GOODBYE_PRESETS';
+  var presets=cfg[key]||[];
+  var galleryEl=document.getElementById(type+'-gallery');
+  var badgeCls=isV?'badge-verify':isW?'badge-welcome':'badge-goodbye';
+  var badgeTxt=isV?'Verify':isW?'Welcome':'Goodbye';
+  var accentColor=isV?'var(--pk)':isW?'var(--green)':'var(--yellow)';
 
-// ── EMBED OVERVIEW (หน้าหลักก่อน wizard) ────────────────────
-function renderEmbedOverview(type){
-  var isV=type==='verify',isW=type==='welcome',isG=type==='goodbye';
-  var stepsEl=document.querySelector('#wiz-'+type+' .wiz-steps');
-  if(stepsEl) stepsEl.classList.add('hidden');
-  var title=cfg[isV?'VERIFY_EMBED_TITLE':isW?'WELCOME_TITLE':'GOODBYE_TITLE']||'';
-  var desc =cfg[isV?'VERIFY_EMBED_DESC' :isW?'WELCOME_MESSAGE':'GOODBYE_MESSAGE']||'';
-  var color=cfg[isV?'VERIFY_EMBED_COLOR':isW?'WELCOME_COLOR':'GOODBYE_COLOR']||'#ff2d95';
-  var image=cfg[isV?'VERIFY_IMAGE'      :isW?'WELCOME_IMAGE':'GOODBYE_IMAGE']||'';
-  var thumb=cfg[isV?'VERIFY_THUMBNAIL'  :isW?'WELCOME_THUMBNAIL':'GOODBYE_THUMBNAIL']||'';
-  var ch   =cfg[type.toUpperCase()+'_CHANNEL_NAME']||'—';
-  var btnLabel=isV?(cfg.VERIFY_BUTTON_LABEL||'ยืนยันตัวตน'):'';
-  var btnColor=isV?(cfg.VERIFY_BUTTON_COLOR||'Primary'):'';
-  var memberRole=isV?(cfg.MEMBER_ROLE_NAME||'—'):'';
-
-  var thumbSrc='';
-  if(thumb==='[user]')       thumbSrc='https://cdn.discordapp.com/embed/avatars/1.png';
-  else if(thumb==='[server]') thumbSrc='https://cdn.discordapp.com/embed/avatars/0.png';
-  else if(thumb)              thumbSrc=thumb;
-
-  var thumbHtml=thumbSrc?`<div class="dc-thumb" style="display:block"><img src="${esc(thumbSrc)}" onerror="this.parentElement.style.display='none'"></div>`:'';
-  var imgHtml=image?`<div class="dc-img" style="display:block"><img src="${esc(image)}" onerror="this.parentElement.style.display='none'"></div>`:'';
-  var mentionHtml=(isW&&cfg.MENTION_USER)?`<div style="margin-bottom:4px"><span class="dc-mention">@สมาชิกใหม่</span></div>`:'';
-  var btnColorMap={Primary:'primary',Secondary:'secondary',Success:'success',Danger:'danger'};
-  var btnHtml=isV?`<div class="dc-btn-row"><button class="dc-btn-preview dc-btn-${btnColorMap[btnColor]||'primary'}">${esc(btnLabel)}</button></div>`:'';
-
-  var rolesPreview='';
-  if(isV&&cfg.ROLE_CATEGORIES&&cfg.ROLE_CATEGORIES.length){
-    rolesPreview='<div class="card" style="margin-top:0">'
-      +'<div class="card-head"><span class="card-head-icon">&#127917;</span> ยศหมวดหมู่ที่ให้สมาชิกเลือก'
-      +'<button class="btn btn-ghost btn-xs" style="margin-left:auto" onclick="nav('roles',null)">&#9998; แก้ไขยศ</button></div>';
-    cfg.ROLE_CATEGORIES.forEach(function(cat){
-      rolesPreview+='<div style="margin-bottom:12px">'
-        +'<div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">'+esc(cat.name)+(cat.multi?' · เลือกหลายอัน':' · เลือก 1 อัน')+'</div>'
-        +'<div style="display:flex;flex-wrap:wrap;gap:6px">';
-      (cat.roles||[]).forEach(function(r){
-        var hex=r.color||'#5865f2';
-        var hasRole=!!r.roleId||!!r.roleName;
-        rolesPreview+='<div style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;background:'+hex+'22;border:1px solid '+hex+'66;color:'+hex+'">'
-          +(r.emoji?r.emoji+' ':'')+esc(r.label)
-          +(hasRole?'':' <span style="color:var(--red);font-size:10px">⚠ ยังไม่ผูก</span>')
-          +'</div>';
-      });
-      rolesPreview+='</div></div>';
-    });
-    rolesPreview+='</div>';
-  } else if(isV){
-    rolesPreview='<div class="card" style="margin-top:0;border-color:rgba(245,158,11,.2);background:rgba(245,158,11,.04)">'
-      +'<div class="card-head" style="color:var(--yellow)"><span class="card-head-icon">⚠️</span> ยังไม่มียศหมวดหมู่</div>'
-      +'<p style="font-size:12.5px;color:var(--text3)">สมาชิกจะไม่มีปุ่มให้เลือกยศ — <span style="color:var(--pk3);cursor:pointer" onclick="nav('roles',null)">ตั้งค่าที่นี่</span></p>'
+  galleryEl.innerHTML='';
+  presets.forEach(function(p){
+    var card=document.createElement('div');
+    card.className='preset-card';
+    card.innerHTML=
+      '<div class="preset-card-accent" style="background:'+accentColor+'"></div>'
+      +'<div class="preset-card-head">'
+        +'<div class="preset-card-name">'+esc(p.name||'ไม่มีชื่อ')+'</div>'
+        +'<span class="preset-card-badge '+badgeCls+'">'+badgeTxt+'</span>'
+      +'</div>'
+      +'<div class="preset-card-desc">'+esc(p.embedDesc||p.message||'(ยังไม่มีคำอธิบาย)')+'</div>'
+      +'<div class="preset-card-meta">'
+        +(p.channelName?'<span class="preset-meta-chip">&#128226; #'+esc(p.channelName)+'</span>':'<span class="preset-meta-chip" style="color:var(--red)">⚠ ยังไม่เลือกห้อง</span>')
+        +(isV&&p.memberRoleName?'<span class="preset-meta-chip">&#127917; '+esc(p.memberRoleName)+'</span>':'')
+        +(isV?'<span class="preset-meta-chip">&#128280; '+(p.roleCategories&&p.roleCategories.length?p.roleCategories.length+' หมวดหมู่':'ไม่มียศ')+'</span>':'')
+        +(p.embedColor?'<span class="preset-meta-chip"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+esc(p.embedColor)+';vertical-align:middle;margin-right:2px"></span>สี embed</span>':'')
+      +'</div>'
+      +'<div class="preset-card-actions">'
+        +'<button class="btn btn-ghost btn-sm" style="flex:1" onclick="openEditor(\''+type+'\',\''+p.id+'\');event.stopPropagation()">&#9998; แก้ไข</button>'
+        +'<button class="btn btn-danger btn-sm" onclick="confirmDelete(\''+type+'\',\''+p.id+'\',\''+esc(p.name||'preset')+'\');event.stopPropagation()">&#128465;</button>'
       +'</div>';
-  }
-
-  var metaInfo='';
-  if(isV) metaInfo=`<div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:14px;font-size:12.5px;color:var(--text3)">
-    <div>📢 ห้อง Verify: <span style="color:var(--text);font-weight:700"># ${esc(ch)}</span></div>
-    <div>🎯 Member Role: <span style="color:var(--green);font-weight:700">${esc(memberRole)}</span></div>
-  </div>`;
-  else metaInfo=`<div style="margin-top:14px;font-size:12.5px;color:var(--text3)">📢 ห้อง: <span style="color:var(--text);font-weight:700"># ${esc(ch)}</span></div>`;
-
-  var body=document.getElementById('wiz-body-'+type);
-  body.innerHTML=`
-  <div class="card">
-    <div class="card-head" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
-      <span><span class="card-head-icon">&#128065;</span> Embed ปัจจุบัน</span>
-      <div style="display:flex;gap:6px">
-        <button class="btn btn-ghost btn-sm" onclick="startEditWiz('${type}')">&#9998; แก้ไข Embed</button>
-        <button class="btn btn-ghost btn-sm" onclick="startEditWiz('${type}',2)">&#128226; เปลี่ยนห้อง/ยศ</button>
-      </div>
-    </div>
-    <div class="dc-wrap">
-      <div class="dc-row">
-        <div class="dc-av">BBT</div>
-        <div class="dc-body">
-          <div class="dc-name">BBT Bot <span style="font-size:10px;color:#888;font-weight:400">— วันนี้</span></div>
-          ${mentionHtml}
-          <div class="dc-embed" style="border-left-color:${color}">
-            ${thumbHtml}
-            <div class="dc-etitle">${esc(title)}</div>
-            <div class="dc-edesc" style="white-space:pre-wrap">${esc(desc).replace(/\{user\}/g,'@สมาชิกใหม่')}</div>
-            ${imgHtml}
-          </div>
-          ${btnHtml}
-        </div>
-      </div>
-    </div>
-    ${metaInfo}
-  </div>
-  ${rolesPreview}`;
-}
-
-function startEditWiz(type,step){
-  var stepsEl=document.querySelector('#wiz-'+type+' .wiz-steps');
-  if(stepsEl) stepsEl.classList.remove('hidden');
-  renderWiz(type,step||1);
-}
-
-// ── WIZARD ENGINE ──────────────────────────────────────────
-function renderWiz(type,step){
-  wizStep[type]=step;
-  var body=document.getElementById('wiz-body-'+type);
-  var steps=document.querySelectorAll('#wiz-'+type+' .wiz-step');
-  steps.forEach(function(s,i){
-    s.classList.remove('active','done');
-    if(i+1<step) s.classList.add('done');
-    if(i+1===step) s.classList.add('active');
+    card.onclick=function(){openEditor(type,p.id);};
+    galleryEl.appendChild(card);
   });
-  if(step===1) body.innerHTML=buildWizStep1(type);
-  else if(step===2) body.innerHTML=buildWizStep2(type);
-  else body.innerHTML=buildWizConfirm(type);
-  if(step===1) refreshPreview(type);
+
+  // add card
+  var addCard=document.createElement('div');
+  addCard.className='preset-add-card';
+  addCard.innerHTML='<div class="preset-add-icon">+</div><div class="preset-add-label">สร้าง Preset ใหม่</div><div style="font-size:11px;opacity:.6">ตั้งชื่อ embed ออกแบบ เลือกห้อง</div>';
+  addCard.onclick=function(){openEditor(type,null);};
+  galleryEl.appendChild(addCard);
 }
 
-// ── WIZARD STEP 1 ──────────────────────────────────────────
-function buildWizStep1(type){
-  var isV=type==='verify',isW=type==='welcome',isG=type==='goodbye';
-  var titleKey=isV?'VERIFY_EMBED_TITLE':isW?'WELCOME_TITLE':'GOODBYE_TITLE';
-  var descKey =isV?'VERIFY_EMBED_DESC' :isW?'WELCOME_MESSAGE':'GOODBYE_MESSAGE';
-  var colorKey=isV?'VERIFY_EMBED_COLOR':isW?'WELCOME_COLOR':'GOODBYE_COLOR';
-  var imageKey=isV?'VERIFY_IMAGE'      :isW?'WELCOME_IMAGE':'GOODBYE_IMAGE';
-  var thumb=cfg[isV?'VERIFY_THUMBNAIL':isW?'WELCOME_THUMBNAIL':'GOODBYE_THUMBNAIL']||'';
-  var thumbIsUser=thumb==='[user]',thumbIsServ=thumb==='[server]',thumbIsCustom=thumb&&!thumbIsUser&&!thumbIsServ;
-  var title=esc(cfg[titleKey]||''),desc=esc(cfg[descKey]||''),color=cfg[colorKey]||'#ff2d95',image=esc(cfg[imageKey]||'');
+// ── EDITOR ──
+function openEditor(type,presetId){
+  var isV=type==='verify',isW=type==='welcome';
+  var key=isV?'VERIFY_PRESETS':isW?'WELCOME_PRESETS':'GOODBYE_PRESETS';
+  var presets=cfg[key]||[];
+  var preset=presetId?presets.find(function(p){return p.id===presetId;}):null;
+  var isNew=!preset;
+  if(isNew){preset={id:uid(),name:'',embedTitle:'',embedDesc:'',embedColor:'#ff2d95',embedImage:'',embedThumbnail:'',channelName:'',memberRoleName:'',memberRoleId:'',roleCategories:[]};if(isW){preset.mentionUser=true;preset.showAvatar=true;}if(!isW&&!isV){preset.enabled=true;preset.showAvatar=true;}}
 
+  activeEditorType=type;activeEditorId=preset.id;
+
+  var editorEl=document.getElementById(type+'-editor');
+  editorEl.classList.add('open');
+  editorEl.scrollIntoView({behavior:'smooth',block:'nearest'});
+
+  var tabsHtml='<div class="editor-tabs">'
+    +'<div class="editor-tab on" onclick="switchEditorTab(this,\'design\')">&#127912; ออกแบบ Embed</div>'
+    +'<div class="editor-tab" onclick="switchEditorTab(this,\'channel\')">&#128226; ห้อง'+(isV?' &amp; ยศ':'')+'</div>'
+    +(isV?'<div class="editor-tab" onclick="switchEditorTab(this,\'roles\')">&#127917; ยศหมวดหมู่</div>':'')
+    +'</div>';
+
+  // tab: design
+  var thumb=preset.embedThumbnail||'';
+  var thumbIsUser=thumb==='[user]',thumbIsServ=thumb==='[server]',thumbIsCustom=thumb&&!thumbIsUser&&!thumbIsServ;
   var thumbRow='';
   if(isV){
-    thumbRow=`
-    <div class="field s2"><label>รูปมุมขวาบน (Thumbnail)</label>
-      <select id="v-thumb" onchange="handleThumbChange()">
-        <option value=""        ${!thumb       ?'selected':''}>ไม่แสดง</option>
-        <option value="[server]"${thumbIsServ  ?'selected':''}>รูป Server</option>
-        <option value="[user]"  ${thumbIsUser  ?'selected':''}>รูปโปรไฟล์สมาชิก</option>
-        <option value="custom"  ${thumbIsCustom?'selected':''}>URL ของฉัน</option>
-      </select>
-    </div>
-    <div class="field s2" id="v-thumb-url-wrap" style="display:${thumbIsCustom?'block':'none'}">
-      <label>URL Thumbnail</label>
-      <input type="text" id="v-thumb-url" value="${thumbIsCustom?esc(thumb):''}" oninput="refreshPreview('verify')" placeholder="https://...">
-    </div>`;
+    thumbRow='<div class="field"><label>Thumbnail</label><select id="ed-thumb" onchange="handleEdThumb()">'
+      +'<option value="" '+(thumb===''?'selected':'')+'>ไม่แสดง</option>'
+      +'<option value="[server]" '+(thumbIsServ?'selected':'')+'>รูป Server</option>'
+      +'<option value="[user]" '+(thumbIsUser?'selected':'')+'>รูปโปรไฟล์สมาชิก</option>'
+      +'<option value="custom" '+(thumbIsCustom?'selected':'')+'>URL ของฉัน</option>'
+      +'</select></div>'
+      +'<div class="field" id="ed-thumb-url-wrap" style="display:'+(thumbIsCustom?'block':'none')+'">'
+      +'<label>URL Thumbnail</label><input type="text" id="ed-thumb-url" value="'+(thumbIsCustom?esc(thumb):'')+'" oninput="refreshEditorPreview()" placeholder="https://..."></div>';
   }
-
-  var extraCards='';
+  var extraRows='';
   if(isV){
-    var btnLabel=esc(cfg.VERIFY_BUTTON_LABEL||'ยืนยันตัวตน');
-    var btnColor=cfg.VERIFY_BUTTON_COLOR||'Primary';
-    extraCards=`
-    <hr class="sep">
-    <div class="card-head"><span class="card-head-icon">&#128280;</span> ปุ่ม Verify</div>
-    <div class="g2">
-      <div class="field"><label>ข้อความบนปุ่ม</label><input type="text" id="v-btn-label" value="${btnLabel}" oninput="refreshPreview('verify')"></div>
-      <div class="field"><label>สีปุ่ม</label>
-        <select id="v-btn-color" onchange="refreshPreview('verify')">
-          <option value="Primary"  ${btnColor==='Primary'  ?'selected':''}>Primary (น้ำเงิน)</option>
-          <option value="Secondary"${btnColor==='Secondary'?'selected':''}>Secondary (เทา)</option>
-          <option value="Success"  ${btnColor==='Success'  ?'selected':''}>Success (เขียว)</option>
-          <option value="Danger"   ${btnColor==='Danger'   ?'selected':''}>Danger (แดง)</option>
-        </select>
-      </div>
-    </div>`;
+    var btnLabel=preset.embedButtonLabel||'ยืนยันตัวตน';
+    var btnColor=preset.embedButtonColor||'Primary';
+    extraRows='<hr class="sep"><div class="card-head" style="margin-bottom:14px"><span class="card-head-icon">&#128280;</span> ปุ่ม Verify</div>'
+      +'<div class="g2"><div class="field"><label>ข้อความบนปุ่ม</label><input type="text" id="ed-btn-label" value="'+esc(btnLabel)+'" oninput="refreshEditorPreview()"></div>'
+      +'<div class="field"><label>สีปุ่ม</label><select id="ed-btn-color" onchange="refreshEditorPreview()">'
+      +'<option value="Primary" '+(btnColor==='Primary'?'selected':'')+'>Primary (น้ำเงิน)</option>'
+      +'<option value="Secondary" '+(btnColor==='Secondary'?'selected':'')+'>Secondary (เทา)</option>'
+      +'<option value="Success" '+(btnColor==='Success'?'selected':'')+'>Success (เขียว)</option>'
+      +'<option value="Danger" '+(btnColor==='Danger'?'selected':'')+'>Danger (แดง)</option>'
+      +'</select></div></div>';
   }
   if(isW){
-    var showAv=cfg.WELCOME_SHOW_AVATAR!==false,mention=cfg.MENTION_USER!==false;
-    extraCards=`
-    <hr class="sep">
-    <div class="card-head"><span class="card-head-icon">&#9881;&#65039;</span> ตัวเลือกเพิ่มเติม</div>
-    <div class="tr"><div><div class="tr-lbl">แสดงรูปโปรไฟล์เป็น Thumbnail</div><div class="tr-sub">รูปสมาชิกในมุมขวาบน</div></div><label class="sw"><input type="checkbox" id="w-show-avatar" ${showAv?'checked':''} onchange="refreshPreview('welcome')"><div class="sw-t"></div><div class="sw-th"></div></label></div>
-    <div class="tr"><div><div class="tr-lbl">@mention สมาชิกในข้อความ</div><div class="tr-sub">ส่ง ping เมื่อมีสมาชิกเข้าใหม่</div></div><label class="sw"><input type="checkbox" id="w-mention" ${mention?'checked':''} onchange="refreshPreview('welcome')"><div class="sw-t"></div><div class="sw-th"></div></label></div>`;
+    var showAv=preset.showAvatar!==false,mention=preset.mentionUser!==false;
+    extraRows='<hr class="sep"><div class="tr"><div><div class="tr-lbl">แสดงรูปโปรไฟล์ Thumbnail</div></div><label class="sw"><input type="checkbox" id="ed-show-avatar" '+(showAv?'checked':'')+' onchange="refreshEditorPreview()"><div class="sw-t"></div><div class="sw-th"></div></label></div>'
+      +'<div class="tr"><div><div class="tr-lbl">@mention สมาชิก</div></div><label class="sw"><input type="checkbox" id="ed-mention" '+(mention?'checked':'')+' onchange="refreshEditorPreview()"><div class="sw-t"></div><div class="sw-th"></div></label></div>';
   }
-  if(isG){
-    var gEnabled=cfg.GOODBYE_ENABLED!==false,gShowAv=cfg.GOODBYE_SHOW_AVATAR!==false;
-    extraCards=`
-    <hr class="sep">
-    <div class="card-head"><span class="card-head-icon">&#9881;&#65039;</span> ตัวเลือก Goodbye</div>
-    <div class="tr"><div><div class="tr-lbl">เปิดใช้งาน Goodbye</div><div class="tr-sub">ส่งข้อความเมื่อสมาชิกออกจาก server</div></div><label class="sw"><input type="checkbox" id="gb-enabled" ${gEnabled?'checked':''}><div class="sw-t"></div><div class="sw-th"></div></label></div>
-    <div class="tr"><div><div class="tr-lbl">แสดงรูปโปรไฟล์เป็น Thumbnail</div></div><label class="sw"><input type="checkbox" id="gb-show-avatar" ${gShowAv?'checked':''} onchange="refreshPreview('goodbye')"><div class="sw-t"></div><div class="sw-th"></div></label></div>`;
+  if(!isV&&!isW){
+    var gEnabled=preset.enabled!==false,gShowAv=preset.showAvatar!==false;
+    extraRows='<hr class="sep"><div class="tr"><div><div class="tr-lbl">เปิดใช้งาน Goodbye</div></div><label class="sw"><input type="checkbox" id="ed-gb-enabled" '+(gEnabled?'checked':'')+'>  <div class="sw-t"></div><div class="sw-th"></div></label></div>'
+      +'<div class="tr"><div><div class="tr-lbl">แสดงรูปโปรไฟล์ Thumbnail</div></div><label class="sw"><input type="checkbox" id="ed-show-avatar" '+(gShowAv?'checked':'')+' onchange="refreshEditorPreview()"><div class="sw-t"></div><div class="sw-th"></div></label></div>';
   }
 
-  var prevMention=isW?`<div id="${type}-prev-mention" style="margin-bottom:4px;display:none"><span class="dc-mention">@สมาชิกใหม่</span></div>`:'';
-  var prevBtnRow=isV?`<div class="dc-btn-row" id="v-prev-btn-row"></div>`:'';
-
-  return `
-  <div class="card">
-    <div class="card-head"><span class="card-head-icon">&#127912;</span> ตกแต่ง Embed</div>
-    <div class="g2">
-      <div class="field"><label>หัวข้อ</label><input type="text" id="${type}-title" value="${title}" oninput="refreshPreview('${type}')"></div>
-      <div class="field"><label>สี Embed</label><input type="color" id="${type}-color" value="${color}" oninput="refreshPreview('${type}')"></div>
-      <div class="field s2">
-        <label>รายละเอียด${!isV?' <span style="font-size:10px;font-weight:400;color:var(--text3);text-transform:none">(ใช้ {user} สำหรับ mention)</span>':''}</label>
-        <textarea id="${type}-desc" rows="4" oninput="refreshPreview('${type}')">${desc}</textarea>
-      </div>
-      <div class="field s2"><label>รูปภาพหลัก (ล่างสุดของ embed)</label><input type="text" id="${type}-image" value="${image}" oninput="refreshPreview('${type}')" placeholder="URL รูปภาพหรือ GIF"></div>
-      ${thumbRow}
-    </div>
-    ${extraCards}
-  </div>
-  <div class="card">
-    <div class="card-head"><span class="card-head-icon">&#128065;</span> Preview</div>
-    <div class="dc-wrap">
-      <div class="dc-row">
-        <div class="dc-av">BBT</div>
-        <div class="dc-body">
-          <div class="dc-name">BBT Bot <span style="font-size:10px;color:#888;font-weight:400">— วันนี้</span></div>
-          ${prevMention}
-          <div class="dc-embed" id="${type}-prev-embed" style="border-left-color:${color}">
-            <div class="dc-thumb" id="${type}-prev-thumb"></div>
-            <div class="dc-etitle" id="${type}-prev-title">${title}</div>
-            <div class="dc-edesc" id="${type}-prev-desc">${esc(cfg[descKey]||'').replace(/\{user\}/g,'@สมาชิกใหม่')}</div>
-            <div class="dc-img"   id="${type}-prev-img"></div>
-          </div>
-          ${prevBtnRow}
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="btn-row"><div></div><button class="btn btn-pk" onclick="renderWiz('${type}',2)">ถัดไป &#10145;</button></div>`;
-}
-
-// ── WIZARD STEP 2 ──────────────────────────────────────────
-function buildWizStep2(type){
-  var isV=type==='verify';
-  var chKey=type.toUpperCase()+'_CHANNEL_NAME';
-  var curCh=cfg[chKey]||'';
-  var chOpts=channels.map(function(ch){return '<option value="'+esc(ch.name)+'"'+(curCh===ch.name?' selected':'')+'>&#35; '+esc(ch.name)+'</option>';}).join('');
-
+  // tab: channel
+  var chOpts=channels.map(function(ch){return '<option value="'+esc(ch.name)+'" '+(preset.channelName===ch.name?'selected':'')+'>&#35; '+esc(ch.name)+'</option>';}).join('');
   var memberRoleHtml='';
   if(isV){
-    var roleOpts=fetchedRoles.map(function(r,i){
-      if(r.isAdmin) return '';
-      return '<div class="role-dd-opt" data-idx="'+i+'" onclick="pickVerifyRole(event,this)"><span class="r-dot" style="background:#'+(r.color||0).toString(16).padStart(6,'0')+'"></span>'+esc(r.name)+'</div>';
-    }).join('');
-    var curRoleName=cfg.MEMBER_ROLE_NAME||'';
-    memberRoleHtml=`
-    <hr class="sep">
-    <div class="card-head"><span class="card-head-icon">&#127917;</span> ยศสมาชิก (Member Role)</div>
-    <p class="hint" style="margin-bottom:12px">ยศที่สมาชิกจะได้รับโดยอัตโนมัติหลังกดปุ่ม Verify</p>
-    ${rolesLoaded&&fetchedRoles.length?'':`<button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="fetchRolesForVerify()">&#128260; โหลดยศ</button>`}
-    <div class="field">
-      <label>ยศที่ได้รับหลัง Verify</label>
-      <div class="role-dd-wrap">
-        <div class="role-dd-trigger" onclick="toggleLegacyDD('role-menu-verify',event)">
-          <div class="role-dd-tags" id="role-display-verify">${curRoleName?`<div class="role-tag">${esc(curRoleName)}</div>`:'<span class="role-dd-placeholder">— เลือกยศ —</span>'}</div>
-          <span class="role-dd-arrow">▼</span>
-        </div>
-        <div class="role-dd-menu" id="role-menu-verify">
-          <input class="role-dd-search" type="text" placeholder="ค้นหายศ" oninput="filterLegacyDD('role-menu-verify',this.value)">
-          <div id="role-menu-verify-opts">${roleOpts||'<div class="dd-empty">กด "โหลดยศ" ก่อน</div>'}</div>
-        </div>
-      </div>
-    </div>`;
+    var roleOpts=fetchedRoles.map(function(r,i){if(r.isAdmin)return '';return '<div class="role-dd-opt" data-idx="'+i+'" onclick="pickEditorMemberRole(event,this)"><span class="r-dot" style="background:#'+(r.color||0).toString(16).padStart(6,'0')+'"></span>'+esc(r.name)+'</div>';}).join('');
+    var curRoleName=preset.memberRoleName||'';
+    memberRoleHtml='<hr class="sep"><div class="card-head" style="margin-bottom:14px"><span class="card-head-icon">&#127917;</span> ยศ Member</div>'
+      +'<p class="hint" style="margin-bottom:12px">ยศที่สมาชิกจะได้รับหลังกด Verify</p>'
+      +(rolesLoaded&&fetchedRoles.length?'':'<button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="loadRolesForEditor()">&#128260; โหลดยศ</button>')
+      +'<div class="field"><label>เลือกยศ Member</label><div class="role-dd-wrap">'
+      +'<div class="role-dd-trigger" onclick="toggleDD(\'ed-role-menu\',event)">'
+      +'<div class="role-dd-tags" id="ed-role-display">'+(curRoleName?'<div class="role-tag">'+esc(curRoleName)+'</div>':'<span class="role-dd-placeholder">— เลือกยศ —</span>')+'</div>'
+      +'<span class="role-dd-arrow">▼</span></div>'
+      +'<div class="role-dd-menu" id="ed-role-menu"><input class="role-dd-search" type="text" placeholder="ค้นหายศ" oninput="filterDD(\'ed-role-menu\',this.value)"><div id="ed-role-menu-opts">'+(roleOpts||'<div class="dd-empty">กด "โหลดยศ" ก่อน</div>')+'</div></div>'
+      +'</div></div>';
   }
 
-  return `
-  <div class="card">
-    <div class="card-head"><span class="card-head-icon">&#128226;</span> เลือกห้อง Discord</div>
-    ${channels.length?'':`<button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="fetchChannelsStep('${type}')">&#128260; ดึงรายชื่อห้อง</button>`}
-    <div class="field">
-      <label>ห้องที่จะส่งข้อความ</label>
-      <select id="${type}-ch">
-        <option value="">— เลือกห้อง —</option>
-        ${chOpts}
-      </select>
-      <span class="hint">กด "ดึงรายชื่อห้อง" หากยังไม่เห็นตัวเลือก</span>
-    </div>
-    ${memberRoleHtml}
-  </div>
-  <div class="btn-row">
-    <button class="btn btn-ghost" onclick="renderWiz('${type}',1)">&#8592; ย้อนกลับ</button>
-    <button class="btn btn-pk"    onclick="renderWiz('${type}',3)">ถัดไป &#10145;</button>
-  </div>`;
-}
-
-// ── WIZARD STEP 3 ──────────────────────────────────────────
-function buildWizConfirm(type){
-  var isV=type==='verify',isW=type==='welcome',isG=type==='goodbye';
-  var title=cfg[isV?'VERIFY_EMBED_TITLE':isW?'WELCOME_TITLE':'GOODBYE_TITLE']||'';
-  var desc =cfg[isV?'VERIFY_EMBED_DESC' :isW?'WELCOME_MESSAGE':'GOODBYE_MESSAGE']||'';
-  var color=cfg[isV?'VERIFY_EMBED_COLOR':isW?'WELCOME_COLOR':'GOODBYE_COLOR']||'#ff2d95';
-  var image=cfg[isV?'VERIFY_IMAGE'      :isW?'WELCOME_IMAGE':'GOODBYE_IMAGE']||'';
-  var thumb=cfg[isV?'VERIFY_THUMBNAIL'  :isW?'WELCOME_THUMBNAIL':'GOODBYE_THUMBNAIL']||'';
-  var ch   =cfg[type.toUpperCase()+'_CHANNEL_NAME']||'—';
-  var btnLabel=isV?(cfg.VERIFY_BUTTON_LABEL||'ยืนยันตัวตน'):'';
-  var btnColor=isV?(cfg.VERIFY_BUTTON_COLOR||'Primary'):'';
-  var memberRole=isV?(cfg.MEMBER_ROLE_NAME||'—'):'';
-
-  // thumb src
-  var thumbSrc='';
-  if(thumb==='[user]')   thumbSrc='https://cdn.discordapp.com/embed/avatars/1.png';
-  else if(thumb==='[server]') thumbSrc='https://cdn.discordapp.com/embed/avatars/0.png';
-  else if(thumb)         thumbSrc=thumb;
-
-  var thumbHtml=thumbSrc?`<div class="dc-thumb" style="display:block"><img src="${esc(thumbSrc)}" onerror="this.parentElement.style.display='none'"></div>`:'';
-  var imgHtml=image?`<div class="dc-img" style="display:block"><img src="${esc(image)}" onerror="this.parentElement.style.display='none'"></div>`:'';
-  var mentionHtml=(isW&&cfg.MENTION_USER)?`<div style="margin-bottom:4px"><span class="dc-mention">@สมาชิกใหม่</span></div>`:'';
-
-  var btnColorMap={Primary:'primary',Secondary:'secondary',Success:'success',Danger:'danger'};
-  var btnHtml=isV?`<div class="dc-btn-row"><button class="dc-btn-preview dc-btn-${btnColorMap[btnColor]||'primary'}">${esc(btnLabel)}</button></div>`:'';
-
-  var metaRows='';
-  if(isV) metaRows=`
-    <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:14px;font-size:12px;color:var(--text3)">
-      <div>📢 ห้อง <span style="color:var(--text);font-weight:700"># ${esc(ch)}</span></div>
-      <div>🎯 Member Role <span style="color:var(--green);font-weight:700">${esc(memberRole)}</span></div>
-    </div>`;
-  else metaRows=`
-    <div style="margin-top:14px;font-size:12px;color:var(--text3)">
-      📢 ห้อง <span style="color:var(--text);font-weight:700"># ${esc(ch)}</span>
-    </div>`;
-
-  return `
-  <div class="card">
-    <div class="card-head" style="justify-content:space-between">
-      <span><span class="card-head-icon">&#10024;</span> บันทึกสำเร็จ! — ตัวอย่าง Embed</span>
-      <button class="btn btn-ghost btn-sm" onclick="renderWiz('${type}',1)">&#9998; แก้ไขอีกครั้ง</button>
-    </div>
-    <div class="dc-wrap">
-      <div class="dc-row">
-        <div class="dc-av">BBT</div>
-        <div class="dc-body">
-          <div class="dc-name">BBT Bot <span style="font-size:10px;color:#888;font-weight:400">— วันนี้</span></div>
-          ${mentionHtml}
-          <div class="dc-embed" style="border-left-color:${color}">
-            ${thumbHtml}
-            <div class="dc-etitle">${esc(title)}</div>
-            <div class="dc-edesc">${esc(desc).replace(/\{user\}/g,'@สมาชิกใหม่')}</div>
-            ${imgHtml}
-          </div>
-          ${btnHtml}
-        </div>
-      </div>
-    </div>
-    ${metaRows}
-  </div>
-  <div class="btn-row">
-    <button class="btn btn-ghost" onclick="renderWiz('${type}',2)">&#8592; ย้อนกลับ step 2</button>
-    <button class="btn btn-pk"    onclick="saveWiz('${type}')">&#128190; บันทึกอีกครั้ง</button>
-  </div>`;
-}
-
-// ── PREVIEW ────────────────────────────────────────────────
-function refreshPreview(type){
-  var get=function(id){return document.getElementById(id);};
-  var title=get(type+'-title')?get(type+'-title').value:'';
-  var raw  =get(type+'-desc') ?get(type+'-desc').value :'';
-  var color=get(type+'-color')?get(type+'-color').value:'#ff2d95';
-  var image=get(type+'-image')?get(type+'-image').value:'';
-
-  if(get(type+'-prev-title')) get(type+'-prev-title').textContent=title;
-  if(get(type+'-prev-desc'))  get(type+'-prev-desc').textContent=raw.replace(/\{user\}/g,'@สมาชิกใหม่');
-  var embed=get(type+'-prev-embed');
-  if(embed) embed.style.borderLeftColor=color;
-  var imgEl=get(type+'-prev-img');
-  if(imgEl){
-    if(image){imgEl.style.display='block';imgEl.innerHTML='<img src="'+image+'" onerror="this.parentElement.style.display=\'none\'">';}
-    else imgEl.style.display='none';
-  }
-
-  if(type==='verify'){
-    var thumbSel=get('v-thumb')?get('v-thumb').value:'';
-    var thumbUrl=get('v-thumb-url')?get('v-thumb-url').value:'';
-    var thumbEl=get('verify-prev-thumb');
-    var src='';
-    if(thumbSel==='[server]') src='https://cdn.discordapp.com/embed/avatars/0.png';
-    else if(thumbSel==='[user]') src='https://cdn.discordapp.com/embed/avatars/1.png';
-    else if(thumbSel==='custom') src=thumbUrl;
-    if(thumbEl){if(src){thumbEl.style.display='block';thumbEl.innerHTML='<img src="'+src+'" onerror="this.style.display=\'none\'">';}else thumbEl.style.display='none';}
-    var btnRow=get('v-prev-btn-row');
-    if(btnRow){
-      var lbl=get('v-btn-label')?get('v-btn-label').value:'ยืนยันตัวตน';
-      var col=get('v-btn-color')?get('v-btn-color').value:'Primary';
-      var map={Primary:'primary',Secondary:'secondary',Success:'success',Danger:'danger'};
-      btnRow.innerHTML='<button class="dc-btn-preview dc-btn-'+(map[col]||'primary')+'">'+esc(lbl)+'</button>';
-    }
-  }
-  if(type==='welcome'){
-    var m=get('w-mention'),md=get('welcome-prev-mention');
-    if(m&&md) md.style.display=m.checked?'block':'none';
-    var showAvW=get('w-show-avatar')?get('w-show-avatar').checked:false;
-    var thW=get('welcome-prev-thumb');
-    if(thW){if(showAvW){thW.style.display='block';thW.innerHTML='<img src="https://cdn.discordapp.com/embed/avatars/1.png">';}else thW.style.display='none';}
-  }
-  if(type==='goodbye'){
-    var showAvG=get('gb-show-avatar')?get('gb-show-avatar').checked:false;
-    var thG=get('goodbye-prev-thumb');
-    if(thG){if(showAvG){thG.style.display='block';thG.innerHTML='<img src="https://cdn.discordapp.com/embed/avatars/1.png">';}else thG.style.display='none';}
-  }
-}
-
-function handleThumbChange(){
-  var sel=document.getElementById('v-thumb')?document.getElementById('v-thumb').value:'';
-  var wrap=document.getElementById('v-thumb-url-wrap');
-  if(wrap) wrap.style.display=sel==='custom'?'block':'none';
-  refreshPreview('verify');
-}
-
-// ── SAVE WIZARD ────────────────────────────────────────────
-async function saveWiz(type){
-  var isV=type==='verify',isW=type==='welcome',isG=type==='goodbye';
-  var get=function(id){return document.getElementById(id);};
-  var ch=(get(type+'-ch')?get(type+'-ch').value:'')||cfg[type.toUpperCase()+'_CHANNEL_NAME']||'';
-
+  // tab: role categories (verify only)
+  var rolePoolHtml='';
   if(isV){
-    cfg.VERIFY_EMBED_TITLE =get('verify-title')?get('verify-title').value:'';
-    cfg.VERIFY_EMBED_DESC  =get('verify-desc') ?get('verify-desc').value :'';
-    cfg.VERIFY_EMBED_COLOR =get('verify-color')?get('verify-color').value:'#ff2d95';
-    cfg.VERIFY_IMAGE       =get('verify-image')?get('verify-image').value:'';
-    cfg.VERIFY_BUTTON_LABEL=get('v-btn-label') ?get('v-btn-label').value :'ยืนยันตัวตน';
-    cfg.VERIFY_BUTTON_COLOR=get('v-btn-color') ?get('v-btn-color').value :'Primary';
-    var ts=get('v-thumb')?get('v-thumb').value:'';
-    cfg.VERIFY_THUMBNAIL   =ts==='custom'?(get('v-thumb-url')?get('v-thumb-url').value:''):ts;
-    cfg.VERIFY_CHANNEL_NAME=ch;
+    var pool=fetchedRoles.filter(function(r){return !r.isAdmin;});
+    var poolChips=pool.map(function(r){var hex=r.color?'#'+r.color.toString(16).padStart(6,'0'):'#5865f2';return '<span class="role-chip" style="background:'+hex+'22;border-color:'+hex+'66;color:'+hex+'" onclick="pickRoleChip(\''+r.id+'\',\''+esc(r.name)+'\',\''+hex+'\',this)">'+esc(r.name)+'</span>';}).join('');
+    rolePoolHtml='<div class="card-head" style="margin-bottom:14px"><span class="card-head-icon">&#128203;</span> ยศจาก Discord</div>'
+      +'<div class="pick-banner" id="ed-pick-banner"><span>&#127919;</span><span id="ed-pick-banner-text">เลือกยศ...</span><button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="cancelEditorPick()">&#10005; ยกเลิก</button></div>'
+      +(rolesLoaded&&pool.length?'':'<button class="btn btn-ghost btn-sm" style="margin-bottom:12px" onclick="loadRolesForEditor()">&#128260; โหลดยศก่อน</button>')
+      +'<div class="roles-pool" id="ed-role-pool">'+(poolChips||'<span class="roles-empty">กด "โหลดยศ" ก่อน</span>')+'</div><hr class="sep">'
+      +'<div id="ed-cat-list" class="cat-list"></div>'
+      +'<div class="add-cat-row"><div class="field"><label>ชื่อหมวดหมู่</label><input type="text" id="ed-new-cat-name" placeholder="เช่น 🎮 เกมที่เล่น"></div>'
+      +'<div class="field" style="flex:0 0 170px"><label>โหมด</label><select id="ed-new-cat-multi"><option value="true">เลือกได้หลาย</option><option value="false">เลือกได้อัน​เดียว</option></select></div>'
+      +'<div style="padding-bottom:16px"><button class="btn btn-gr btn-sm" onclick="addEditorCat()">+ เพิ่มหมวดหมู่</button></div></div>';
   }
-  if(isW){
-    cfg.WELCOME_TITLE      =get('welcome-title')?get('welcome-title').value:'';
-    cfg.WELCOME_MESSAGE    =get('welcome-desc') ?get('welcome-desc').value :'';
-    cfg.WELCOME_COLOR      =get('welcome-color')?get('welcome-color').value:'#ff2d95';
-    cfg.WELCOME_IMAGE      =get('welcome-image')?get('welcome-image').value:'';
-    cfg.WELCOME_SHOW_AVATAR=get('w-show-avatar')?get('w-show-avatar').checked:true;
-    cfg.MENTION_USER       =get('w-mention')    ?get('w-mention').checked    :true;
-    cfg.WELCOME_THUMBNAIL  =cfg.WELCOME_SHOW_AVATAR?'[user]':'';
-    cfg.WELCOME_CHANNEL_NAME=ch;
+
+  editorEl.innerHTML=
+    '<div class="editor-header">'
+      +'<div>'
+        +'<div class="editor-title">'+(isNew?'&#10010; สร้าง Preset ใหม่':'&#9998; แก้ไข: '+esc(preset.name||'Preset'))+'</div>'
+        +'<div style="font-size:11px;color:var(--text3);margin-top:2px;font-family:\'DM Mono\',monospace">/setup '+esc(preset.name||'&lt;ชื่อ&gt;')+'</div>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
+        +'<button class="btn btn-ghost btn-sm" onclick="closeEditor(\''+type+'\')">&#10005; ปิด</button>'
+        +'<button class="btn btn-pk btn-sm" onclick="savePreset(\''+type+'\',\''+preset.id+'\')">&#128190; บันทึก</button>'
+      +'</div>'
+    +'</div>'
+    +tabsHtml
+    // TAB: design
+    +'<div class="editor-tab-body on" id="ed-tab-design">'
+      +'<div class="g2">'
+        +'<div class="field"><label>ชื่อ Preset <span style="color:var(--red)">*</span></label><input type="text" id="ed-preset-name" value="'+esc(preset.name)+'" placeholder="เช่น member-verify" oninput="updateEditorTitleBar(\''+type+'\')"></div>'
+        +'<div class="field"><label>สี Embed</label><input type="color" id="ed-embed-color" value="'+(preset.embedColor||'#ff2d95')+'" oninput="refreshEditorPreview()"></div>'
+        +'<div class="field s2"><label>หัวข้อ Embed</label><input type="text" id="ed-embed-title" value="'+esc(preset.embedTitle||'')+'" oninput="refreshEditorPreview()"></div>'
+        +'<div class="field s2"><label>คำอธิบาย <span style="font-size:10px;font-weight:400;color:var(--text3);text-transform:none">(ใช้ {user} สำหรับ mention)</span></label><textarea id="ed-embed-desc" rows="4" oninput="refreshEditorPreview()">'+esc(preset.embedDesc||preset.message||'')+'</textarea></div>'
+        +'<div class="field s2"><label>รูปภาพหลัก (URL)</label><input type="text" id="ed-embed-image" value="'+esc(preset.embedImage||'')+'" oninput="refreshEditorPreview()" placeholder="https://..."></div>'
+        +thumbRow
+      +'</div>'
+      +extraRows
+      +'<hr class="sep">'
+      +'<div style="font-size:11px;font-weight:800;color:var(--pk3);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px">&#128065; Preview</div>'
+      +'<div class="dc-wrap"><div class="dc-row">'
+        +'<div class="dc-av">BBT</div>'
+        +'<div class="dc-body">'
+          +'<div class="dc-name">BBT Bot <span style="font-size:10px;color:#888;font-weight:400">— วันนี้</span></div>'
+          +'<div id="ed-prev-mention" style="display:none;margin-bottom:4px"><span class="dc-mention">@สมาชิกใหม่</span></div>'
+          +'<div class="dc-embed" id="ed-prev-embed" style="border-left-color:'+(preset.embedColor||'#ff2d95')+'">'
+            +'<div class="dc-thumb" id="ed-prev-thumb"></div>'
+            +'<div class="dc-etitle" id="ed-prev-title">'+esc(preset.embedTitle||'')+'</div>'
+            +'<div class="dc-edesc" id="ed-prev-desc">'+esc((preset.embedDesc||preset.message||'').replace(/\{user\}/g,'@สมาชิกใหม่'))+'</div>'
+            +'<div class="dc-img" id="ed-prev-img"></div>'
+          +'</div>'
+          +'<div class="dc-btn-row" id="ed-prev-btn-row"></div>'
+        +'</div>'
+      +'</div></div>'
+    +'</div>'
+    // TAB: channel
+    +'<div class="editor-tab-body" id="ed-tab-channel">'
+      +'<div class="field">'
+        +'<label>ห้อง Discord</label>'
+        +(channels.length?'':'<button class="btn btn-ghost btn-sm" style="margin-bottom:10px;width:fit-content" onclick="loadChannelsForEditor(\''+type+'\',\''+preset.id+'\')">&#128260; ดึงรายชื่อห้อง</button>')
+        +'<select id="ed-channel"><option value="">— เลือกห้อง —</option>'+chOpts+'</select>'
+      +'</div>'
+      +memberRoleHtml
+    +'</div>'
+    // TAB: roles (verify only)
+    +(isV?'<div class="editor-tab-body" id="ed-tab-roles">'+rolePoolHtml+'</div>':'');
+
+  if(isV) drawEditorCats(preset.roleCategories||[]);
+  refreshEditorPreview();
+}
+
+function closeEditor(type){
+  var el=document.getElementById(type+'-editor');
+  el.classList.remove('open');
+  el.innerHTML='';
+  activeEditorType=null;activeEditorId=null;
+}
+
+function switchEditorTab(tabEl,name){
+  var panel=tabEl.closest('.editor-panel');
+  panel.querySelectorAll('.editor-tab').forEach(function(t){t.classList.remove('on');});
+  panel.querySelectorAll('.editor-tab-body').forEach(function(b){b.classList.remove('on');});
+  tabEl.classList.add('on');
+  var body=document.getElementById('ed-tab-'+name);
+  if(body)body.classList.add('on');
+}
+
+function updateEditorTitleBar(type){
+  var nameInp=document.getElementById('ed-preset-name');
+  if(!nameInp)return;
+  var el=document.getElementById(type+'-editor');
+  var sub=el.querySelector('.editor-title+div');
+  if(sub)sub.textContent='/setup '+(nameInp.value||'<ชื่อ>');
+}
+
+// ── PREVIEW ──
+function refreshEditorPreview(){
+  var g=function(id){return document.getElementById(id);};
+  var title=g('ed-embed-title')?g('ed-embed-title').value:'';
+  var desc=g('ed-embed-desc')?g('ed-embed-desc').value:'';
+  var color=g('ed-embed-color')?g('ed-embed-color').value:'#ff2d95';
+  var image=g('ed-embed-image')?g('ed-embed-image').value:'';
+  if(g('ed-prev-title'))g('ed-prev-title').textContent=title;
+  if(g('ed-prev-desc'))g('ed-prev-desc').textContent=desc.replace(/\{user\}/g,'@สมาชิกใหม่');
+  var embed=g('ed-prev-embed');if(embed)embed.style.borderLeftColor=color;
+  var imgEl=g('ed-prev-img');
+  if(imgEl){if(image){imgEl.style.display='block';imgEl.innerHTML='<img src="'+image+'" onerror="this.parentElement.style.display=\'none\'">';}else imgEl.style.display='none';}
+  // thumb
+  var thumbSel=g('ed-thumb')?g('ed-thumb').value:'';
+  var thumbUrl=g('ed-thumb-url')?g('ed-thumb-url').value:'';
+  var thumbEl=g('ed-prev-thumb');
+  if(thumbEl){
+    var src='';
+    if(thumbSel==='[server]')src='https://cdn.discordapp.com/embed/avatars/0.png';
+    else if(thumbSel==='[user]')src='https://cdn.discordapp.com/embed/avatars/1.png';
+    else if(thumbSel==='custom')src=thumbUrl;
+    var showAv=g('ed-show-avatar')?g('ed-show-avatar').checked:false;
+    if(!src&&showAv)src='https://cdn.discordapp.com/embed/avatars/1.png';
+    if(src){thumbEl.style.display='block';thumbEl.innerHTML='<img src="'+src+'" onerror="this.style.display=\'none\'">';}
+    else thumbEl.style.display='none';
   }
-  if(isG){
-    cfg.GOODBYE_TITLE      =get('goodbye-title')?get('goodbye-title').value:'';
-    cfg.GOODBYE_MESSAGE    =get('goodbye-desc') ?get('goodbye-desc').value :'';
-    cfg.GOODBYE_COLOR      =get('goodbye-color')?get('goodbye-color').value:'#ff2d95';
-    cfg.GOODBYE_IMAGE      =get('goodbye-image')?get('goodbye-image').value:'';
-    cfg.GOODBYE_ENABLED    =get('gb-enabled')   ?get('gb-enabled').checked   :true;
-    cfg.GOODBYE_SHOW_AVATAR=get('gb-show-avatar')?get('gb-show-avatar').checked:true;
-    cfg.GOODBYE_THUMBNAIL  =cfg.GOODBYE_SHOW_AVATAR?'[user]':'';
-    cfg.GOODBYE_CHANNEL_NAME=ch;
+  // mention
+  var mentionEl=g('ed-prev-mention');
+  var mentionCb=g('ed-mention');
+  if(mentionEl)mentionEl.style.display=(mentionCb&&mentionCb.checked)?'block':'none';
+  // button
+  var btnRow=g('ed-prev-btn-row');
+  if(btnRow){
+    var lbl=g('ed-btn-label')?g('ed-btn-label').value:'ยืนยันตัวตน';
+    var col=g('ed-btn-color')?g('ed-btn-color').value:'Primary';
+    var map={Primary:'primary',Secondary:'secondary',Success:'success',Danger:'danger'};
+    if(g('ed-btn-label'))btnRow.innerHTML='<button class="dc-btn-preview dc-btn-'+(map[col]||'primary')+'">'+esc(lbl)+'</button>';
   }
+}
+
+function handleEdThumb(){
+  var sel=document.getElementById('ed-thumb');
+  var wrap=document.getElementById('ed-thumb-url-wrap');
+  if(wrap)wrap.style.display=sel&&sel.value==='custom'?'block':'none';
+  refreshEditorPreview();
+}
+
+// ── SAVE PRESET ──
+async function savePreset(type,presetId){
+  var g=function(id){return document.getElementById(id);};
+  var name=(g('ed-preset-name')?g('ed-preset-name').value:'').trim();
+  if(!name){toast('กรุณาตั้งชื่อ Preset ก่อน','err');return;}
+  var isV=type==='verify',isW=type==='welcome';
+  var key=isV?'VERIFY_PRESETS':isW?'WELCOME_PRESETS':'GOODBYE_PRESETS';
+  if(!cfg[key])cfg[key]=[];
+  var idx=cfg[key].findIndex(function(p){return p.id===presetId;});
+  var existing=idx>=0?cfg[key][idx]:{id:presetId};
+
+  var thumbSel=g('ed-thumb')?g('ed-thumb').value:'';
+  var thumbVal=thumbSel==='custom'?(g('ed-thumb-url')?g('ed-thumb-url').value:''):thumbSel;
+  var chEl=g('ed-channel');
+
+  var updated=Object.assign({},existing,{
+    name:name,
+    embedTitle:g('ed-embed-title')?g('ed-embed-title').value:'',
+    embedDesc:g('ed-embed-desc')?g('ed-embed-desc').value:'',
+    embedColor:g('ed-embed-color')?g('ed-embed-color').value:'#ff2d95',
+    embedImage:g('ed-embed-image')?g('ed-embed-image').value:'',
+    embedThumbnail:thumbVal,
+    channelName:chEl?chEl.value:existing.channelName||'',
+    roleCategories:existing.roleCategories||[],
+  });
+  if(isV){
+    updated.embedButtonLabel=g('ed-btn-label')?g('ed-btn-label').value:'ยืนยันตัวตน';
+    updated.embedButtonColor=g('ed-btn-color')?g('ed-btn-color').value:'Primary';
+    updated.memberRoleId=existing.memberRoleId||'';
+    updated.memberRoleName=existing.memberRoleName||'';
+  }
+  if(isW){updated.mentionUser=g('ed-mention')?g('ed-mention').checked:true;updated.showAvatar=g('ed-show-avatar')?g('ed-show-avatar').checked:true;if(updated.showAvatar)updated.embedThumbnail='[user]';}
+  if(!isV&&!isW){updated.enabled=g('ed-gb-enabled')?g('ed-gb-enabled').checked:true;updated.showAvatar=g('ed-show-avatar')?g('ed-show-avatar').checked:true;if(updated.showAvatar)updated.embedThumbnail='[user]';}
+
+  if(idx>=0)cfg[key][idx]=updated;else cfg[key].push(updated);
 
   toast('กำลังบันทึก...','info');
   var res=await api('POST','/api/config',cfg);
   if(res&&res.ok){
     toast('บันทึกสำเร็จ! ✅','ok');
+    closeEditor(type);
+    renderGallery(type);
     refreshOverview();
-    renderEmbedOverview(type);
-    var stepsEl=document.querySelector('#wiz-'+type+' .wiz-steps');
-    if(stepsEl) stepsEl.classList.add('hidden');
   } else {
     toast('บันทึกไม่สำเร็จ'+(res&&res.error?' — '+res.error:''),'err');
   }
 }
 
-// ── CHANNELS ───────────────────────────────────────────────
-async function fetchChannelsStep(type){
-  if(channelsLoaded&&channels.length){renderWiz(type,2);return;}
+// ── DELETE ──
+var _deleteTarget={type:null,id:null};
+function confirmDelete(type,id,name){
+  _deleteTarget={type:type,id:id};
+  document.getElementById('delete-modal-msg').textContent='ลบ "'+name+'" ? ไม่สามารถกู้คืนได้';
+  document.getElementById('delete-modal-confirm').onclick=function(){doDelete();};
+  document.getElementById('delete-modal').classList.add('open');
+}
+function closeDeleteModal(){document.getElementById('delete-modal').classList.remove('open');}
+async function doDelete(){
+  var type=_deleteTarget.type,id=_deleteTarget.id;
+  var isV=type==='verify',isW=type==='welcome';
+  var key=isV?'VERIFY_PRESETS':isW?'WELCOME_PRESETS':'GOODBYE_PRESETS';
+  cfg[key]=(cfg[key]||[]).filter(function(p){return p.id!==id;});
+  closeDeleteModal();
+  var res=await api('POST','/api/config',cfg);
+  if(res&&res.ok){toast('ลบแล้ว','ok');renderGallery(type);refreshOverview();}
+  else toast('ลบไม่สำเร็จ','err');
+}
+
+// ── CHANNELS ──
+async function loadChannelsForEditor(type,presetId){
+  if(channelsLoaded&&channels.length){
+    var sel=document.getElementById('ed-channel');
+    if(sel){var preset=null;var key=type==='verify'?'VERIFY_PRESETS':type==='welcome'?'WELCOME_PRESETS':'GOODBYE_PRESETS';preset=(cfg[key]||[]).find(function(p){return p.id===presetId;});
+    var chOpts=channels.map(function(ch){return '<option value="'+esc(ch.name)+'" '+(preset&&preset.channelName===ch.name?'selected':'')+'>&#35; '+esc(ch.name)+'</option>';}).join('');
+    sel.innerHTML='<option value="">— เลือกห้อง —</option>'+chOpts;}
+    return;
+  }
   toast('กำลังโหลดห้อง...','info');
   var data=await api('GET','/api/channels');
-  channels=data&&data.channels?data.channels:[];
-  channelsLoaded=true;
-  renderWiz(type,2);
+  channels=data&&data.channels?data.channels:[];channelsLoaded=true;
+  loadChannelsForEditor(type,presetId);
   toast('โหลด '+channels.length+' ห้อง','ok');
 }
 
-
-// ── VERIFY ROLE DD (legacy simple) ────────────────────────
-async function fetchRolesForVerify(){
-  if(rolesLoaded&&fetchedRoles.length){renderWiz('verify',2);return;}
+// ── ROLES ──
+async function loadRolesForEditor(){
+  if(rolesLoaded&&fetchedRoles.length){rebuildEditorRolePool();return;}
   toast('กำลังโหลดยศ...','info');
   var data=await api('GET','/api/roles');
-  fetchedRoles=data&&data.roles?data.roles:[];
-  rolesLoaded=true;
-  renderWiz('verify',2);
-  toast('โหลด '+fetchedRoles.filter(function(r){return !r.isAdmin;}).length+' ยศ','ok');
+  fetchedRoles=data&&data.roles?data.roles:[];rolesLoaded=true;
+  rebuildEditorRolePool();
+  // rebuild member role dropdown
+  var opts=fetchedRoles.map(function(r,i){if(r.isAdmin)return '';return '<div class="role-dd-opt" data-idx="'+i+'" onclick="pickEditorMemberRole(event,this)"><span class="r-dot" style="background:#'+(r.color||0).toString(16).padStart(6,'0')+'"></span>'+esc(r.name)+'</div>';}).join('');
+  var optsEl=document.getElementById('ed-role-menu-opts');if(optsEl)optsEl.innerHTML=opts||'<div class="dd-empty">ไม่มียศ</div>';
+  toast('โหลดแล้ว','ok');
 }
-
-function _posDD(menu,trigger){
-  var r=trigger.getBoundingClientRect();
-  menu.style.left=r.left+'px';
-  menu.style.width=r.width+'px';
-  var below=window.innerHeight-r.bottom;
-  if(below>180){menu.style.top=(r.bottom+4)+'px';menu.style.bottom='auto';}
-  else{menu.style.bottom=(window.innerHeight-r.top+4)+'px';menu.style.top='auto';}
-}
-function toggleLegacyDD(id,ev){
-  if(ev) ev.stopPropagation();
-  var el=document.getElementById(id);
-  document.querySelectorAll('.role-dd-menu.open').forEach(function(m){if(m.id!==id){m.classList.remove('open');var t=m.previousElementSibling;if(t)t.classList.remove('open');}});
-  var wasOpen=el.classList.contains('open');
-  el.classList.toggle('open');
-  var trigger=el.previousElementSibling;if(trigger)trigger.classList.toggle('open',el.classList.contains('open'));
-  if(!wasOpen&&trigger){_posDD(el,trigger);}
-  if(el.classList.contains('open')){var s=el.querySelector('.role-dd-search');if(s)setTimeout(function(){s.focus();},80);}
-}
-window.addEventListener('resize',function(){document.querySelectorAll('.role-dd-menu.open').forEach(function(m){var t=m.previousElementSibling;if(t)_posDD(m,t);});});
-
-function filterLegacyDD(menuId,q){
-  var opts=document.getElementById(menuId+'-opts');if(!opts)return;
-  var lower=q.toLowerCase();
-  opts.querySelectorAll('.role-dd-opt').forEach(function(o){
-    o.style.display=o.textContent.toLowerCase().includes(lower)?'':'none';
-  });
-}
-
-function pickVerifyRole(ev,el){
-  ev.stopPropagation();
-  var idx=+el.dataset.idx;
-  var r=fetchedRoles[idx];
-  if(!r){toast('ไม่พบยศ (idx='+idx+')','err');return;}
-  cfg.MEMBER_ROLE_ID  =r.id;
-  cfg.MEMBER_ROLE_NAME=r.name;
-  // อัพเดท display
-  var disp=document.getElementById('role-display-verify');
-  if(disp) disp.innerHTML='<div class="role-tag">'+esc(r.name)+'</div>';
-  // ปิด dropdown + trigger
-  var menu=document.getElementById('role-menu-verify');
-  if(menu){menu.classList.remove('open');}
-  var trigger=menu?menu.previousElementSibling:null;
-  if(trigger) trigger.classList.remove('open');
-  toast('เลือกยศ Member: '+r.name,'ok');
-}
-
-// ── ROLE CATEGORIES ────────────────────────────────────────
-function _renderRolePool(){
+function rebuildEditorRolePool(){
   var pool=fetchedRoles.filter(function(r){return !r.isAdmin;});
-  var area=document.getElementById('roles-chips-area');
-  if(!area)return;
+  var area=document.getElementById('ed-role-pool');if(!area)return;
   area.innerHTML='';
-  if(!pool.length){area.innerHTML='<span class="roles-empty">ไม่มียศที่ใช้ได้</span>';return;}
   pool.forEach(function(r){
     var hex=r.color?'#'+r.color.toString(16).padStart(6,'0'):'#5865f2';
-    var chip=document.createElement('span');
-    chip.className='role-chip';chip.textContent=r.name;
+    var chip=document.createElement('span');chip.className='role-chip';chip.textContent=r.name;
     chip.style.background=hex+'22';chip.style.borderColor=hex+'66';chip.style.color=hex;
-    chip.onclick=function(){
-      if(!activePicker){toast('กดปุ่ม "คลิกเพื่อเลือกยศ" ในตารางก่อน','err');return;}
-      var ci=activePicker.ci,ri=activePicker.ri;
-      cfg.ROLE_CATEGORIES[ci].roles[ri].roleId=r.id;
-      cfg.ROLE_CATEGORIES[ci].roles[ri].roleName=r.name;
-      if(!cfg.ROLE_CATEGORIES[ci].roles[ri].color&&r.color)cfg.ROLE_CATEGORIES[ci].roles[ri].color=hex;
-      activePicker=null;hideBanner();renderRoleRows(ci);
-      toast('ผูก "'+r.name+'" แล้ว','ok');
-      area.querySelectorAll('.role-chip').forEach(function(c){c.classList.remove('picked');});
-      chip.classList.add('picked');
-    };
+    chip.onclick=function(){pickRoleChip(r.id,r.name,hex,chip);};
     area.appendChild(chip);
   });
 }
-async function loadAllRoles(force){
-  if(rolesLoaded&&!force){toast('โหลดยศแล้ว (cache)','info');_renderRolePool();return;}
-  var btn=document.getElementById('reload-roles-btn');
-  if(btn){btn.disabled=true;btn.textContent='กำลังโหลด...';}
-  toast('กำลังโหลดยศ...','info');
-  var data=await api('GET','/api/roles');
-  if(!data){toast('โหลดยศไม่สำเร็จ','err');}
-  else{
-    fetchedRoles=data.roles||[];
-    rolesLoaded=true;
-      _renderRolePool();
-    toast('โหลดแล้ว '+pool.length+' ยศ','ok');
-  }
-  if(btn){btn.disabled=false;btn.textContent='&#128260; โหลดยศใหม่';}
+function pickEditorMemberRole(ev,el){
+  ev.stopPropagation();
+  var idx=+el.dataset.idx;var r=fetchedRoles[idx];if(!r)return;
+  var key=activeEditorType==='verify'?'VERIFY_PRESETS':activeEditorType==='welcome'?'WELCOME_PRESETS':'GOODBYE_PRESETS';
+  var preset=(cfg[key]||[]).find(function(p){return p.id===activeEditorId;});
+  if(preset){preset.memberRoleId=r.id;preset.memberRoleName=r.name;}
+  var disp=document.getElementById('ed-role-display');if(disp)disp.innerHTML='<div class="role-tag">'+esc(r.name)+'</div>';
+  var menu=document.getElementById('ed-role-menu');if(menu)menu.classList.remove('open');
+  var tr=menu?menu.previousElementSibling:null;if(tr)tr.classList.remove('open');
+  toast('เลือกยศ: '+r.name,'ok');
 }
 
-function drawCats(){
-  var list=document.getElementById('cat-list');if(!list)return;
-  var cats=cfg.ROLE_CATEGORIES||[];
-  if(!cats.length){list.innerHTML='<p style="color:var(--text3);font-size:13px">ยังไม่มีหมวดหมู่ เพิ่มด้านล่าง</p>';return;}
+// ── ROLE CATEGORIES (in editor) ──
+function getActivePreset(){
+  var key=activeEditorType==='verify'?'VERIFY_PRESETS':activeEditorType==='welcome'?'WELCOME_PRESETS':'GOODBYE_PRESETS';
+  return (cfg[key]||[]).find(function(p){return p.id===activeEditorId;})||null;
+}
+function drawEditorCats(cats){
+  var list=document.getElementById('ed-cat-list');if(!list)return;
+  cats=cats||[];
+  if(!cats.length){list.innerHTML='<p style="color:var(--text3);font-size:13px;margin-bottom:8px">ยังไม่มีหมวดหมู่</p>';return;}
   list.innerHTML='';
   cats.forEach(function(cat,ci){
-    var div=document.createElement('div');
-    div.className='cat-item';
-    div.innerHTML=
-      '<div class="cat-header">'
-      +'<input type="text" class="cat-name-inp" value="'+esc(cat.name)+'" placeholder="ชื่อหมวดหมู่" oninput="cfg.ROLE_CATEGORIES['+ci+'].name=this.value">'
-      +'<span class="cat-badge" id="cat-badge-'+ci+'">'+(cat.multi?'เลือกหลายอัน':'เลือก 1 อัน')+'</span>'
-      +'<button class="btn btn-ghost btn-xs" onclick="toggleCatMulti('+ci+')">&#128260;</button>'
-      +'<button class="btn btn-danger btn-xs" onclick="removeCat('+ci+')">&#128465; ลบ</button>'
+    var div=document.createElement('div');div.className='cat-item';
+    div.innerHTML='<div class="cat-header">'
+      +'<input type="text" class="cat-name-inp" value="'+esc(cat.name||'')+'" placeholder="ชื่อหมวดหมู่" oninput="updateEdCatName('+ci+',this.value)">'
+      +'<span class="cat-badge" id="ed-cat-badge-'+ci+'">'+(cat.multi?'เลือกหลายอัน':'เลือก 1 อัน')+'</span>'
+      +'<button class="btn btn-ghost btn-xs" onclick="toggleEdCatMulti('+ci+')">&#128260;</button>'
+      +'<button class="btn btn-danger btn-xs" onclick="removeEdCat('+ci+')">&#128465; ลบ</button>'
       +'</div>'
-      +'<table class="role-table"><thead><tr>'
-      +'<td style="width:60px">Emoji</td><td>ชื่อปุ่ม</td><td>ยศ Discord</td><td style="width:52px">สี</td><td style="width:40px"></td>'
-      +'</tr></thead><tbody id="cat-body-'+ci+'"></tbody></table>'
-      +'<button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="addRole('+ci+')">+ เพิ่มปุ่มยศ</button>';
+      +'<table class="role-table"><thead><tr><td style="width:60px">Emoji</td><td>ชื่อปุ่ม</td><td>ยศ Discord</td><td style="width:52px">สี</td><td style="width:40px"></td></tr></thead>'
+      +'<tbody id="ed-cat-body-'+ci+'"></tbody></table>'
+      +'<button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="addEdRole('+ci+')">+ เพิ่มปุ่มยศ</button>';
     list.appendChild(div);
-    renderRoleRows(ci);
+    renderEdRoleRows(ci);
   });
 }
-
-function renderRoleRows(ci){
-  var el=document.getElementById('cat-body-'+ci);if(!el)return;
+function updateEdCatName(ci,val){var p=getActivePreset();if(p&&p.roleCategories&&p.roleCategories[ci])p.roleCategories[ci].name=val;}
+function toggleEdCatMulti(ci){var p=getActivePreset();if(!p||!p.roleCategories[ci])return;p.roleCategories[ci].multi=!p.roleCategories[ci].multi;var b=document.getElementById('ed-cat-badge-'+ci);if(b)b.textContent=p.roleCategories[ci].multi?'เลือกหลายอัน':'เลือก 1 อัน';toast('เปลี่ยนโหมดแล้ว');}
+function removeEdCat(ci){var p=getActivePreset();if(!p)return;p.roleCategories.splice(ci,1);drawEditorCats(p.roleCategories);toast('ลบหมวดหมู่แล้ว');}
+function addEdRole(ci){var p=getActivePreset();if(!p||!p.roleCategories[ci])return;if(!p.roleCategories[ci].roles)p.roleCategories[ci].roles=[];p.roleCategories[ci].roles.push({id:'r_'+Math.random().toString(36).slice(2,7),emoji:'',label:'',roleId:'',roleName:'',color:'#5865f2'});renderEdRoleRows(ci);}
+function removeEdRole(ci,ri){var p=getActivePreset();if(!p)return;p.roleCategories[ci].roles.splice(ri,1);renderEdRoleRows(ci);}
+function renderEdRoleRows(ci){
+  var el=document.getElementById('ed-cat-body-'+ci);if(!el)return;
+  var p=getActivePreset();var roles=p&&p.roleCategories[ci]?p.roleCategories[ci].roles||[]:[];
   el.innerHTML='';
-  (cfg.ROLE_CATEGORIES[ci]&&cfg.ROLE_CATEGORIES[ci].roles||[]).forEach(function(r,ri){
-    var hex=r.color||'#5865f2';
-    var hasRole=!!r.roleName;
+  roles.forEach(function(r,ri){
+    var hex=r.color||'#5865f2';var hasRole=!!r.roleName;
     var tr=document.createElement('tr');
-    tr.innerHTML=
-      '<td><input class="role-cell-input" type="text" value="'+esc(r.emoji||'')+'" maxlength="4" placeholder="🎮" style="text-align:center;font-size:17px;padding:6px" oninput="cfg.ROLE_CATEGORIES['+ci+'].roles['+ri+'].emoji=this.value"></td>'
-      +'<td><input class="role-cell-input" type="text" value="'+esc(r.label||'')+'" placeholder="ชื่อปุ่ม" oninput="cfg.ROLE_CATEGORIES['+ci+'].roles['+ri+'].label=this.value"></td>'
-      +'<td><button class="role-pick-btn '+(hasRole?'has-role':'')+'" onclick="startPick('+ci+','+ri+')">'+(hasRole?'&#9989; '+esc(r.roleName):'คลิกเพื่อเลือกยศ &rarr;')+'</button></td>'
-      +'<td><input type="color" value="'+hex+'" style="width:44px;height:34px;border:1px solid var(--border);border-radius:7px;cursor:pointer;background:transparent;padding:2px 4px" oninput="cfg.ROLE_CATEGORIES['+ci+'].roles['+ri+'].color=this.value"></td>'
-      +'<td><button class="btn btn-danger btn-sm" style="padding:5px 9px" onclick="removeRole('+ci+','+ri+')">&#10005;</button></td>';
+    tr.innerHTML='<td><input class="role-cell-input" type="text" value="'+esc(r.emoji||'')+'" maxlength="4" placeholder="🎮" style="text-align:center;font-size:17px;padding:6px" oninput="updateEdRole('+ci+','+ri+',\'emoji\',this.value)"></td>'
+      +'<td><input class="role-cell-input" type="text" value="'+esc(r.label||'')+'" placeholder="ชื่อปุ่ม" oninput="updateEdRole('+ci+','+ri+',\'label\',this.value)"></td>'
+      +'<td><button class="role-pick-btn '+(hasRole?'has-role':'')+'" onclick="startEditorPick('+ci+','+ri+')">'+(hasRole?'&#9989; '+esc(r.roleName):'คลิกเพื่อเลือกยศ &rarr;')+'</button></td>'
+      +'<td><input type="color" value="'+hex+'" style="width:44px;height:34px;border:1px solid var(--border);border-radius:7px;cursor:pointer;background:transparent;padding:2px 4px" oninput="updateEdRole('+ci+','+ri+',\'color\',this.value)"></td>'
+      +'<td><button class="btn btn-danger btn-sm" style="padding:5px 9px" onclick="removeEdRole('+ci+','+ri+')">&#10005;</button></td>';
     el.appendChild(tr);
   });
 }
-
-function addCategory(){
-  var name=document.getElementById('new-cat-name').value.trim();
-  var multi=document.getElementById('new-cat-multi').value==='true';
+function updateEdRole(ci,ri,key,val){var p=getActivePreset();if(p&&p.roleCategories[ci]&&p.roleCategories[ci].roles[ri])p.roleCategories[ci].roles[ri][key]=val;}
+function addEditorCat(){
+  var name=document.getElementById('ed-new-cat-name')?document.getElementById('ed-new-cat-name').value.trim():'';
+  var multi=document.getElementById('ed-new-cat-multi')?document.getElementById('ed-new-cat-multi').value==='true':true;
   if(!name){toast('กรุณากรอกชื่อหมวดหมู่','err');return;}
-  if(!cfg.ROLE_CATEGORIES) cfg.ROLE_CATEGORIES=[];
-  cfg.ROLE_CATEGORIES.push({id:uid(),name:name,multi:multi,roles:[]});
-  document.getElementById('new-cat-name').value='';
-  drawCats();
-  toast('เพิ่มหมวดหมู่ "'+name+'" แล้ว','ok');
+  var p=getActivePreset();if(!p)return;
+  if(!p.roleCategories)p.roleCategories=[];
+  p.roleCategories.push({id:'cat_'+Math.random().toString(36).slice(2,7),name:name,multi:multi,roles:[]});
+  if(document.getElementById('ed-new-cat-name'))document.getElementById('ed-new-cat-name').value='';
+  drawEditorCats(p.roleCategories);toast('เพิ่มหมวดหมู่ "'+name+'" แล้ว','ok');
 }
-
-function removeCat(ci){
-  var name=cfg.ROLE_CATEGORIES[ci]?cfg.ROLE_CATEGORIES[ci].name:'';
-  cfg.ROLE_CATEGORIES.splice(ci,1);
-  drawCats();
-  toast('ลบหมวดหมู่ "'+name+'" แล้ว');
-}
-
-function toggleCatMulti(ci){
-  cfg.ROLE_CATEGORIES[ci].multi=!cfg.ROLE_CATEGORIES[ci].multi;
-  var badge=document.getElementById('cat-badge-'+ci);
-  if(badge) badge.textContent=cfg.ROLE_CATEGORIES[ci].multi?'เลือกหลายอัน':'เลือก 1 อัน';
-  toast('เปลี่ยนโหมดแล้ว');
-}
-
-function addRole(ci){
-  if(!cfg.ROLE_CATEGORIES[ci].roles) cfg.ROLE_CATEGORIES[ci].roles=[];
-  cfg.ROLE_CATEGORIES[ci].roles.push({id:uid(),emoji:'',label:'',roleId:'',roleName:'',color:'#5865f2'});
-  renderRoleRows(ci);
-}
-
-function removeRole(ci,ri){
-  cfg.ROLE_CATEGORIES[ci].roles.splice(ri,1);
-  renderRoleRows(ci);
-}
-
-function startPick(ci,ri){
+function startEditorPick(ci,ri){
   activePicker={ci:ci,ri:ri};
-  var label=cfg.ROLE_CATEGORIES[ci]&&cfg.ROLE_CATEGORIES[ci].roles[ri]?cfg.ROLE_CATEGORIES[ci].roles[ri].label||'ปุ่มนี้':'ปุ่มนี้';
-  showBanner('กำลังเลือกยศสำหรับ "'+label+'" — คลิกยศใน Pool ด้านบน');
-  var area=document.getElementById('roles-chips-area');
-  if(area) area.scrollIntoView({behavior:'smooth',block:'nearest'});
+  var p=getActivePreset();var label=p&&p.roleCategories[ci]&&p.roleCategories[ci].roles[ri]?p.roleCategories[ci].roles[ri].label||'ปุ่มนี้':'ปุ่มนี้';
+  var b=document.getElementById('ed-pick-banner');if(b)b.classList.add('show');
+  var bt=document.getElementById('ed-pick-banner-text');if(bt)bt.textContent='กำลังเลือกยศสำหรับ "'+label+'" — คลิกยศด้านบน';
+  var pool=document.getElementById('ed-role-pool');if(pool)pool.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
-function cancelPick(){activePicker=null;hideBanner();}
-function showBanner(txt){var b=document.getElementById('pick-banner');if(b)b.classList.add('show');var bt=document.getElementById('pick-banner-text');if(bt)bt.textContent=txt;}
-function hideBanner(){var b=document.getElementById('pick-banner');if(b)b.classList.remove('show');}
-
-async function saveRoles(){
-  toast('กำลังบันทึก...','info');
-  var res=await api('POST','/api/config',cfg);
-  if(res&&res.ok){toast('บันทึกยศสำเร็จ!','ok');refreshOverview();}
-  else toast('บันทึกไม่สำเร็จ','err');
+function cancelEditorPick(){activePicker=null;var b=document.getElementById('ed-pick-banner');if(b)b.classList.remove('show');}
+function pickRoleChip(roleId,roleName,hex,chipEl){
+  if(!activePicker){toast('กดปุ่ม "คลิกเพื่อเลือกยศ" ในตารางก่อน','err');return;}
+  var ci=activePicker.ci,ri=activePicker.ri;
+  var p=getActivePreset();if(!p)return;
+  p.roleCategories[ci].roles[ri].roleId=roleId;p.roleCategories[ci].roles[ri].roleName=roleName;
+  if(!p.roleCategories[ci].roles[ri].color)p.roleCategories[ci].roles[ri].color=hex;
+  activePicker=null;cancelEditorPick();renderEdRoleRows(ci);
+  document.querySelectorAll('#ed-role-pool .role-chip').forEach(function(c){c.classList.remove('picked');});
+  if(chipEl)chipEl.classList.add('picked');
+  toast('ผูก "'+roleName+'" แล้ว','ok');
 }
 
-
-// ── CLOSE DROPDOWNS ────────────────────────────────────────
-function closeAllDropdowns(){
-  document.querySelectorAll('.role-dd-menu.open').forEach(function(m){
-    m.classList.remove('open');
-    var t=m.previousElementSibling;if(t)t.classList.remove('open');
-  });
+// ── DROPDOWN ──
+function toggleDD(id,ev){
+  if(ev)ev.stopPropagation();
+  var el=document.getElementById(id);if(!el)return;
+  document.querySelectorAll('.role-dd-menu.open').forEach(function(m){if(m.id!==id){m.classList.remove('open');var t=m.previousElementSibling;if(t)t.classList.remove('open');}});
+  var wasOpen=el.classList.contains('open');el.classList.toggle('open');
+  var trigger=el.previousElementSibling;if(trigger)trigger.classList.toggle('open',el.classList.contains('open'));
+  if(!wasOpen&&trigger)_posDD(el,trigger);
+  if(el.classList.contains('open')){var s=el.querySelector('.role-dd-search');if(s)setTimeout(function(){s.focus();},80);}
 }
-document.addEventListener('click',function(e){
-  if(!e.target.closest('.role-dd-wrap')) closeAllDropdowns();
-});
+function filterDD(menuId,q){var opts=document.getElementById(menuId+'-opts');if(!opts)return;var lower=q.toLowerCase();opts.querySelectorAll('.role-dd-opt').forEach(function(o){o.style.display=o.textContent.toLowerCase().includes(lower)?'':'none';});}
+function _posDD(menu,trigger){var r=trigger.getBoundingClientRect();menu.style.left=r.left+'px';menu.style.width=r.width+'px';var below=window.innerHeight-r.bottom;if(below>180){menu.style.top=(r.bottom+4)+'px';menu.style.bottom='auto';}else{menu.style.bottom=(window.innerHeight-r.top+4)+'px';menu.style.top='auto';}}
+document.addEventListener('click',function(e){if(!e.target.closest('.role-dd-wrap')&&!e.target.closest('.role-dd-menu'))document.querySelectorAll('.role-dd-menu.open').forEach(function(m){m.classList.remove('open');var t=m.previousElementSibling;if(t)t.classList.remove('open');});});
+window.addEventListener('resize',function(){document.querySelectorAll('.role-dd-menu.open').forEach(function(m){var t=m.previousElementSibling;if(t)_posDD(m,t);});});
 
-// ── LOGOUT ─────────────────────────────────────────────────
+// ── LOGOUT ──
 document.getElementById('logout-btn').addEventListener('click',function(){
-  localStorage.removeItem('session_token');
-  document.cookie='session_token=; Max-Age=0; path=/';
+  localStorage.removeItem('session_token');document.cookie='session_token=; Max-Age=0; path=/';
   window.location='/auth/logout'+(TOKEN?'?token='+TOKEN:'');
 });
 
-// ── INIT ───────────────────────────────────────────────────
+// ── INIT ──
 (async function(){
-  var ltxt=document.getElementById('loading-txt');
-  if(ltxt) ltxt.textContent='กำลังโหลด BBT Panel...';
-
-  // ── โหลดทุกอย่างใน call เดียว ──────────────────────────
+  var ltxt=document.getElementById('loading-txt');if(ltxt)ltxt.textContent='กำลังโหลด BBT Panel...';
   var initData=await api('GET','/api/init');
-
   if(initData){
     cfg=initData.config||{};
-    var statusData=initData.status||{};
-    var u=statusData.user||{};
-    var guildName=u.guildName||'—';
-    var userName=u.username||'Admin';
-    document.getElementById('guild-name').textContent=guildName;
-    document.getElementById('user-name').textContent=userName;
-    document.getElementById('user-avatar').textContent=(userName[0]||'A').toUpperCase();
-    var dot=document.getElementById('bot-dot');
-    var tag=document.getElementById('bot-tag');
+    var statusData=initData.status||{};var u=statusData.user||{};
+    document.getElementById('guild-name').textContent=u.guildName||'—';
+    document.getElementById('user-name').textContent=u.username||'Admin';
+    document.getElementById('user-avatar').textContent=((u.username||'A')[0]||'A').toUpperCase();
+    var dot=document.getElementById('bot-dot'),tag=document.getElementById('bot-tag');
     if(statusData.online){dot.classList.remove('off');tag.textContent=statusData.tag||'Online';}
     else{dot.classList.add('off');tag.textContent='Offline';}
-    cfg._botTag=statusData.tag||'';
-    cfg._guildName=guildName;
-    cfg._online=statusData.online||false;
-
-    // ── cache roles + channels จาก init ────────────────────
-    if(initData.roles&&initData.roles.length){
-      fetchedRoles=initData.roles;
-      rolesLoaded=true;
-      _renderRolePool();
-    }
-    if(initData.channels&&initData.channels.length){
-      channels=initData.channels;
-      channelsLoaded=true;
-    }
+    cfg._botTag=statusData.tag||'';cfg._guildName=u.guildName||'';cfg._online=statusData.online||false;
+    if(initData.roles&&initData.roles.length){fetchedRoles=initData.roles;rolesLoaded=true;}
+    if(initData.channels&&initData.channels.length){channels=initData.channels;channelsLoaded=true;}
   } else {
-    // fallback แบบเดิม (กัน error)
     var r2=await Promise.all([api('GET','/api/config'),api('GET','/api/status')]);
-    cfg=r2[0]||{};
-    var s2=r2[1]||{};
-    var u2=s2.user||{};
+    cfg=r2[0]||{};var s2=r2[1]||{};var u2=s2.user||{};
     document.getElementById('guild-name').textContent=u2.guildName||'—';
     document.getElementById('user-name').textContent=u2.username||'Admin';
-    document.getElementById('user-avatar').textContent=(u2.username||'A')[0].toUpperCase();
+    document.getElementById('user-avatar').textContent=((u2.username||'A')[0]||'A').toUpperCase();
     var dot2=document.getElementById('bot-dot'),tag2=document.getElementById('bot-tag');
-    if(s2.online){dot2.classList.remove('off');tag2.textContent=s2.tag||'Online';}
-    else{dot2.classList.add('off');tag2.textContent='Offline';}
-    cfg._botTag=s2.tag||'';cfg._guildName=u2.guildName||'—';cfg._online=s2.online||false;
+    if(s2.online){dot2.classList.remove('off');tag2.textContent=s2.tag||'Online';}else{dot2.classList.add('off');tag2.textContent='Offline';}
+    cfg._botTag=s2.tag||'';cfg._guildName=u2.guildName||'';cfg._online=s2.online||false;
+  }
+
+  // Migrate old cfg → presets format (backward compat)
+  if(!cfg.VERIFY_PRESETS&&cfg.VERIFY_EMBED_TITLE){
+    cfg.VERIFY_PRESETS=[{id:uid(),name:'verify',embedTitle:cfg.VERIFY_EMBED_TITLE,embedDesc:cfg.VERIFY_EMBED_DESC||'',embedColor:cfg.VERIFY_EMBED_COLOR||'#ff2d95',embedImage:cfg.VERIFY_IMAGE||'',embedThumbnail:cfg.VERIFY_THUMBNAIL||'',embedButtonLabel:cfg.VERIFY_BUTTON_LABEL||'ยืนยันตัวตน',embedButtonColor:cfg.VERIFY_BUTTON_COLOR||'Primary',channelName:cfg.VERIFY_CHANNEL_NAME||'',memberRoleId:cfg.MEMBER_ROLE_ID||'',memberRoleName:cfg.MEMBER_ROLE_NAME||'',roleCategories:cfg.ROLE_CATEGORIES||[]}];
+  }
+  if(!cfg.WELCOME_PRESETS&&cfg.WELCOME_TITLE){
+    cfg.WELCOME_PRESETS=[{id:uid(),name:'welcome',embedTitle:cfg.WELCOME_TITLE,embedDesc:cfg.WELCOME_MESSAGE||'',embedColor:cfg.WELCOME_COLOR||'#ff2d95',embedImage:cfg.WELCOME_IMAGE||'',embedThumbnail:cfg.WELCOME_THUMBNAIL||'',channelName:cfg.WELCOME_CHANNEL_NAME||'',mentionUser:cfg.MENTION_USER!==false,showAvatar:cfg.WELCOME_SHOW_AVATAR!==false}];
+  }
+  if(!cfg.GOODBYE_PRESETS&&cfg.GOODBYE_TITLE){
+    cfg.GOODBYE_PRESETS=[{id:uid(),name:'goodbye',embedTitle:cfg.GOODBYE_TITLE,embedDesc:cfg.GOODBYE_MESSAGE||'',embedColor:cfg.GOODBYE_COLOR||'#ff2d95',embedImage:cfg.GOODBYE_IMAGE||'',embedThumbnail:cfg.GOODBYE_THUMBNAIL||'',channelName:cfg.GOODBYE_CHANNEL_NAME||'',enabled:cfg.GOODBYE_ENABLED!==false,showAvatar:cfg.GOODBYE_SHOW_AVATAR!==false}];
   }
 
   refreshOverview();
-  ['verify','welcome','goodbye'].forEach(function(t){
-    var has=(t==='verify'&&cfg.VERIFY_EMBED_TITLE)||(t==='welcome'&&cfg.WELCOME_TITLE)||(t==='goodbye'&&cfg.GOODBYE_TITLE);
-    if(has){ renderEmbedOverview(t); var s=document.querySelector('#wiz-'+t+' .wiz-steps');if(s)s.classList.add('hidden'); }
-    else renderWiz(t,1);
-  });
-
-  var ov=document.getElementById('loading-overlay');
-  ov.classList.add('hidden');
+  var ov=document.getElementById('loading-overlay');ov.classList.add('hidden');
   setTimeout(function(){if(ov.parentNode)ov.parentNode.removeChild(ov);},500);
 })();
 </script>
