@@ -311,6 +311,7 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
     <a class="sb-link" onclick="nav('goodbye',this)"><span class="sb-link-ico">&#128682;</span> Goodbye Presets</a>
     <div class="sb-sec" id="sb-sec-owner" style="display:none">Owner</div>
     <a class="sb-link" id="sb-link-admins" style="display:none" onclick="nav('admins',this)"><span class="sb-link-ico">&#128737;</span> จัดการผู้ดูแล</a>
+    <a class="sb-link" id="sb-link-whoami" onclick="navWhoami(this)" style="opacity:.55;font-size:12px"><span class="sb-link-ico">&#128270;</span> ตรวจสอบ Owner ID</a>
   </nav>
   <div class="sb-foot">
     <div class="sb-user">
@@ -385,6 +386,11 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
     <div class="pg-head">
       <div><div class="pg-title">&#128737; จัดการผู้ดูแล</div><div class="pg-sub">กำหนดว่าใครเข้า BBT Panel ได้บ้าง</div></div>
       <div class="pg-actions"><button class="btn btn-pk btn-sm" onclick="saveAdmins()">&#128190; บันทึก</button></div>
+    </div>
+    <!-- DEBUG CARD -->
+    <div class="card" id="whoami-card" style="border-color:rgba(88,101,242,.25);display:none">
+      <div class="card-head" style="color:#7b8fff"><span class="card-head-icon">&#128270;</span> ตรวจสอบ Owner ID</div>
+      <div id="whoami-result" style="font-size:13px;color:var(--text2);line-height:2;font-family:'DM Mono',monospace"></div>
     </div>
     <div class="card">
       <div class="card-head"><span class="card-head-icon">&#128737;</span> รายชื่อผู้ดูแลที่เข้าได้</div>
@@ -1235,6 +1241,29 @@ document.getElementById('logout-btn').addEventListener('click',function(){
   localStorage.removeItem('session_token');document.cookie='session_token=; Max-Age=0; path=/';
   window.location='/auth/logout'+(TOKEN?'?token='+TOKEN:'');
 });
+
+// ── WHOAMI DEBUG ──
+async function navWhoami(el){
+  nav('admins',el);
+  var card=document.getElementById('whoami-card');
+  var result=document.getElementById('whoami-result');
+  if(!card||!result)return;
+  card.style.display='';
+  result.innerHTML='<span style="color:var(--text3)">กำลังตรวจสอบ...</span>';
+  try{
+    var r=await fetch('/api/whoami'+(TOKEN?'?token='+TOKEN:''),{headers:{'x-session-token':TOKEN}});
+    var d=await r.json();
+    if(r.status===401){result.innerHTML='<span style="color:var(--red)">❌ Session หมดอายุ — ลอง logout แล้ว login ใหม่</span>';return;}
+    result.innerHTML=
+      '<div style="margin-bottom:6px">👤 <strong style="color:var(--text)">ชื่อของคุณ:</strong> <span style="color:var(--pk3)">'+esc(d.username||'?')+'</span></div>'
+      +'<div style="margin-bottom:6px">🆔 <strong style="color:var(--text)">userId ของคุณ:</strong> <span style="color:var(--green);font-family:\'DM Mono\',monospace">'+esc(d.userId||'?')+'</span>'
+      +'<button onclick="navigator.clipboard.writeText(\''+esc(d.userId||'')+'\').then(function(){toast(\'คัดลอกแล้ว ✅\',\'ok\')})" style="margin-left:8px;background:var(--card2);border:1px solid var(--border2);color:var(--text2);border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer;font-family:inherit">📋 คัดลอก</button></div>'
+      +'<div style="margin-bottom:6px">🔑 <strong style="color:var(--text)">OWNER_ID ที่ตั้งใน Render:</strong> <span style="color:var(--yellow);font-family:\'DM Mono\',monospace">'+esc(d.ownerIdConfigured||'(ไม่ได้ตั้งค่า)')+'</span></div>'
+      +(d.isOwner
+        ?'<div style="margin-top:10px;padding:10px 14px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);border-radius:10px;color:var(--green)">✅ userId ตรงกับ OWNER_ID — คุณควรเห็นเมนู "จัดการผู้ดูแล" แล้ว ลอง reload หน้า</div>'
+        :'<div style="margin-top:10px;padding:10px 14px;background:rgba(244,63,94,.08);border:1px solid rgba(244,63,94,.2);border-radius:10px;color:var(--red)">❌ userId <strong>ไม่ตรง</strong>กับ OWNER_ID ใน Render<br><span style="font-size:12px;opacity:.8">→ ไปที่ Render → Environment → ตั้ง <code>OWNER_ID</code> = <strong>'+esc(d.userId||'?')+'</strong> แล้ว Redeploy</span></div>');
+  }catch(e){result.innerHTML='<span style="color:var(--red)">❌ เรียก API ไม่ได้: '+esc(String(e))+'</span>';}
+}
 
 // ── ADMIN MANAGER ──
 var _adminList=[];
