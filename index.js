@@ -111,7 +111,30 @@ const REDIRECT_URI = process.env.REDIRECT_URI || `http://localhost:${PORT}/auth/
 
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "public", "login.html")));
 
+// ── ACCESS DENIED PAGE ──
+app.get("/access-denied", (req, res) => {
+  res.send(`<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Access Denied</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;700;800&family=Syne:wght@800&display=swap" rel="stylesheet">
+<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#050507;font-family:'Noto Sans Thai',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh}
+.box{background:#0d0d12;border:1px solid #1e1e2a;border-radius:20px;padding:52px 44px;text-align:center;max-width:400px;width:90%;position:relative;overflow:hidden}
+.box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(244,63,94,.6),transparent)}
+.icon{font-size:60px;margin-bottom:20px}
+h1{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:10px}
+p{font-size:13px;color:#50505e;line-height:1.7;margin-bottom:8px}
+.uid{font-size:11px;color:#30303e;font-family:monospace;margin-top:16px;padding:8px 12px;background:#080810;border-radius:8px;border:1px solid #1a1a28}
+</style></head><body>
+<div class="box">
+  <div class="icon">⛔</div>
+  <h1>ไม่มีสิทธิ์เข้าถึง</h1>
+  <p>คุณไม่ได้รับอนุญาตให้เข้าใช้งาน BBT Panel</p>
+  <p style="color:#30303e">กรุณาติดต่อเจ้าของเซิร์ฟเวอร์หากคิดว่านี่เป็นข้อผิดพลาด</p>
+</div></body></html>`);
+});
+
 app.get("/auth/login", (req, res) => {
+  // ถ้ากำหนด ADMIN_USER_IDS ไว้ใน env ต้องตรวจ state token ก่อน
+  // แต่เราไม่รู้ userId ก่อน OAuth — ให้ผ่านไปก่อน แล้วตรวจที่ callback
   const params = new URLSearchParams({ client_id: DISCORD_CLIENT_ID, redirect_uri: REDIRECT_URI, response_type: "code", scope: "identify guilds" });
   res.redirect(`https://discord.com/api/oauth2/authorize?${params}`);
 });
@@ -129,6 +152,13 @@ app.get("/auth/callback", async (req, res) => {
     if (!tokenData.access_token) return res.redirect("/?error=token_failed");
 
     const user = await (await fetch("https://discord.com/api/users/@me", { headers: { Authorization: `Bearer ${tokenData.access_token}` } })).json();
+
+    // ตรวจ whitelist ก่อน — ถ้ากำหนด ADMIN_USER_IDS ใน env
+    const allowedIds = process.env.ADMIN_USER_IDS ? process.env.ADMIN_USER_IDS.split(",").map(s => s.trim()) : null;
+    if (allowedIds && allowedIds.length > 0 && !allowedIds.includes(user.id)) {
+      return res.redirect("/access-denied");
+    }
+
     const guilds = await (await fetch("https://discord.com/api/users/@me/guilds", { headers: { Authorization: `Bearer ${tokenData.access_token}` } })).json();
 
     const adminGuilds = guilds.filter((g) => (BigInt(g.permissions) & BigInt(0x8)) !== BigInt(0));
