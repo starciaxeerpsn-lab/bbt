@@ -84,7 +84,7 @@ try {
 
 const err = new URLSearchParams(location.search).get('error');
 if (err) {
-  const msgs = { not_admin:'คุณไม่มีสิทธิ์ Admin ในเซิร์ฟเวอร์ที่บอทอยู่', token_failed:'ไม่สามารถยืนยันตัวตนได้', oauth_error:'เกิดข้อผิดพลาดในการเข้าสู่ระบบ' };
+  const msgs = { not_admin:'คุณไม่มีสิทธิ์ Admin ในเซิร์ฟเวอร์ที่บอทอยู่', token_failed:'ไม่สามารถยืนยันตัวตนได้', oauth_error:'เกิดข้อผิดพลาดในการเข้าสู่ระบบ', permission_revoked:'⛔ สิทธิ์ของคุณถูกยกเลิก กรุณาติดต่อผู้ดูแล', session_expired:'Session หมดอายุ กรุณาเข้าสู่ระบบใหม่' };
   const el = document.getElementById('err');
   el.textContent = msgs[err] || 'เกิดข้อผิดพลาด: ' + err;
   el.classList.add('show');
