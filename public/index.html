@@ -166,19 +166,33 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
 .editor-tab-body{display:none;padding:24px}
 .editor-tab-body.on{display:block}
 /* ROLE CATEGORIES inside editor */
-.cat-list{display:flex;flex-direction:column;gap:12px;margin-bottom:14px}
-.cat-item{background:var(--card2);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;position:relative}
-.cat-item::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--pk),transparent 80%);border-radius:12px 0 0 12px}
-.cat-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.cat-list{display:flex;flex-direction:column;gap:0;margin-bottom:14px}
+/* Group tab bar */
+.cat-tab-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.cat-tab-btn{background:var(--card2);border:1px solid var(--border2);color:var(--text2);border-radius:20px;padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s;white-space:nowrap}
+.cat-tab-btn:hover{border-color:var(--pk3);color:var(--pk3)}
+.cat-tab-btn.active{background:var(--pk-dim);border-color:var(--pk-border);color:var(--pk3)}
+/* Active group panel */
+.cat-panel{background:var(--card2);border:1px solid var(--border2);border-radius:14px;padding:16px 18px;position:relative;margin-bottom:14px}
+.cat-panel::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--pk),transparent 80%);border-radius:14px 0 0 14px}
+.cat-header{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
 .cat-name-inp{flex:1;min-width:120px;background:var(--bg);border:1px solid var(--border2);border-radius:9px;color:var(--text);padding:8px 12px;font-family:inherit;font-size:13px;outline:none;font-weight:700}
 .cat-name-inp:focus{border-color:var(--pk);box-shadow:0 0 0 3px var(--pk-glow)}
-.cat-badge{font-size:10px;padding:3px 9px;border-radius:20px;border:1px solid var(--border2);color:var(--text2);white-space:nowrap}
-.role-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
-.role-table thead td{color:var(--text3);font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:0 6px 8px}
-.role-table tbody tr:not(:last-child){border-bottom:1px solid var(--border)}
-.role-table tbody td{padding:6px}
-.role-cell-input{background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:7px 10px;font-family:inherit;font-size:13px;outline:none;width:100%;transition:.15s}
-.role-cell-input:focus{border-color:var(--pk);box-shadow:0 0 0 2px var(--pk-glow)}
+.cat-mode-btn{font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid var(--pk-border);color:var(--pk3);background:var(--pk-dim);cursor:pointer;transition:.15s;white-space:nowrap;font-family:inherit;font-weight:600}
+.cat-mode-btn:hover{filter:brightness(1.15)}
+/* Role button chips inside a group */
+.role-chips-area{display:flex;flex-wrap:wrap;gap:8px;min-height:36px;align-items:flex-start}
+.role-btn-chip{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:12px;font-size:12.5px;font-weight:600;border:1px solid;transition:.15s;background:var(--card)}
+.role-btn-chip:hover{filter:brightness(1.1)}
+.rbc-emoji-wrap{flex-shrink:0}
+.rbc-emoji{background:none;border:none;outline:none;width:26px;font-size:16px;cursor:text;color:inherit;font-family:inherit;text-align:center;padding:0}
+.rbc-mid{display:flex;flex-direction:column;gap:1px;min-width:60px}
+.rbc-label{background:none;border:none;outline:none;font-size:12.5px;font-weight:700;cursor:text;color:var(--text);font-family:inherit;width:100%}
+.rbc-label:focus{outline:none}
+.rbc-role-name{font-size:10.5px;font-weight:500;opacity:.85}
+.rbc-color{width:28px;height:28px;border:1px solid var(--border2);border-radius:6px;cursor:pointer;background:transparent;padding:2px;flex-shrink:0}
+.rbc-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:2px 4px;border-radius:4px;transition:.1s;flex-shrink:0;line-height:1}
+.rbc-del:hover{color:var(--red);background:rgba(244,63,94,.12)}
 .add-cat-row{display:flex;gap:10px;margin-top:14px;align-items:flex-end;flex-wrap:wrap;padding-top:14px;border-top:1px solid var(--border)}
 .add-cat-row .field{margin-bottom:0;flex:1}
 /* SEARCHABLE DROPDOWN */
@@ -210,9 +224,7 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
 .role-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid;cursor:pointer;transition:.15s}
 .role-chip:hover{transform:scale(1.04);filter:brightness(1.15)}
 .role-chip.picked{outline:2px solid var(--pk);outline-offset:2px}
-/* PICK BANNER */
-.pick-banner{display:none;align-items:center;gap:10px;padding:12px 18px;border-radius:12px;background:var(--pk-dim);border:1px solid var(--pk-border);color:var(--pk3);font-size:13px;margin-bottom:14px}
-.pick-banner.show{display:flex}
+/* pick-banner removed */
 /* MODAL */
 .modal-bg{display:none;position:fixed;inset:0;z-index:8000;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);align-items:center;justify-content:center}
 .modal-bg.open{display:flex}
@@ -533,8 +545,7 @@ function openEditor(type,presetId){
   if(isV){
     var pool=fetchedRoles.filter(function(r){return !r.isAdmin;});
     var poolChips=pool.map(function(r){var hex=r.color?'#'+r.color.toString(16).padStart(6,'0'):'#5865f2';return '<span class="role-chip" style="background:'+hex+'22;border-color:'+hex+'66;color:'+hex+'" onclick="pickRoleChip(\''+r.id+'\',\''+esc(r.name)+'\',\''+hex+'\',this)">'+esc(r.name)+'</span>';}).join('');
-    rolePoolHtml='<div class="card-head" style="margin-bottom:14px"><span class="card-head-icon">&#128203;</span> ยศจาก Discord</div>'
-      +'<div class="pick-banner" id="ed-pick-banner"><span>&#127919;</span><span id="ed-pick-banner-text">เลือกยศ...</span><button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="cancelEditorPick()">&#10005; ยกเลิก</button></div>'
+    rolePoolHtml='<div class="card-head" style="margin-bottom:8px"><span class="card-head-icon">&#128203;</span> ยศจาก Discord <span style="font-size:11px;font-weight:400;color:var(--text3);margin-left:6px">— คลิกยศเพื่อเพิ่มลงหมวดหมู่ที่เลือกอยู่</span></div>'
       +(rolesLoaded&&pool.length?'':'<button class="btn btn-ghost btn-sm" style="margin-bottom:12px" onclick="loadRolesForEditor()">&#128260; โหลดยศก่อน</button>')
       +'<div class="roles-pool" id="ed-role-pool">'+(poolChips||'<span class="roles-empty">กด "โหลดยศ" ก่อน</span>')+'</div><hr class="sep">'
       +'<div id="ed-cat-list" class="cat-list"></div>'
@@ -795,28 +806,38 @@ function getActivePreset(){
   var key=activeEditorType==='verify'?'VERIFY_PRESETS':activeEditorType==='welcome'?'WELCOME_PRESETS':'GOODBYE_PRESETS';
   return (cfg[key]||[]).find(function(p){return p.id===activeEditorId;})||null;
 }
+var activeGroupIdx=0;
+function updateCatTabLabel(ci,val){var tabs=document.querySelectorAll('.cat-tab-btn');if(tabs[ci])tabs[ci].textContent=val||'กลุ่ม '+(ci+1);}
 function drawEditorCats(cats){
   var list=document.getElementById('ed-cat-list');if(!list)return;
   cats=cats||[];
-  if(!cats.length){list.innerHTML='<p style="color:var(--text3);font-size:13px;margin-bottom:8px">ยังไม่มีหมวดหมู่</p>';return;}
+  if(!cats.length){list.innerHTML='<p style="color:var(--text3);font-size:13px;margin-bottom:8px">ยังไม่มีหมวดหมู่ — กด "+ เพิ่มหมวดหมู่" ด้านล่าง</p>';activeGroupIdx=0;return;}
+  if(activeGroupIdx>=cats.length)activeGroupIdx=cats.length-1;
   list.innerHTML='';
+  // Group selector tabs
+  var tabBar=document.createElement('div');tabBar.className='cat-tab-bar';
   cats.forEach(function(cat,ci){
-    var div=document.createElement('div');div.className='cat-item';
-    div.innerHTML='<div class="cat-header">'
-      +'<input type="text" class="cat-name-inp" value="'+esc(cat.name||'')+'" placeholder="ชื่อหมวดหมู่" oninput="updateEdCatName('+ci+',this.value)">'
-      +'<span class="cat-badge" id="ed-cat-badge-'+ci+'">'+(cat.multi?'เลือกหลายอัน':'เลือก 1 อัน')+'</span>'
-      +'<button class="btn btn-ghost btn-xs" onclick="toggleEdCatMulti('+ci+')">&#128260;</button>'
-      +'<button class="btn btn-danger btn-xs" onclick="removeEdCat('+ci+')">&#128465; ลบ</button>'
-      +'</div>'
-      +'<table class="role-table"><thead><tr><td style="width:60px">Emoji</td><td>ชื่อปุ่ม</td><td>ยศ Discord</td><td style="width:52px">สี</td><td style="width:40px"></td></tr></thead>'
-      +'<tbody id="ed-cat-body-'+ci+'"></tbody></table>'
-      +'<button class="btn btn-ghost btn-sm" style="margin-top:10px" onclick="addEdRole('+ci+')">+ เพิ่มปุ่มยศ</button>';
-    list.appendChild(div);
-    renderEdRoleRows(ci);
+    var t=document.createElement('button');
+    t.className='cat-tab-btn'+(ci===activeGroupIdx?' active':'');
+    t.textContent=(cat.name||'กลุ่ม '+(ci+1));
+    t.onclick=function(){activeGroupIdx=ci;drawEditorCats(getActivePreset().roleCategories);};
+    tabBar.appendChild(t);
   });
+  list.appendChild(tabBar);
+  // Active group panel
+  var cat=cats[activeGroupIdx],ci=activeGroupIdx;
+  var panel=document.createElement('div');panel.className='cat-panel';
+  panel.innerHTML='<div class="cat-header">'
+    +'<input type="text" class="cat-name-inp" value="'+esc(cat.name||'')+'" placeholder="ชื่อหมวดหมู่" oninput="updateEdCatName('+ci+',this.value);updateCatTabLabel('+ci+',this.value)">'
+    +'<button class="cat-mode-btn" id="ed-cat-badge-'+ci+'" onclick="toggleEdCatMulti('+ci+')">'+(cat.multi?'✦ หลายอัน':'➀ อันเดียว')+'</button>'
+    +'<button class="btn btn-danger btn-xs" onclick="removeEdCat('+ci+')">&#128465; ลบกลุ่ม</button>'
+    +'</div>'
+    +'<div class="role-chips-area" id="ed-cat-body-'+ci+'"></div>';
+  list.appendChild(panel);
+  renderEdRoleRows(ci);
 }
 function updateEdCatName(ci,val){var p=getActivePreset();if(p&&p.roleCategories&&p.roleCategories[ci])p.roleCategories[ci].name=val;}
-function toggleEdCatMulti(ci){var p=getActivePreset();if(!p||!p.roleCategories[ci])return;p.roleCategories[ci].multi=!p.roleCategories[ci].multi;var b=document.getElementById('ed-cat-badge-'+ci);if(b)b.textContent=p.roleCategories[ci].multi?'เลือกหลายอัน':'เลือก 1 อัน';toast('เปลี่ยนโหมดแล้ว');}
+function toggleEdCatMulti(ci){var p=getActivePreset();if(!p||!p.roleCategories[ci])return;p.roleCategories[ci].multi=!p.roleCategories[ci].multi;var b=document.getElementById('ed-cat-badge-'+ci);if(b)b.textContent=p.roleCategories[ci].multi?'✦ หลายอัน':'➀ อันเดียว';toast('เปลี่ยนโหมดแล้ว');}
 function removeEdCat(ci){var p=getActivePreset();if(!p)return;p.roleCategories.splice(ci,1);drawEditorCats(p.roleCategories);toast('ลบหมวดหมู่แล้ว');}
 function addEdRole(ci){var p=getActivePreset();if(!p||!p.roleCategories[ci])return;if(!p.roleCategories[ci].roles)p.roleCategories[ci].roles=[];p.roleCategories[ci].roles.push({id:'r_'+Math.random().toString(36).slice(2,7),emoji:'',label:'',roleId:'',roleName:'',color:'#5865f2'});renderEdRoleRows(ci);}
 function removeEdRole(ci,ri){var p=getActivePreset();if(!p)return;p.roleCategories[ci].roles.splice(ri,1);renderEdRoleRows(ci);}
@@ -824,16 +845,28 @@ function renderEdRoleRows(ci){
   var el=document.getElementById('ed-cat-body-'+ci);if(!el)return;
   var p=getActivePreset();var roles=p&&p.roleCategories[ci]?p.roleCategories[ci].roles||[]:[];
   el.innerHTML='';
-  roles.forEach(function(r,ri){
-    var hex=r.color||'#5865f2';var hasRole=!!r.roleName;
-    var tr=document.createElement('tr');
-    tr.innerHTML='<td><input class="role-cell-input" type="text" value="'+esc(r.emoji||'')+'" maxlength="4" placeholder="🎮" style="text-align:center;font-size:17px;padding:6px" oninput="updateEdRole('+ci+','+ri+',\'emoji\',this.value)"></td>'
-      +'<td><input class="role-cell-input" type="text" value="'+esc(r.label||'')+'" placeholder="ชื่อปุ่ม" oninput="updateEdRole('+ci+','+ri+',\'label\',this.value)"></td>'
-      +'<td><button class="role-pick-btn '+(hasRole?'has-role':'')+'" onclick="startEditorPick('+ci+','+ri+')">'+(hasRole?'&#9989; '+esc(r.roleName):'คลิกเพื่อเลือกยศ &rarr;')+'</button></td>'
-      +'<td><input type="color" value="'+hex+'" style="width:44px;height:34px;border:1px solid var(--border);border-radius:7px;cursor:pointer;background:transparent;padding:2px 4px" oninput="updateEdRole('+ci+','+ri+',\'color\',this.value)"></td>'
-      +'<td><button class="btn btn-danger btn-sm" style="padding:5px 9px" onclick="removeEdRole('+ci+','+ri+')">&#10005;</button></td>';
-    el.appendChild(tr);
-  });
+  if(!roles.length){
+    var empty=document.createElement('p');empty.style.cssText='color:var(--text3);font-size:12px;padding:8px 2px 4px';
+    empty.textContent='คลิกยศจาก pool ด้านบนเพื่อเพิ่มลงกลุ่มนี้ได้เลย';
+    el.appendChild(empty);
+  } else {
+    roles.forEach(function(r,ri){
+      var hex=r.color||'#5865f2';
+      var chip=document.createElement('div');chip.className='role-btn-chip';
+      chip.style.cssText='border-color:'+hex+'55;background:'+hex+'18';
+      chip.innerHTML=
+        '<div class="rbc-emoji-wrap"><input class="rbc-emoji" type="text" value="'+esc(r.emoji||'')+'" maxlength="4" placeholder="🎮" oninput="updateEdRole('+ci+','+ri+',\'emoji\',this.value)"></div>'
+        +'<div class="rbc-mid">'
+          +'<input class="rbc-label" type="text" value="'+esc(r.label||r.roleName||'')+'" placeholder="ชื่อปุ่ม" oninput="updateEdRole('+ci+','+ri+',\'label\',this.value)">'
+          +'<span class="rbc-role-name" style="color:'+hex+'">'+(r.roleName?'@'+esc(r.roleName):'— ยังไม่ผูกยศ —')+'</span>'
+        +'</div>'
+        +'<input type="color" class="rbc-color" value="'+hex+'" title="สีปุ่ม" oninput="updateEdRole('+ci+','+ri+',\'color\',this.value);this.closest(\'.role-btn-chip\').style.borderColor=this.value+\'55\';this.closest(\'.role-btn-chip\').style.background=this.value+\'18\';this.closest(\'.role-btn-chip\').querySelector(\'.rbc-role-name\').style.color=this.value">'
+        +'<button class="rbc-del" onclick="removeEdRole('+ci+','+ri+')" title="ลบ">✕</button>';
+      el.appendChild(chip);
+    });
+  }
+  var addBtn=document.createElement('button');addBtn.className='btn btn-ghost btn-sm';addBtn.style.cssText='margin-top:6px;width:fit-content';addBtn.textContent='+ เพิ่มปุ่มว่าง';addBtn.onclick=function(){addEdRole(ci);};
+  el.appendChild(addBtn);
 }
 function updateEdRole(ci,ri,key,val){var p=getActivePreset();if(p&&p.roleCategories[ci]&&p.roleCategories[ci].roles[ri])p.roleCategories[ci].roles[ri][key]=val;}
 function addEditorCat(){
@@ -844,26 +877,22 @@ function addEditorCat(){
   if(!p.roleCategories)p.roleCategories=[];
   p.roleCategories.push({id:'cat_'+Math.random().toString(36).slice(2,7),name:name,multi:multi,roles:[]});
   if(document.getElementById('ed-new-cat-name'))document.getElementById('ed-new-cat-name').value='';
-  drawEditorCats(p.roleCategories);toast('เพิ่มหมวดหมู่ "'+name+'" แล้ว','ok');
+  activeGroupIdx=p.roleCategories.length-1;drawEditorCats(p.roleCategories);toast('เพิ่มหมวดหมู่ "'+name+'" แล้ว','ok');
 }
-function startEditorPick(ci,ri){
-  activePicker={ci:ci,ri:ri};
-  var p=getActivePreset();var label=p&&p.roleCategories[ci]&&p.roleCategories[ci].roles[ri]?p.roleCategories[ci].roles[ri].label||'ปุ่มนี้':'ปุ่มนี้';
-  var b=document.getElementById('ed-pick-banner');if(b)b.classList.add('show');
-  var bt=document.getElementById('ed-pick-banner-text');if(bt)bt.textContent='กำลังเลือกยศสำหรับ "'+label+'" — คลิกยศด้านบน';
-  var pool=document.getElementById('ed-role-pool');if(pool)pool.scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-function cancelEditorPick(){activePicker=null;var b=document.getElementById('ed-pick-banner');if(b)b.classList.remove('show');}
 function pickRoleChip(roleId,roleName,hex,chipEl){
-  if(!activePicker){toast('กดปุ่ม "คลิกเพื่อเลือกยศ" ในตารางก่อน','err');return;}
-  var ci=activePicker.ci,ri=activePicker.ri;
   var p=getActivePreset();if(!p)return;
-  p.roleCategories[ci].roles[ri].roleId=roleId;p.roleCategories[ci].roles[ri].roleName=roleName;
-  if(!p.roleCategories[ci].roles[ri].color)p.roleCategories[ci].roles[ri].color=hex;
-  activePicker=null;cancelEditorPick();renderEdRoleRows(ci);
+  var cats=p.roleCategories||[];
+  if(!cats.length){toast('เพิ่มหมวดหมู่ก่อนนะครับ','err');return;}
+  var ci=activeGroupIdx;
+  if(!cats[ci].roles)cats[ci].roles=[];
+  // check duplicate
+  if(cats[ci].roles.find(function(r){return r.roleId===roleId;})){toast('ยศนี้อยู่ในกลุ่มนี้แล้ว','err');return;}
+  cats[ci].roles.push({id:'r_'+Math.random().toString(36).slice(2,7),emoji:'',label:roleName,roleId:roleId,roleName:roleName,color:hex});
+  // mark chip as picked
   document.querySelectorAll('#ed-role-pool .role-chip').forEach(function(c){c.classList.remove('picked');});
   if(chipEl)chipEl.classList.add('picked');
-  toast('ผูก "'+roleName+'" แล้ว','ok');
+  renderEdRoleRows(ci);
+  toast('เพิ่ม "'+roleName+'" ลง "'+esc(cats[ci].name||'กลุ่ม '+(ci+1))+'" แล้ว','ok');
 }
 
 // ── DROPDOWN ──
