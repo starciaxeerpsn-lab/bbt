@@ -535,7 +535,7 @@ function renderGallery(type){
         +(p.embedColor?'<span class="preset-meta-chip"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+esc(p.embedColor)+';vertical-align:middle;margin-right:2px"></span>สี embed</span>':'')
       +'</div>'
       +'<div class="preset-card-actions">'
-        +(type==='verify'?'<button class="btn btn-gr btn-sm" id="send-embed-btn-'+p.id+'" onclick="event.stopPropagation();sendEmbed(''+p.id+'')" title="ส่ง Embed ไปยังห้องที่ตั้งค่าไว้">🚀 ส่ง</button>':'')        +'<button class="btn btn-ghost btn-sm" style="flex:1" data-etype="'+type+'" data-eid="'+p.id+'" onclick="_galOpen(event,this)">&#9998; แก้ไข</button>'        +'<button class="btn btn-danger btn-sm" data-etype="'+type+'" data-eid="'+p.id+'" data-ename="'+esc(p.name||'preset')+'" onclick="_galDel(event,this)">&#128465;</button>'
+        +(type==='verify'?'<button class="btn btn-gr btn-sm" id="send-embed-btn-'+p.id+'" onclick="event.stopPropagation();sendEmbed(\''+p.id+'\')" title="ส่ง Embed ไปยังห้องที่ตั้งค่าไว้">🚀 ส่ง</button>':'')        +'<button class="btn btn-ghost btn-sm" style="flex:1" data-etype="'+type+'" data-eid="'+p.id+'" onclick="_galOpen(event,this)">&#9998; แก้ไข</button>'        +'<button class="btn btn-danger btn-sm" data-etype="'+type+'" data-eid="'+p.id+'" data-ename="'+esc(p.name||'preset')+'" onclick="_galDel(event,this)">&#128465;</button>'
       +'</div>';
     card.onclick=function(){openEditor(type,p.id);};
     galleryEl.appendChild(card);
