@@ -568,6 +568,7 @@ function removeSelectedRole(roleId,chipEl){
 // ── FORM BUILDER ──
 function getFormFields(){
   var p=getActivePreset();
+  if(!p)return [];
   if(!p.formFields)p.formFields=[];
   return p.formFields;
 }
@@ -575,6 +576,7 @@ function getFormFields(){
 function renderFormBuilder(){
   var el=document.getElementById('ed-form-builder');
   if(!el)return;
+  if(!getActivePreset())return;
   var fields=getFormFields();
   if(!fields.length){
     el.innerHTML='<div class="form-empty-hint">ยังไม่มีคำถาม — กด "+ เพิ่มคำถาม" เพื่อสร้าง</div>';
