@@ -488,8 +488,8 @@ function renderGallery(type){
         +(p.embedColor?'<span class="preset-meta-chip"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+esc(p.embedColor)+';vertical-align:middle;margin-right:2px"></span>สี embed</span>':'')
       +'</div>'
       +'<div class="preset-card-actions">'
-        +'<button class="btn btn-ghost btn-sm" style="flex:1" onclick="openEditor(\''+type+'\',\''+p.id+'\');event.stopPropagation()">&#9998; แก้ไข</button>'
-        +'<button class="btn btn-danger btn-sm" onclick="confirmDelete(\''+type+'\',\''+p.id+'\',\''+esc(p.name||'preset')+'\');event.stopPropagation()">&#128465;</button>'
+        +'<button class="btn btn-ghost btn-sm" style="flex:1" data-etype="'+type+'" data-eid="'+p.id+'" onclick="_galOpen(event,this)">&#9998; แก้ไข</button>'
+        +'<button class="btn btn-danger btn-sm" data-etype="'+type+'" data-eid="'+p.id+'" data-ename="'+esc(p.name||'preset')+'" onclick="_galDel(event,this)">&#128465;</button>'
       +'</div>';
     card.onclick=function(){openEditor(type,p.id);};
     galleryEl.appendChild(card);
@@ -530,6 +530,10 @@ function _selChipClick(el){
   var roleId=el.dataset.rid;
   removeSelectedRole(roleId,el);
 }
+function _edClose(el){closeEditor(el.dataset.etype);}
+function _edSave(el){savePreset(el.dataset.etype,el.dataset.eid);}
+function _galOpen(ev,el){openEditor(el.dataset.etype,el.dataset.eid);ev.stopPropagation();}
+function _galDel(ev,el){confirmDelete(el.dataset.etype,el.dataset.eid,el.dataset.ename);ev.stopPropagation();}
 function setRoleMode(mode){
   var p=getActivePreset();if(!p)return;
   p.roleMode=mode;
@@ -716,8 +720,8 @@ function openEditor(type,presetId){
   editorEl.scrollIntoView({behavior:'smooth',block:'nearest'});
 
   var tabsHtml='<div class="editor-tabs">'
-    +'<div class="editor-tab on" onclick="switchEditorTab(this,\'design\')">&#127912; ออกแบบ Embed</div>'
-    +'<div class="editor-tab" onclick="switchEditorTab(this,\'channel\')">&#128226; ห้อง'+(isV?' &amp; ยศ':'')+'</div>'
+    +'<div class="editor-tab on" onclick="switchEditorTab(this,&quot;design&quot;)">&#127912; ออกแบบ Embed</div>'
+    +'<div class="editor-tab" onclick="switchEditorTab(this,&quot;channel&quot;)">&#128226; ห้อง'+(isV?' &amp; ยศ':'')+'</div>'
     // roles tab removed
     +'</div>';
 
@@ -785,8 +789,8 @@ function openEditor(type,presetId){
         +'<div style="font-size:11px;color:var(--text3);margin-top:2px;font-family:\'DM Mono\',monospace">/setup '+esc(preset.name||'&lt;ชื่อ&gt;')+'</div>'
       +'</div>'
       +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
-        +'<button class="btn btn-ghost btn-sm" onclick="closeEditor(\''+type+'\')">&#10005; ปิด</button>'
-        +'<button class="btn btn-pk btn-sm" onclick="savePreset(\''+type+'\',\''+preset.id+'\')">&#128190; บันทึก</button>'
+        +'<button class="btn btn-ghost btn-sm" data-etype="'+type+'" onclick="_edClose(this)">&#10005; ปิด</button>'
+        +'<button class="btn btn-pk btn-sm" data-etype="'+type+'" data-eid="'+preset.id+'" onclick="_edSave(this)">&#128190; บันทึก</button>'
       +'</div>'
     +'</div>'
     +tabsHtml
@@ -805,8 +809,8 @@ function openEditor(type,presetId){
       '<hr class="sep">'
       +'<div class="card-head" style="margin-bottom:14px"><span class="card-head-icon">&#127917;</span> ยศเพิ่มเติม <span style="font-size:11px;font-weight:400;color:var(--text3)">(ให้สมาชิกเลือกหลังกด Verify)</span></div>'
       +'<div class="role-mode-picker" id="ed-role-mode-picker">'
-        +'<button class="role-mode-opt '+((preset.roleMode==="single"||!preset.roleMode||preset.roleMode==="none")?"active":"")+'" onclick="setRoleMode(\'single\')" id="rmode-single"><div class="rmo-icon">☝️</div><div class="rmo-label">ยศเดียว</div><div class="rmo-desc">เลือกได้ 1 ยศเท่านั้น</div></button>'
-        +'<button class="role-mode-opt '+(preset.roleMode==="multi"?"active":"")+'" onclick="setRoleMode(\'multi\')" id="rmode-multi"><div class="rmo-icon">🎭</div><div class="rmo-label">หลายยศ</div><div class="rmo-desc">เลือกได้หลายยศพร้อมกัน</div></button>'
+        +'<button class="role-mode-opt '+((preset.roleMode==="single"||!preset.roleMode||preset.roleMode==="none")?"active":"")+'" onclick="setRoleMode(&apos;single&apos;)" id="rmode-single"><div class="rmo-icon">☝️</div><div class="rmo-label">ยศเดียว</div><div class="rmo-desc">เลือกได้ 1 ยศเท่านั้น</div></button>'
+        +'<button class="role-mode-opt '+(preset.roleMode==="multi"?"active":"")+'" onclick="setRoleMode(&apos;multi&apos;)" id="rmode-multi"><div class="rmo-icon">🎭</div><div class="rmo-label">หลายยศ</div><div class="rmo-desc">เลือกได้หลายยศพร้อมกัน</div></button>'
       +'</div>'
       +'<div id="ed-role-pool-wrap" style="margin-top:14px">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
