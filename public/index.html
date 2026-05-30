@@ -601,7 +601,7 @@ function _edClose(el){closeEditor(el.dataset.etype);}
 function _edSave(el){savePreset(el.dataset.etype,el.dataset.eid);}
 function _galOpen(ev,el){openEditor(el.dataset.etype,el.dataset.eid);ev.stopPropagation();}
 function _galDel(ev,el){confirmDelete(el.dataset.etype,el.dataset.eid,el.dataset.ename);ev.stopPropagation();}
-function setRoleMode(mode){
+async function setRoleMode(mode){
   var p=getActivePreset();if(!p)return;
   p.roleMode=mode;
   // toggle card active state
@@ -612,8 +612,20 @@ function setRoleMode(mode){
   // show/hide role pool
   var wrap=document.getElementById('ed-role-pool-wrap');
   if(wrap)wrap.style.display=mode==='multi'?'block':'none';
-  // load roles if needed
-  if(mode==='multi'&&(!rolesLoaded||!fetchedRoles.length)){loadRolesForEditor();}
+  // โหลดยศแล้ว rebuild pool ทันที
+  if(mode==='multi'){
+    if(!rolesLoaded||!fetchedRoles.length){
+      await loadRolesForEditor();
+    } else {
+      rebuildEditorRolePool();
+    }
+    // ซ่อน load button ถ้ายังโชว์อยู่หลัง load เสร็จ
+    if(wrap){var lb=wrap.querySelector('.btn-ghost.btn-xs');if(lb)lb.remove();}
+    // rebuild selected chips ด้วย
+    var pp=getActivePreset();
+    var selEl=document.getElementById('ed-selected-roles');
+    if(selEl)selEl.innerHTML=buildSelectedChips(pp);
+  }
 }
 
 
@@ -901,11 +913,16 @@ function openEditor(type,presetId){
   // Populate preview after DOM is ready
   if(isV){
     renderFormBuilder();
-    if(preset.roleMode==='multi'&&rolesLoaded&&fetchedRoles.length){
-      var poolEl=document.getElementById('ed-role-pool');
-      if(poolEl)poolEl.innerHTML=buildPoolChips(preset);
-      var selEl=document.getElementById('ed-selected-roles');
-      if(selEl)selEl.innerHTML=buildSelectedChips(preset);
+    if(preset.roleMode==='multi'){
+      if(rolesLoaded&&fetchedRoles.length){
+        var poolEl=document.getElementById('ed-role-pool');
+        if(poolEl)poolEl.innerHTML=buildPoolChips(preset);
+        var selEl=document.getElementById('ed-selected-roles');
+        if(selEl)selEl.innerHTML=buildSelectedChips(preset);
+      } else {
+        // auto-load roles ถ้าเปิด editor ใน multi mode แต่ยังไม่ได้โหลด
+        loadRolesForEditor();
+      }
     }
   }
   refreshEditorPreview();
@@ -1087,10 +1104,17 @@ async function loadRolesForEditor(){
   var data=await api('GET','/api/roles');
   fetchedRoles=data&&data.roles?data.roles:[];rolesLoaded=true;
   rebuildEditorRolePool();
+  // ซ่อน load button ใน pool-wrap header
+  var wrap=document.getElementById('ed-role-pool-wrap');
+  if(wrap){var lb=wrap.querySelector('.btn-ghost.btn-xs');if(lb)lb.remove();}
+  // rebuild selected chips หลัง load
+  var pp=getActivePreset();
+  var selEl=document.getElementById('ed-selected-roles');
+  if(selEl)selEl.innerHTML=buildSelectedChips(pp);
   // rebuild member role dropdown
   var opts=fetchedRoles.map(function(r,i){if(r.isAdmin)return '';return '<div class="role-dd-opt" data-idx="'+i+'" onclick="pickEditorMemberRole(event,this)"><span class="r-dot" style="background:#'+(r.color||0).toString(16).padStart(6,'0')+'"></span>'+esc(r.name)+'</div>';}).join('');
   var optsEl=document.getElementById('ed-role-menu-opts');if(optsEl)optsEl.innerHTML=opts||'<div class="dd-empty">ไม่มียศ</div>';
-  toast('โหลดแล้ว','ok');
+  toast('โหลด '+fetchedRoles.length+' ยศ ✅','ok');
 }
 function rebuildEditorRolePool(){
   var p=getActivePreset();
