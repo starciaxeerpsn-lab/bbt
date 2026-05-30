@@ -102,6 +102,12 @@ async function requireAuth(req, res, next) {
   const session = await getSession(token);
   if (!session) return res.status(401).json({ error: "Unauthorized" });
 
+  // Owner always bypasses permission checks
+  if (isOwner(session.userId)) {
+    req.session = session;
+    return next();
+  }
+
   // Re-verify user still has admin permission in the guild (cached 60s)
   try {
     const guild = client.guilds.cache.get(session.guildId);
