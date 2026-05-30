@@ -531,7 +531,7 @@ function renderGallery(type){
       +'<div class="preset-card-meta">'
         +(p.channelName?'<span class="preset-meta-chip">&#128226; #'+esc(p.channelName)+'</span>':'<span class="preset-meta-chip" style="color:var(--red)">⚠ ยังไม่เลือกห้อง</span>')
         +(isV&&p.memberRoleName?'<span class="preset-meta-chip">&#127917; '+esc(p.memberRoleName)+'</span>':'')
-        +(isV?'<span class="preset-meta-chip">&#127917; '+(p.selectedRoles&&p.selectedRoles.length?p.selectedRoles.length+' ยศเพิ่ม':'ยังไม่เลือกยศ')+'</span>':'')
+        +(isV?'<span class="preset-meta-chip">'+(p.roleMode==='multi'?'🎭 หลายยศ':'☝️ ยศเดียว')+'</span>':'')
         +(p.embedColor?'<span class="preset-meta-chip"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+esc(p.embedColor)+';vertical-align:middle;margin-right:2px"></span>สี embed</span>':'')
       +'</div>'
       +'<div class="preset-card-actions">'
@@ -584,8 +584,9 @@ function _galDel(ev,el){confirmDelete(el.dataset.etype,el.dataset.eid,el.dataset
 function setRoleMode(mode){
   var p=getActivePreset();if(!p)return;
   p.roleMode=mode;
-  document.querySelectorAll('.role-mode-opt').forEach(function(b){b.classList.remove('active');});
-  var btn=document.getElementById('rmode-'+mode);if(btn)btn.classList.add('active');
+  // sync dropdown if exists
+  var sel=document.getElementById('ed-role-mode-select');
+  if(sel)sel.value=mode;
 }
 function toggleRoleChip(roleId,roleName,hex,chipEl){
   var p=getActivePreset();if(!p)return;
@@ -895,29 +896,18 @@ function openEditor(type,presetId){
       +memberRoleHtml
       +(isV?
         '<hr class="sep">'
-        +'<div class="card-head" style="margin-bottom:14px"><span class="card-head-icon">&#127917;</span> ยศเพิ่มเติม <span style="font-size:11px;font-weight:400;color:var(--text3)">(ให้สมาชิกเลือกหลังกด Verify)</span></div>'
-        +'<div class="role-mode-picker" id="ed-role-mode-picker">'
-          +'<button class="role-mode-opt '+((preset.roleMode==="single"||!preset.roleMode||preset.roleMode==="none")?"active":"")+'" onclick="setRoleMode(&apos;single&apos;)" id="rmode-single"><div class="rmo-icon">☝️</div><div class="rmo-label">ยศเดียว</div><div class="rmo-desc">เลือกได้ 1 ยศเท่านั้น</div></button>'
-          +'<button class="role-mode-opt '+(preset.roleMode==="multi"?"active":"")+'" onclick="setRoleMode(&apos;multi&apos;)" id="rmode-multi"><div class="rmo-icon">🎭</div><div class="rmo-label">หลายยศ</div><div class="rmo-desc">เลือกได้หลายยศพร้อมกัน</div></button>'
-        +'</div>'
-        +'<div id="ed-role-pool-wrap" style="margin-top:14px">'
-          +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
-            +'<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px">คลิกยศเพื่อเพิ่ม / คลิกซ้ำเพื่อเอาออก</div>'
-            +(rolesLoaded?'':'<button class="btn btn-ghost btn-xs" onclick="loadRolesForEditor()">&#128260; โหลดยศ</button>')
-          +'</div>'
-          +'<div class="roles-pool" id="ed-role-pool"></div>'
-          +'<div style="margin-top:10px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">ยศที่เลือก</div>'
-          +'<div class="selected-roles-area" id="ed-selected-roles"></div>'
+        +'<div class="card-head" style="margin-bottom:14px"><span class="card-head-icon">&#127917;</span> โหมดรับยศ <span style="font-size:11px;font-weight:400;color:var(--text3)">(สมาชิกจะได้รับยศ Member อัตโนมัติหลัง Verify)</span></div>'
+        +'<div class="field"><label>จำนวนยศที่ให้เลือก</label>'
+        +'<select id="ed-role-mode-select" onchange="setRoleMode(this.value)">'
+        +'<option value="single" '+((!preset.roleMode||preset.roleMode==="single"||preset.roleMode==="none")?"selected":"")+'>☝️ ยศเดียว — ได้รับยศ Member อันเดียว</option>'
+        +'<option value="multi" '+(preset.roleMode==="multi"?"selected":"")+'>🎭 หลายยศ — ได้รับยศ Member + ยศเสริมที่เลือก</option>'
+        +'</select>'
         +'</div>'
       :'')
     +'</div>';
 
-  // Populate role pool after DOM is ready
+  // Populate preview after DOM is ready
   if(isV){
-    var poolEl=document.getElementById('ed-role-pool');
-    if(poolEl)poolEl.innerHTML=buildPoolChips(preset);
-    var selEl=document.getElementById('ed-selected-roles');
-    if(selEl)selEl.innerHTML=buildSelectedChips(preset);
     renderFormBuilder();
   }
   refreshEditorPreview();
