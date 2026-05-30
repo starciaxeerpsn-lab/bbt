@@ -49,6 +49,24 @@ async function getSession(token) {
 }
 async function deleteSession(token) { await redis.del(`session:${token}`); }
 
+// ── ALLOWED USERS (stored in Redis) ──
+const ALLOWED_KEY = "panel:allowed_users";
+async function getAllowedUsers() {
+  try {
+    const raw = await redis.get(ALLOWED_KEY);
+    if (!raw) return null; // null = ไม่ได้ตั้งค่า = ใช้ env แทน
+    return typeof raw === "string" ? JSON.parse(raw) : raw;
+  } catch { return null; }
+}
+async function saveAllowedUsers(list) {
+  await redis.set(ALLOWED_KEY, JSON.stringify(list));
+}
+function isOwner(userId) {
+  // OWNER_ID ใน env = เจ้าของเดียวที่จัดการ whitelist ได้
+  const owner = process.env.OWNER_ID || process.env.ADMIN_USER_IDS?.split(",")[0]?.trim();
+  return userId === owner;
+}
+
 const app = express();
 app.use(express.json({ limit: "10mb" }));
 app.use(express.static(path.join(__dirname, "public")));
@@ -153,8 +171,10 @@ app.get("/auth/callback", async (req, res) => {
 
     const user = await (await fetch("https://discord.com/api/users/@me", { headers: { Authorization: `Bearer ${tokenData.access_token}` } })).json();
 
-    // ตรวจ whitelist ก่อน — ถ้ากำหนด ADMIN_USER_IDS ใน env
-    const allowedIds = process.env.ADMIN_USER_IDS ? process.env.ADMIN_USER_IDS.split(",").map(s => s.trim()) : null;
+    // ตรวจ whitelist — ดูจาก Redis ก่อน ถ้าไม่มีค่อย fallback ไป env
+    const redisAllowed = await getAllowedUsers();
+    const envAllowed = process.env.ADMIN_USER_IDS ? process.env.ADMIN_USER_IDS.split(",").map(s => s.trim()) : null;
+    const allowedIds = redisAllowed || envAllowed;
     if (allowedIds && allowedIds.length > 0 && !allowedIds.includes(user.id)) {
       return res.redirect("/access-denied");
     }
@@ -183,6 +203,26 @@ app.get("/auth/logout", async (req, res) => {
 
 app.get("/api/status", requireAuth, (req, res) => {
   res.json({ online: client.isReady(), tag: client.user?.tag || "Offline", guilds: client.guilds?.cache?.size || 0, user: req.session });
+});
+
+// ── ALLOWED USERS API (owner only) ──
+app.get("/api/allowed-users", requireAuth, async (req, res) => {
+  if (!isOwner(req.session.userId)) return res.status(403).json({ error: "Owner only" });
+  const redisAllowed = await getAllowedUsers();
+  const envAllowed = process.env.ADMIN_USER_IDS ? process.env.ADMIN_USER_IDS.split(",").map(s => s.trim()) : [];
+  res.json({ users: redisAllowed || envAllowed, isOwner: true, ownerId: process.env.OWNER_ID || envAllowed[0] });
+});
+
+app.post("/api/allowed-users", requireAuth, async (req, res) => {
+  if (!isOwner(req.session.userId)) return res.status(403).json({ error: "Owner only" });
+  const { users } = req.body; // array of { id, label }
+  if (!Array.isArray(users)) return res.status(400).json({ error: "Invalid" });
+  // owner ต้องอยู่ใน list เสมอ
+  const ownerId = process.env.OWNER_ID || process.env.ADMIN_USER_IDS?.split(",")[0]?.trim();
+  const ids = users.map(u => typeof u === "string" ? u : u.id).filter(Boolean);
+  if (ownerId && !ids.includes(ownerId)) ids.unshift(ownerId);
+  await saveAllowedUsers(ids);
+  res.json({ ok: true, users: ids });
 });
 app.get("/api/config", requireAuth, (req, res) => {
   try { res.json(loadConfig()); } catch (e) { res.status(500).json({ error: e.message }); }
