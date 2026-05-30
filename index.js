@@ -25,50 +25,7 @@ const { Redis } = require("@upstash/redis");
 require("dotenv").config();
 
 const CONFIG_PATH = path.join(__dirname, "config.json");
-
-const DEFAULT_CONFIG = {
-  VERIFY_EMBED_TITLE: "🌸 ยืนยันตัวตน",
-  VERIFY_EMBED_DESC: "กดปุ่มด้านล่างเพื่อกรอกข้อมูลและรับยศของคุณ!",
-  VERIFY_EMBED_COLOR: "#ff6eb4",
-  VERIFY_BUTTON_LABEL: "✅ ยืนยันตัวตน",
-  VERIFY_BUTTON_COLOR: "Primary",
-  VERIFY_CHANNEL_NAME: "verify",
-  VERIFY_THUMBNAIL: "",
-  VERIFY_IMAGE: "",
-  MEMBER_ROLE_ID: "",
-  MEMBER_ROLE_NAME: "",
-  ROLE_CATEGORIES: [],
-  WELCOME_CHANNEL_NAME: "welcome",
-  WELCOME_TITLE: "ยินดีต้อนรับ!",
-  WELCOME_MESSAGE: "ยินดีต้อนรับ {user}!",
-  WELCOME_COLOR: "#ff6eb4",
-  WELCOME_SHOW_AVATAR: true,
-  WELCOME_IMAGE: "",
-  MENTION_USER: false,
-  GOODBYE_ENABLED: false,
-  GOODBYE_CHANNEL_NAME: "goodbye",
-  GOODBYE_TITLE: "ลาก่อน!",
-  GOODBYE_MESSAGE: "{user} ได้ออกจากเซิร์ฟเวอร์",
-  GOODBYE_COLOR: "#ff6eb4",
-  GOODBYE_SHOW_AVATAR: true,
-  GOODBYE_IMAGE: "",
-};
-
-function loadConfig() {
-  try {
-    if (!fs.existsSync(CONFIG_PATH)) {
-      fs.writeFileSync(CONFIG_PATH, JSON.stringify(DEFAULT_CONFIG, null, 2));
-      console.log("⚙️ สร้าง config.json ใหม่ด้วยค่า default");
-      return { ...DEFAULT_CONFIG };
-    }
-    const raw = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
-    // merge กับ default เพื่อป้องกัน field หาย
-    return { ...DEFAULT_CONFIG, ...raw };
-  } catch (err) {
-    console.error("❌ loadConfig error:", err);
-    return { ...DEFAULT_CONFIG };
-  }
-}
+function loadConfig() { return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8")); }
 function saveConfig(data) { fs.writeFileSync(CONFIG_PATH, JSON.stringify(data, null, 2)); }
 
 const redis = new Redis({
@@ -92,24 +49,6 @@ async function getSession(token) {
 }
 async function deleteSession(token) { await redis.del(`session:${token}`); }
 
-// ── ALLOWED USERS (stored in Redis) ──
-const ALLOWED_KEY = "panel:allowed_users";
-async function getAllowedUsers() {
-  try {
-    const raw = await redis.get(ALLOWED_KEY);
-    if (!raw) return null; // null = ไม่ได้ตั้งค่า = ใช้ env แทน
-    return typeof raw === "string" ? JSON.parse(raw) : raw;
-  } catch { return null; }
-}
-async function saveAllowedUsers(list) {
-  await redis.set(ALLOWED_KEY, JSON.stringify(list));
-}
-function isOwner(userId) {
-  // OWNER_ID ใน env = เจ้าของเดียวที่จัดการ whitelist ได้
-  const owner = process.env.OWNER_ID || process.env.ADMIN_USER_IDS?.split(",")[0]?.trim();
-  return userId === owner;
-}
-
 const app = express();
 app.use(express.json({ limit: "10mb" }));
 app.use(express.static(path.join(__dirname, "public")));
@@ -127,61 +66,12 @@ const upload = multer({
 });
 app.use("/uploads", express.static(uploadsDir));
 
-// Cache permission checks for 60s to avoid Discord rate limits
-const _permCache = new Map();
-async function checkMemberIsAdmin(guild, userId) {
-  const cacheKey = `${guild.id}:${userId}`;
-  const cached = _permCache.get(cacheKey);
-  if (cached && Date.now() - cached.ts < 60000) return cached.ok;
-
-  const member = await guild.members.fetch(userId).catch(() => null);
-  const ok = member ? (member.permissions.has("Administrator") || member.permissions.has("ManageGuild")) : false;
-  _permCache.set(cacheKey, { ok, ts: Date.now() });
-  return ok;
-}
-
 async function requireAuth(req, res, next) {
   const token = req.headers["x-session-token"] || req.query.token;
+  console.log("[AUTH] token:", token ? token.substring(0,8)+"..." : "MISSING");
   const session = await getSession(token);
+  console.log("[AUTH] session:", session ? "OK" : "NULL");
   if (!session) return res.status(401).json({ error: "Unauthorized" });
-
-  // Owner always bypasses all checks
-  if (isOwner(session.userId)) {
-    req.session = session;
-    return next();
-  }
-
-  // ตรวจ whitelist — ถ้ามี list ใน Redis หรือ env ต้องอยู่ในนั้นด้วย
-  try {
-    const redisAllowed = await getAllowedUsers();
-    const envAllowed = process.env.ADMIN_USER_IDS ? process.env.ADMIN_USER_IDS.split(",").map(s => s.trim()) : [];
-    const ownerIdOnly = process.env.OWNER_ID ? [process.env.OWNER_ID] : [];
-    const allowedIds = (redisAllowed && redisAllowed.length > 0)
-      ? redisAllowed
-      : (envAllowed.length > 0 ? envAllowed : ownerIdOnly);
-    if (allowedIds.length > 0 && !allowedIds.includes(session.userId)) {
-      await deleteSession(token);
-      return res.status(401).json({ error: "Permission revoked" });
-    }
-  } catch (err) {
-    console.error("[AUTH] whitelist check error:", err);
-  }
-
-  // Re-verify user still has admin permission in the guild (cached 60s)
-  try {
-    const guild = client.guilds.cache.get(session.guildId);
-    if (guild) {
-      const isAdmin = await checkMemberIsAdmin(guild, session.userId);
-      if (!isAdmin) {
-        await deleteSession(token);
-        _permCache.delete(`${session.guildId}:${session.userId}`);
-        return res.status(401).json({ error: "Permission revoked" });
-      }
-    }
-  } catch (err) {
-    console.error("[AUTH] re-verify error:", err);
-  }
-
   req.session = session;
   next();
 }
@@ -193,30 +83,7 @@ const REDIRECT_URI = process.env.REDIRECT_URI || `http://localhost:${PORT}/auth/
 
 app.get("/", (req, res) => res.sendFile(path.join(__dirname, "public", "login.html")));
 
-// ── ACCESS DENIED PAGE ──
-app.get("/access-denied", (req, res) => {
-  res.send(`<!DOCTYPE html><html lang="th"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Access Denied</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;700;800&family=Syne:wght@800&display=swap" rel="stylesheet">
-<style>*{margin:0;padding:0;box-sizing:border-box}body{background:#050507;font-family:'Noto Sans Thai',sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh}
-.box{background:#0d0d12;border:1px solid #1e1e2a;border-radius:20px;padding:52px 44px;text-align:center;max-width:400px;width:90%;position:relative;overflow:hidden}
-.box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(244,63,94,.6),transparent)}
-.icon{font-size:60px;margin-bottom:20px}
-h1{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:10px}
-p{font-size:13px;color:#50505e;line-height:1.7;margin-bottom:8px}
-.uid{font-size:11px;color:#30303e;font-family:monospace;margin-top:16px;padding:8px 12px;background:#080810;border-radius:8px;border:1px solid #1a1a28}
-</style></head><body>
-<div class="box">
-  <div class="icon">⛔</div>
-  <h1>ไม่มีสิทธิ์เข้าถึง</h1>
-  <p>คุณไม่ได้รับอนุญาตให้เข้าใช้งาน BBT Panel</p>
-  <p style="color:#30303e">กรุณาติดต่อเจ้าของเซิร์ฟเวอร์หากคิดว่านี่เป็นข้อผิดพลาด</p>
-</div></body></html>`);
-});
-
 app.get("/auth/login", (req, res) => {
-  // ถ้ากำหนด ADMIN_USER_IDS ไว้ใน env ต้องตรวจ state token ก่อน
-  // แต่เราไม่รู้ userId ก่อน OAuth — ให้ผ่านไปก่อน แล้วตรวจที่ callback
   const params = new URLSearchParams({ client_id: DISCORD_CLIENT_ID, redirect_uri: REDIRECT_URI, response_type: "code", scope: "identify guilds" });
   res.redirect(`https://discord.com/api/oauth2/authorize?${params}`);
 });
@@ -234,20 +101,6 @@ app.get("/auth/callback", async (req, res) => {
     if (!tokenData.access_token) return res.redirect("/?error=token_failed");
 
     const user = await (await fetch("https://discord.com/api/users/@me", { headers: { Authorization: `Bearer ${tokenData.access_token}` } })).json();
-
-    // ตรวจ whitelist — ดูจาก Redis ก่อน ถ้าไม่มีค่อย fallback ไป env
-    const redisAllowed = await getAllowedUsers();
-    const envAllowed = process.env.ADMIN_USER_IDS ? process.env.ADMIN_USER_IDS.split(",").map(s => s.trim()) : [];
-    const ownerIdOnly = process.env.OWNER_ID ? [process.env.OWNER_ID] : [];
-    // priority: Redis list → env ADMIN_USER_IDS → OWNER_ID only
-    // ไม่มีรายการใดเลย = อนุญาตเฉพาะ OWNER_ID ไม่เปิดให้ทุกคน
-    const allowedIds = (redisAllowed && redisAllowed.length > 0)
-      ? redisAllowed
-      : (envAllowed.length > 0 ? envAllowed : ownerIdOnly);
-    if (allowedIds.length > 0 && !allowedIds.includes(user.id)) {
-      return res.redirect("/access-denied");
-    }
-
     const guilds = await (await fetch("https://discord.com/api/users/@me/guilds", { headers: { Authorization: `Bearer ${tokenData.access_token}` } })).json();
 
     const adminGuilds = guilds.filter((g) => (BigInt(g.permissions) & BigInt(0x8)) !== BigInt(0));
@@ -273,68 +126,25 @@ app.get("/auth/logout", async (req, res) => {
 app.get("/api/status", requireAuth, (req, res) => {
   res.json({ online: client.isReady(), tag: client.user?.tag || "Offline", guilds: client.guilds?.cache?.size || 0, user: req.session });
 });
-
-// ── WHOAMI (debug: ดู userId ของตัวเอง vs OWNER_ID) ──
-app.get("/api/whoami", requireAuth, (req, res) => {
-  const ownerEnv = process.env.OWNER_ID || process.env.ADMIN_USER_IDS?.split(",")[0]?.trim() || "";
-  res.json({
-    userId: req.session.userId,
-    username: req.session.username,
-    isOwner: req.session.userId === ownerEnv,
-    ownerIdConfigured: ownerEnv ? ownerEnv.substring(0, 6) + "..." : "(ไม่ได้ตั้งค่า)",
-  });
-});
-
-// ── FLUSH ALL SESSIONS (owner only) ──
-app.post("/api/flush-sessions", requireAuth, async (req, res) => {
-  if (!isOwner(req.session.userId)) return res.status(403).json({ error: "Owner only" });
+app.get("/api/init", requireAuth, (req, res) => {
   try {
-    // scan all session:* keys and delete them
-    let cursor = 0;
-    let deleted = 0;
-    do {
-      const result = await redis.scan(cursor, { match: "session:*", count: 100 });
-      cursor = result[0];
-      const keys = result[1];
-      if (keys && keys.length > 0) {
-        await Promise.all(keys.map(k => redis.del(k)));
-        deleted += keys.length;
-      }
-    } while (cursor !== 0);
-    res.json({ ok: true, deleted });
-  } catch (err) {
-    res.status(500).json({ ok: false, error: err.message });
-  }
-});
-
-// ── ALLOWED USERS API (owner only) ──
-app.get("/api/allowed-users", requireAuth, async (req, res) => {
-  if (!isOwner(req.session.userId)) return res.status(403).json({ error: "Owner only" });
-  let redisAllowed = await getAllowedUsers();
-  const envAllowed = process.env.ADMIN_USER_IDS ? process.env.ADMIN_USER_IDS.split(",").map(s => s.trim()) : [];
-  const ownerId = process.env.OWNER_ID || envAllowed[0] || "";
-  // ถ้า Redis ว่าง ให้ auto-init ด้วย owner + env list แล้ว save ทันที
-  if (!redisAllowed || redisAllowed.length === 0) {
-    const initList = [...new Set([ownerId, ...envAllowed].filter(Boolean))];
-    if (initList.length > 0) {
-      await saveAllowedUsers(initList);
-      redisAllowed = initList;
-    }
-  }
-  const users = redisAllowed || envAllowed;
-  res.json({ users, isOwner: true, ownerId });
-});
-
-app.post("/api/allowed-users", requireAuth, async (req, res) => {
-  if (!isOwner(req.session.userId)) return res.status(403).json({ error: "Owner only" });
-  const { users } = req.body; // array of { id, label }
-  if (!Array.isArray(users)) return res.status(400).json({ error: "Invalid" });
-  // owner ต้องอยู่ใน list เสมอ
-  const ownerId = process.env.OWNER_ID || process.env.ADMIN_USER_IDS?.split(",")[0]?.trim();
-  const ids = users.map(u => typeof u === "string" ? u : u.id).filter(Boolean);
-  if (ownerId && !ids.includes(ownerId)) ids.unshift(ownerId);
-  await saveAllowedUsers(ids);
-  res.json({ ok: true, users: ids });
+    const config = loadConfig();
+    const guild = client.guilds.cache.get(req.session.guildId);
+    const roles = guild ? guild.roles.cache
+      .filter((r) => r.name !== "@everyone" && !r.managed)
+      .sort((a, b) => b.position - a.position)
+      .map((r) => ({ id: r.id, name: r.name, color: r.color, isAdmin: (BigInt(r.permissions.bitfield) & BigInt(0x8)) !== BigInt(0) })) : [];
+    const channels = guild ? guild.channels.cache
+      .filter((c) => c.type === 0)
+      .sort((a, b) => a.rawPosition - b.rawPosition)
+      .map((c) => ({ id: c.id, name: c.name })) : [];
+    res.json({
+      config,
+      status: { online: client.isReady(), tag: client.user?.tag || "Offline", user: req.session },
+      roles,
+      channels,
+    });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 app.get("/api/config", requireAuth, (req, res) => {
   try { res.json(loadConfig()); } catch (e) { res.status(500).json({ error: e.message }); }
@@ -396,21 +206,16 @@ function deletePendingData(userId) {
   if (entry?._timer) clearTimeout(entry._timer);
   pendingData.delete(userId);
 }
-function formatMsg(template, memberOrName) {
-  const display = typeof memberOrName === "string" ? memberOrName : `${memberOrName}`;
-  return (template || "").replace(/\{user\}/g, display);
-}
+function formatMsg(template, member) { return template.replace(/\{user\}/g, `${member}`); }
 function resolveButtonStyle(color = "Primary") {
   const map = { Primary: ButtonStyle.Primary, primary: ButtonStyle.Primary, Secondary: ButtonStyle.Secondary, secondary: ButtonStyle.Secondary, Success: ButtonStyle.Success, success: ButtonStyle.Success, Danger: ButtonStyle.Danger, danger: ButtonStyle.Danger };
   return map[color] ?? ButtonStyle.Primary;
 }
 function hexToInt(hex) { return parseInt((hex || "#ff6eb4").replace("#", ""), 16); }
 
-function buildCategoryRows(vpOrCfg, selected = new Set()) {
+function buildCategoryRows(cfg, selected = new Set()) {
   const rows = [];
-  // รองรับทั้ง preset object (roleCategories) และ cfg เก่า (ROLE_CATEGORIES)
-  const categories = vpOrCfg.roleCategories || vpOrCfg.ROLE_CATEGORIES || [];
-  for (const cat of categories) {
+  for (const cat of (cfg.ROLE_CATEGORIES || [])) {
     if (!cat.roles?.length) continue;
     for (let i = 0; i < cat.roles.length; i += 5) {
       const chunk = cat.roles.slice(i, i + 5);
@@ -433,7 +238,7 @@ function buildCategoryRows(vpOrCfg, selected = new Set()) {
 
 async function registerCommands() {
   const commands = [
-    new SlashCommandBuilder().setName("setup").setDescription("ส่ง Verify embed ในห้องนี้").setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
+    new SlashCommandBuilder().setName("setup").setDescription("ส่ง Verify embed ในห้องนี้").setDefaultMemberPermissions(PermissionFlagsBits.Administrator).addStringOption((o) => o.setName("preset").setDescription("ชื่อ preset (ถ้าไม่ระบุใช้อันแรก)").setRequired(false)),
     new SlashCommandBuilder().setName("dashboard").setDescription("รับลิงก์เข้า Dashboard (Admin เท่านั้น)").setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   ].map((c) => c.toJSON());
   const rest = new REST().setToken(process.env.DISCORD_TOKEN);
@@ -451,19 +256,18 @@ client.once("clientReady", async () => {
 client.on("guildMemberAdd", async (member) => {
   try {
     const cfg = loadConfig();
-    const vp = getVerifyPreset(cfg);
-    const ch = member.guild.channels.cache.find((c) => c.name === (vp.channelName || cfg.VERIFY_CHANNEL_NAME));
+    const ch = member.guild.channels.cache.find((c) => c.name === cfg.VERIFY_CHANNEL_NAME);
     if (!ch) return;
     const embed = new EmbedBuilder()
-      .setColor(hexToInt(vp.embedColor))
-      .setTitle(vp.embedTitle || "🌸 ยืนยันตัวตน")
-      .setDescription(`สวัสดี ${member}!\n${vp.embedDesc || "กดปุ่มด้านล่างเพื่อยืนยันตัวตน"}`);
-    if (vp.embedThumbnail === "[user]") embed.setThumbnail(member.user.displayAvatarURL());
-    else if (vp.embedThumbnail === "[server]" && member.guild.iconURL()) embed.setThumbnail(member.guild.iconURL());
-    else if (vp.embedThumbnail) embed.setThumbnail(vp.embedThumbnail);
-    if (vp.embedImage) embed.setImage(vp.embedImage);
+      .setColor(hexToInt(cfg.VERIFY_EMBED_COLOR))
+      .setTitle(cfg.VERIFY_EMBED_TITLE)
+      .setDescription(`สวัสดี ${member}!\n${cfg.VERIFY_EMBED_DESC}`);
+    if (cfg.VERIFY_THUMBNAIL === "[user]") embed.setThumbnail(member.user.displayAvatarURL());
+    else if (cfg.VERIFY_THUMBNAIL === "[server]" && member.guild.iconURL()) embed.setThumbnail(member.guild.iconURL());
+    else if (cfg.VERIFY_THUMBNAIL) embed.setThumbnail(cfg.VERIFY_THUMBNAIL);
+    if (cfg.VERIFY_IMAGE) embed.setImage(cfg.VERIFY_IMAGE);
     const btn = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId("open_verify_modal").setLabel(vp.embedButtonLabel || "✅ ยืนยันตัวตน").setStyle(resolveButtonStyle(vp.embedButtonColor))
+      new ButtonBuilder().setCustomId("open_verify_modal").setLabel(cfg.VERIFY_BUTTON_LABEL || "✅ ยืนยันตัวตน").setStyle(resolveButtonStyle(cfg.VERIFY_BUTTON_COLOR))
     );
     await ch.send({ embeds: [embed], components: [btn] });
   } catch (err) { console.error("❌ guildMemberAdd:", err); }
@@ -478,69 +282,45 @@ client.on("guildMemberRemove", async (member) => {
     const embed = new EmbedBuilder()
       .setColor(hexToInt(cfg.GOODBYE_COLOR))
       .setTitle(cfg.GOODBYE_TITLE)
-      .setDescription(formatMsg(cfg.GOODBYE_MESSAGE || "ลาก่อน {user}!", member));
+      .setDescription(formatMsg(cfg.GOODBYE_MESSAGE, member.user.username));
     if (cfg.GOODBYE_SHOW_AVATAR) embed.setThumbnail(member.user.displayAvatarURL());
     if (cfg.GOODBYE_IMAGE) embed.setImage(cfg.GOODBYE_IMAGE);
     await ch.send({ embeds: [embed] });
   } catch (err) { console.error("❌ guildMemberRemove:", err); }
 });
 
-// ── PRESET HELPERS ──
-// ดึง preset แรกใน VERIFY_PRESETS หรือ fallback ไป legacy fields
-function getVerifyPreset(cfg) {
-  const presets = cfg.VERIFY_PRESETS;
-  if (presets && presets.length > 0) return presets[0];
-  // legacy fallback
-  return {
-    embedTitle: cfg.VERIFY_EMBED_TITLE || "🌸 ยืนยันตัวตน",
-    embedDesc: cfg.VERIFY_EMBED_DESC || "กดปุ่มด้านล่างเพื่อกรอกข้อมูลและรับยศของคุณ!",
-    embedColor: cfg.VERIFY_EMBED_COLOR || "#ff6eb4",
-    embedImage: cfg.VERIFY_IMAGE || "",
-    embedThumbnail: cfg.VERIFY_THUMBNAIL || "",
-    embedButtonLabel: cfg.VERIFY_BUTTON_LABEL || "✅ ยืนยันตัวตน",
-    embedButtonColor: cfg.VERIFY_BUTTON_COLOR || "Primary",
-    channelName: cfg.VERIFY_CHANNEL_NAME || "verify",
-    memberRoleId: cfg.MEMBER_ROLE_ID || "",
-    memberRoleName: cfg.MEMBER_ROLE_NAME || "",
-    roleCategories: cfg.ROLE_CATEGORIES || [],
-    roleMode: "multi",
-  };
-}
-
-// ดึง welcome/goodbye preset
-function getWelcomePreset(cfg) {
-  if (cfg.WELCOME_PRESETS && cfg.WELCOME_PRESETS.length > 0) return cfg.WELCOME_PRESETS[0];
-  return {
-    channelName: cfg.WELCOME_CHANNEL_NAME || "",
-    embedTitle: cfg.WELCOME_TITLE || "ยินดีต้อนรับ!",
-    embedDesc: cfg.WELCOME_MESSAGE || "ยินดีต้อนรับ {user}!",
-    embedColor: cfg.WELCOME_COLOR || "#ff6eb4",
-    showAvatar: cfg.WELCOME_SHOW_AVATAR !== false,
-    embedImage: cfg.WELCOME_IMAGE || "",
-    mentionUser: cfg.MENTION_USER || false,
-  };
-}
-
 client.on("interactionCreate", async (interaction) => {
   const cfg = loadConfig();
 
-  // /setup
+  // /setup [preset_name]
   if (interaction.isChatInputCommand() && interaction.commandName === "setup") {
     await interaction.deferReply({ ephemeral: true });
     try {
-      const vp = getVerifyPreset(cfg);
-      const embed = new EmbedBuilder()
-        .setColor(hexToInt(vp.embedColor))
-        .setTitle(vp.embedTitle || "🌸 ยืนยันตัวตน")
-        .setDescription(vp.embedDesc || "กดปุ่มด้านล่างเพื่อกรอกข้อมูลและรับยศของคุณ!");
-      if (vp.embedThumbnail === "[server]" && interaction.guild.iconURL()) embed.setThumbnail(interaction.guild.iconURL());
-      else if (vp.embedThumbnail && vp.embedThumbnail !== "[user]") embed.setThumbnail(vp.embedThumbnail);
-      if (vp.embedImage) embed.setImage(vp.embedImage);
+      const presetArg = interaction.options.getString("preset") || null;
+      const preset = presetArg
+        ? (cfg.VERIFY_PRESETS || []).find((p) => p.name === presetArg)
+        : (cfg.VERIFY_PRESETS || [])[0] || null;
+
+      const title = preset?.embedTitle || cfg.VERIFY_EMBED_TITLE || "🌸 ยืนยันตัวตน";
+      const desc = preset?.embedDesc || cfg.VERIFY_EMBED_DESC || "กดปุ่มด้านล่างเพื่อกรอกข้อมูลและรับยศของคุณ!";
+      const color = preset?.embedColor || cfg.VERIFY_EMBED_COLOR || "#ff6eb4";
+      const thumb = preset?.embedThumbnail || cfg.VERIFY_THUMBNAIL || "";
+      const image = preset?.embedImage || cfg.VERIFY_IMAGE || "";
+      const btnLabel = preset?.embedButtonLabel || cfg.VERIFY_BUTTON_LABEL || "✅ ยืนยันตัวตน";
+      const btnColor = preset?.embedButtonColor || cfg.VERIFY_BUTTON_COLOR || "Primary";
+      const pName = preset?.name || null;
+
+      const embed = new EmbedBuilder().setColor(hexToInt(color)).setTitle(title).setDescription(desc);
+      if (thumb === "[server]" && interaction.guild.iconURL()) embed.setThumbnail(interaction.guild.iconURL());
+      else if (thumb && thumb !== "[user]") embed.setThumbnail(thumb);
+      if (image) embed.setImage(image);
+
+      const customId = pName ? `open_verify_modal:${pName}` : "open_verify_modal";
       const btn = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId("open_verify_modal").setLabel(vp.embedButtonLabel || "✅ ยืนยันตัวตน").setStyle(resolveButtonStyle(vp.embedButtonColor))
+        new ButtonBuilder().setCustomId(customId).setLabel(btnLabel).setStyle(resolveButtonStyle(btnColor))
       );
       await interaction.channel.send({ embeds: [embed], components: [btn] });
-      await interaction.editReply({ content: "✅ ส่ง Verify embed แล้ว!" });
+      await interaction.editReply({ content: `✅ ส่ง Verify embed แล้ว!${pName ? " (preset: "+pName+")" : ""}` });
     } catch (err) {
       console.error("❌ /setup:", err);
       await interaction.editReply({ content: "❌ เกิดข้อผิดพลาด: " + err.message });
@@ -557,7 +337,8 @@ client.on("interactionCreate", async (interaction) => {
   }
 
   // Button: เปิด modal
-  if (interaction.isButton() && interaction.customId === "open_verify_modal") {
+  if (interaction.isButton() && (interaction.customId === "open_verify_modal" || interaction.customId.startsWith("open_verify_modal:"))) {
+    const presetName = interaction.customId.includes(":") ? interaction.customId.split(":")[1] : null;
     const modal = new ModalBuilder().setCustomId("verify_modal").setTitle("📋 กรอกข้อมูลของคุณ");
     modal.addComponents(
       new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId("name").setLabel("ชื่อที่ใช้เรียก").setStyle(TextInputStyle.Short).setPlaceholder("เช่น ไอซ์, Korn").setRequired(true).setMaxLength(32)),
@@ -573,27 +354,65 @@ client.on("interactionCreate", async (interaction) => {
     const name = interaction.fields.getTextInputValue("name");
     const age = interaction.fields.getTextInputValue("age");
     const gender = interaction.fields.getTextInputValue("gender");
-    const vp = getVerifyPreset(cfg);
-    setPendingData(interaction.user.id, { name, age, gender, selectedRoles: [], presetId: vp.id });
-    // ไม่มี role categories แล้ว → ยืนยันเลย
-    await completeVerify(interaction, cfg, true);
+    const pName = interaction.message?.components?.[0]?.components?.[0]?.customId?.split(":")?.[1] || null;
+    setPendingData(interaction.user.id, { name, age, gender, selectedRoles: [], presetName: pName });
+
+    const categories = cfg.ROLE_CATEGORIES || [];
+    if (categories.length === 0) {
+      await completeVerify(interaction, cfg, true);
+      return;
+    }
+
+    const rows = buildCategoryRows(cfg, new Set());
+    const confirmRow = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId("verify_confirm").setLabel("✅ ยืนยันและเข้าเซิร์ฟเวอร์").setStyle(ButtonStyle.Success)
+    );
+
+    // สร้าง embed แสดงหมวดหมู่
+    const catList = categories.map((c) => `**${c.name}**\n${(c.roles||[]).map((r) => `${r.emoji || "•"} ${r.label}`).join("  ")}`).join("\n\n");
+    const embed = new EmbedBuilder()
+      .setColor(hexToInt(cfg.VERIFY_EMBED_COLOR))
+      .setTitle("🎉 ยินดีต้อนรับ " + name + "!")
+      .setDescription("กดปุ่มเพื่อเลือกยศที่ต้องการ (กดได้หลายอัน)\nแล้วกด **✅ ยืนยัน** เพื่อเข้าสู่เซิร์ฟเวอร์\n\n" + catList);
+
+    await interaction.reply({ embeds: [embed], components: [...rows, confirmRow], ephemeral: true });
     return;
   }
 
-  // Button: toggle role (legacy — ไม่ใช้แล้ว แต่เก็บไว้กัน crash)
+  // Button: toggle role
   if (interaction.isButton() && interaction.customId.startsWith("role_toggle:")) {
-    await interaction.reply({ content: "⚠️ กรุณาใช้ /setup ใหม่เพื่ออัปเดต embed", ephemeral: true });
+    const [, catId, roleId] = interaction.customId.split(":");
+    const pending = getPendingData(interaction.user.id);
+    if (!pending) {
+      await interaction.reply({ content: "⚠️ Session หมดอายุ กรุณากด Verify ใหม่", ephemeral: true });
+      return;
+    }
+    const selected = new Set(pending.selectedRoles || []);
+    const key = `${catId}:${roleId}`;
+    const cat = (cfg.ROLE_CATEGORIES || []).find((c) => c.id === catId);
+    if (cat && !cat.multi) {
+      for (const s of [...selected]) { if (s.startsWith(catId + ":")) selected.delete(s); }
+    }
+    if (selected.has(key)) selected.delete(key); else selected.add(key);
+    setPendingData(interaction.user.id, { ...pending, selectedRoles: [...selected] });
+
+    const rows = buildCategoryRows(cfg, selected);
+    const confirmRow = new ActionRowBuilder().addComponents(
+      new ButtonBuilder().setCustomId("verify_confirm").setLabel("✅ ยืนยันและเข้าเซิร์ฟเวอร์").setStyle(ButtonStyle.Success)
+    );
+    await interaction.update({ components: [...rows, confirmRow] });
     return;
   }
 
   // Button: confirm
   if (interaction.isButton() && interaction.customId === "verify_confirm") {
-    await completeVerify(interaction, cfg, false);
+    const pd = getPendingData(interaction.user.id);
+    await completeVerify(interaction, cfg, false, pd?.presetName || null);
     return;
   }
 });
 
-async function completeVerify(interaction, cfg, isModal = false) {
+async function completeVerify(interaction, cfg, isModal = false, presetName = null) {
   try {
     const member = interaction.member;
     const guild = interaction.guild;
@@ -604,40 +423,42 @@ async function completeVerify(interaction, cfg, isModal = false) {
       return;
     }
 
-    const vp = getVerifyPreset(cfg);
+    // หา preset ที่ตรงกับ presetName (ถ้ามี) หรือใช้อันแรก
+    const preset = presetName
+      ? (cfg.VERIFY_PRESETS || []).find((p) => p.name === presetName)
+      : (cfg.VERIFY_PRESETS || [])[0] || null;
 
     const rolesToAdd = [];
     const addedRoleNames = [];
 
-    // ยศ Member หลัก
-    let memberRole = vp.memberRoleId ? guild.roles.cache.get(vp.memberRoleId) : null;
-    if (!memberRole && vp.memberRoleName) memberRole = guild.roles.cache.find((r) => r.name === vp.memberRoleName);
-    if (memberRole) {
-      const isAdmin = (BigInt(memberRole.permissions.bitfield) & BigInt(0x8)) !== BigInt(0)
-                   || (BigInt(memberRole.permissions.bitfield) & BigInt(0x20)) !== BigInt(0);
-      if (isAdmin) {
-        console.warn(`⛔ ยศ Member เป็น admin role ถูกบล็อก: ${memberRole.name}`);
-      } else {
-        rolesToAdd.push(memberRole);
-        addedRoleNames.push(memberRole.name);
-      }
-    }
+    // memberRole จาก preset (new format) หรือ config root (old format)
+    const memberRoleId = preset?.memberRoleId || cfg.MEMBER_ROLE_ID || "";
+    const memberRoleName = preset?.memberRoleName || cfg.MEMBER_ROLE_NAME || "";
+    let memberRole = memberRoleId ? guild.roles.cache.get(memberRoleId) : null;
+    if (!memberRole && memberRoleName) memberRole = guild.roles.cache.find((r) => r.name === memberRoleName);
+    if (memberRole) rolesToAdd.push(memberRole);
 
-    // ยศเพิ่มเติม (multi mode) — ดึงจาก selectedRoles ที่ admin ตั้งไว้ใน preset
-    if (vp.roleMode === "multi") {
-      for (const sr of (vp.selectedRoles || [])) {
-        if (!sr.roleId) continue;
-        const dr = guild.roles.cache.get(sr.roleId);
-        if (!dr || rolesToAdd.includes(dr)) continue;
-        // ❌ ห้ามให้ยศที่มีสิทธิ์ admin
-        const isAdmin = (BigInt(dr.permissions.bitfield) & BigInt(0x8)) !== BigInt(0)
-                     || (BigInt(dr.permissions.bitfield) & BigInt(0x20)) !== BigInt(0);
-        if (isAdmin) {
-          console.warn(`⛔ ข้าม admin role: ${dr.name} (${dr.id})`);
-          continue;
+    // multi mode: selectedRoles จาก preset (new format)
+    const roleMode = preset?.roleMode || "single";
+    if (roleMode === "multi") {
+      for (const sel of (pending.selectedRoles || [])) {
+        // new format: { roleId, roleName, color }
+        if (sel.roleId) {
+          let dr = guild.roles.cache.get(sel.roleId);
+          if (!dr && sel.roleName) dr = guild.roles.cache.find((r) => r.name === sel.roleName);
+          if (dr) { rolesToAdd.push(dr); addedRoleNames.push(sel.roleName || dr.name); }
+        } else if (typeof sel === "string") {
+          // old format: "catId:roleId"
+          const [catId, roleId] = sel.split(":");
+          const cats = preset?.roleCategories || cfg.ROLE_CATEGORIES || [];
+          const cat = cats.find((c) => c.id === catId);
+          const roleInfo = (cat?.roles || []).find((r) => r.id === roleId);
+          if (!roleInfo) continue;
+          let dr = roleInfo.roleId ? guild.roles.cache.get(roleInfo.roleId) : guild.roles.cache.find((r) => r.name === (roleInfo.roleName || roleInfo.label));
+          if (!dr) dr = await guild.roles.create({ name: roleInfo.roleName || roleInfo.label, color: hexToInt(roleInfo.color), reason: "Auto-created by verify bot" });
+          rolesToAdd.push(dr);
+          addedRoleNames.push(`${roleInfo.emoji || ""} ${roleInfo.label}`.trim());
         }
-        rolesToAdd.push(dr);
-        addedRoleNames.push(dr.name);
       }
     }
 
@@ -649,13 +470,12 @@ async function completeVerify(interaction, cfg, isModal = false) {
     isModal ? await interaction.reply({ ...doneMsg, ephemeral: true }) : await interaction.update(doneMsg);
 
     // Welcome embed
-    const wp = getWelcomePreset(cfg);
-    const wch = guild.channels.cache.find((c) => c.name === wp.channelName);
+    const wch = guild.channels.cache.find((c) => c.name === cfg.WELCOME_CHANNEL_NAME);
     if (wch) {
       const we = new EmbedBuilder()
-        .setColor(hexToInt(wp.embedColor))
-        .setTitle(wp.embedTitle || "ยินดีต้อนรับ!")
-        .setDescription(formatMsg(wp.embedDesc || "ยินดีต้อนรับ {user}!", member))
+        .setColor(hexToInt(cfg.WELCOME_COLOR))
+        .setTitle(cfg.WELCOME_TITLE || "ยินดีต้อนรับ!")
+        .setDescription(formatMsg(cfg.WELCOME_MESSAGE || "ยินดีต้อนรับ {user}!", member))
         .addFields(
           { name: "ชื่อ", value: pending.name || "-", inline: true },
           { name: "อายุ", value: pending.age || "-", inline: true },
@@ -663,9 +483,9 @@ async function completeVerify(interaction, cfg, isModal = false) {
         )
         .setTimestamp();
       if (addedRoleNames.length > 0) we.addFields({ name: "ยศ", value: addedRoleNames.join(", "), inline: false });
-      if (wp.showAvatar !== false) we.setThumbnail(interaction.user.displayAvatarURL());
-      if (wp.embedImage) we.setImage(wp.embedImage);
-      await wch.send({ content: wp.mentionUser ? `${member}` : undefined, embeds: [we] });
+      if (cfg.WELCOME_SHOW_AVATAR) we.setThumbnail(interaction.user.displayAvatarURL());
+      if (cfg.WELCOME_IMAGE) we.setImage(cfg.WELCOME_IMAGE);
+      await wch.send({ content: cfg.MENTION_USER ? `${member}` : undefined, embeds: [we] });
     }
   } catch (err) {
     console.error("❌ completeVerify:", err);
