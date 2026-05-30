@@ -811,21 +811,6 @@ function openEditor(type,presetId){
       +extraRows
 +(isV?
       '<hr class="sep">'
-      +'<div class="card-head" style="margin-bottom:14px"><span class="card-head-icon">&#127917;</span> ยศเพิ่มเติม <span style="font-size:11px;font-weight:400;color:var(--text3)">(ให้สมาชิกเลือกหลังกด Verify)</span></div>'
-      +'<div class="role-mode-picker" id="ed-role-mode-picker">'
-        +'<button class="role-mode-opt '+((preset.roleMode==="single"||!preset.roleMode||preset.roleMode==="none")?"active":"")+'" onclick="setRoleMode(&apos;single&apos;)" id="rmode-single"><div class="rmo-icon">☝️</div><div class="rmo-label">ยศเดียว</div><div class="rmo-desc">เลือกได้ 1 ยศเท่านั้น</div></button>'
-        +'<button class="role-mode-opt '+(preset.roleMode==="multi"?"active":"")+'" onclick="setRoleMode(&apos;multi&apos;)" id="rmode-multi"><div class="rmo-icon">🎭</div><div class="rmo-label">หลายยศ</div><div class="rmo-desc">เลือกได้หลายยศพร้อมกัน</div></button>'
-      +'</div>'
-      +'<div id="ed-role-pool-wrap" style="margin-top:14px">'
-        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
-          +'<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px">คลิกยศเพื่อเพิ่ม / คลิกซ้ำเพื่อเอาออก</div>'
-          +(rolesLoaded?'':'<button class="btn btn-ghost btn-xs" onclick="loadRolesForEditor()">&#128260; โหลดยศ</button>')
-        +'</div>'
-        +'<div class="roles-pool" id="ed-role-pool"></div>'
-        +'<div style="margin-top:10px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">ยศที่เลือก</div>'
-        +'<div class="selected-roles-area" id="ed-selected-roles"></div>'
-      +'</div>'
-      +'<hr class="sep">'
       +'<div class="card-head" style="margin-bottom:14px"><span class="card-head-icon">&#128221;</span> ฟอร์มคำถาม <span style="font-size:11px;font-weight:400;color:var(--text3)">(บอทจะถามสมาชิกก่อนได้รับยศ)</span></div>'
       +'<div id="ed-form-builder"></div>'
       +'<button class="btn btn-ghost btn-sm" style="margin-top:8px;width:100%" onclick="addFormField()">+ เพิ่มคำถาม</button>'
@@ -855,6 +840,23 @@ function openEditor(type,presetId){
         +'<select id="ed-channel"><option value="">— เลือกห้อง —</option>'+chOpts+'</select>'
       +'</div>'
       +memberRoleHtml
+      +(isV?
+        '<hr class="sep">'
+        +'<div class="card-head" style="margin-bottom:14px"><span class="card-head-icon">&#127917;</span> ยศเพิ่มเติม <span style="font-size:11px;font-weight:400;color:var(--text3)">(ให้สมาชิกเลือกหลังกด Verify)</span></div>'
+        +'<div class="role-mode-picker" id="ed-role-mode-picker">'
+          +'<button class="role-mode-opt '+((preset.roleMode==="single"||!preset.roleMode||preset.roleMode==="none")?"active":"")+'" onclick="setRoleMode(&apos;single&apos;)" id="rmode-single"><div class="rmo-icon">☝️</div><div class="rmo-label">ยศเดียว</div><div class="rmo-desc">เลือกได้ 1 ยศเท่านั้น</div></button>'
+          +'<button class="role-mode-opt '+(preset.roleMode==="multi"?"active":"")+'" onclick="setRoleMode(&apos;multi&apos;)" id="rmode-multi"><div class="rmo-icon">🎭</div><div class="rmo-label">หลายยศ</div><div class="rmo-desc">เลือกได้หลายยศพร้อมกัน</div></button>'
+        +'</div>'
+        +'<div id="ed-role-pool-wrap" style="margin-top:14px">'
+          +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
+            +'<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px">คลิกยศเพื่อเพิ่ม / คลิกซ้ำเพื่อเอาออก</div>'
+            +(rolesLoaded?'':'<button class="btn btn-ghost btn-xs" onclick="loadRolesForEditor()">&#128260; โหลดยศ</button>')
+          +'</div>'
+          +'<div class="roles-pool" id="ed-role-pool"></div>'
+          +'<div style="margin-top:10px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">ยศที่เลือก</div>'
+          +'<div class="selected-roles-area" id="ed-selected-roles"></div>'
+        +'</div>'
+      :'')
     +'</div>';
 
   // Populate role pool after DOM is ready
@@ -893,7 +895,12 @@ function updateEditorTitleBar(type){
 }
 
 // ── PREVIEW ──
+var _prevTimer=null;
 function refreshEditorPreview(){
+  clearTimeout(_prevTimer);
+  _prevTimer=setTimeout(_doRefreshPreview,80);
+}
+function _doRefreshPreview(){
   var g=function(id){return document.getElementById(id);};
   var title=g('ed-embed-title')?g('ed-embed-title').value:'';
   var desc=g('ed-embed-desc')?g('ed-embed-desc').value:'';
@@ -931,6 +938,7 @@ function refreshEditorPreview(){
     if(g('ed-btn-label'))btnRow.innerHTML='<button class="dc-btn-preview dc-btn-'+(map[col]||'primary')+'">'+esc(lbl)+'</button>';
   }
 }
+
 
 function handleEdThumb(){
   var sel=document.getElementById('ed-thumb');
