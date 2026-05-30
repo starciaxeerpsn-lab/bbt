@@ -65,7 +65,7 @@ body::before{display:none}
 .field label{font-size:10.5px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px}
 .inp,.field input,.field select,.field textarea{background:var(--bg);border:1px solid var(--border2);border-radius:11px;color:var(--text);padding:12px 14px;font-family:inherit;font-size:14px;outline:none;width:100%;resize:vertical}
 .inp:focus,.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--pk);box-shadow:0 0 0 3px var(--pk-glow)}
-.field input[type="color"]{padding:6px 8px;height:44px;cursor:pointer}
+.field input[type="color"]{padding:2px 4px;height:44px;width:60px;cursor:pointer;border-radius:8px;background:var(--card2)}
 .field select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%23ff2d95' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:38px}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
@@ -535,7 +535,7 @@ function renderGallery(type){
         +(p.embedColor?'<span class="preset-meta-chip"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+esc(p.embedColor)+';vertical-align:middle;margin-right:2px"></span>สี embed</span>':'')
       +'</div>'
       +'<div class="preset-card-actions">'
-        +(type==='verify'?'<button class="btn btn-gr btn-sm" id="send-embed-btn-'+p.id+'" onclick="event.stopPropagation();sendEmbed(\''+p.id+'\')" title="ส่ง Embed ไปยังห้องที่ตั้งค่าไว้">🚀 ส่ง</button>':'')        +'<button class="btn btn-ghost btn-sm" style="flex:1" data-etype="'+type+'" data-eid="'+p.id+'" onclick="_galOpen(event,this)">&#9998; แก้ไข</button>'        +'<button class="btn btn-danger btn-sm" data-etype="'+type+'" data-eid="'+p.id+'" data-ename="'+esc(p.name||'preset')+'" onclick="_galDel(event,this)">&#128465;</button>'
+        +(type==='verify'?'<button class="btn btn-gr btn-sm" id="send-embed-btn-'+p.id+'" onclick="event.stopPropagation();sendEmbed(''+p.id+'')" title="ส่ง Embed ไปยังห้องที่ตั้งค่าไว้">🚀 ส่ง</button>':'')        +'<button class="btn btn-ghost btn-sm" style="flex:1" data-etype="'+type+'" data-eid="'+p.id+'" onclick="_galOpen(event,this)">&#9998; แก้ไข</button>'        +'<button class="btn btn-danger btn-sm" data-etype="'+type+'" data-eid="'+p.id+'" data-ename="'+esc(p.name||'preset')+'" onclick="_galDel(event,this)">&#128465;</button>'
       +'</div>';
     card.onclick=function(){openEditor(type,p.id);};
     galleryEl.appendChild(card);
