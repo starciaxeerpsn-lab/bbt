@@ -761,7 +761,7 @@ function openEditor(type,presetId){
       +'<div class="role-dd-trigger" onclick="toggleDD(\'ed-role-menu\',event)">'
       +'<div class="role-dd-tags" id="ed-role-display">'+(curRoleName?'<div class="role-tag">'+esc(curRoleName)+'</div>':'<span class="role-dd-placeholder">— เลือกยศ —</span>')+'</div>'
       +'<span class="role-dd-arrow">▼</span></div>'
-      +'<div class="role-dd-menu" id="ed-role-menu"><input class="role-dd-search" type="text" placeholder="ค้นหายศ" oninput="filterDD('ed-role-menu',this.value)"><div id="ed-role-menu-opts">'+(roleOpts||'<div class="dd-empty">กด "โหลดยศ" ก่อน</div>')+'</div></div>'
+      +'<div class="role-dd-menu" id="ed-role-menu"><input class="role-dd-search" type="text" placeholder="ค้นหายศ" oninput="filterDD(\'ed-role-menu\',this.value)"><div id="ed-role-menu-opts">'+(roleOpts||'<div class="dd-empty">กด "โหลดยศ" ก่อน</div>')+'</div></div>'
       +'</div></div>';
   }
 
