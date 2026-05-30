@@ -402,10 +402,12 @@ var TOKEN=new URLSearchParams(window.location.search).get('token')
   ||(document.cookie.match(/session_token=([^;]+)/)||[])[1]
   ||localStorage.getItem('session_token')||'';
 if(!TOKEN){
-  document.addEventListener('DOMContentLoaded',function(){
-    document.getElementById('loading-overlay').style.display='none';
+  // Script is at end of body — DOM already ready, no need for DOMContentLoaded
+  (function(){
+    var ov=document.getElementById('loading-overlay');
+    if(ov)ov.style.display='none';
     document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#050507"><div style="text-align:center;font-family:monospace;color:#f0f0f0"><div style="font-size:52px;margin-bottom:16px">🔒</div><p style="margin-bottom:22px;color:#555;font-size:13px">SESSION EXPIRED</p><a href="/auth/login" style="background:linear-gradient(135deg,#ff2d95,#c91870);color:#fff;padding:11px 26px;border-radius:9px;text-decoration:none;font-weight:700">เข้าสู่ระบบด้วย Discord</a></div></div>';
-  });
+  })();
 }
 
 // ── STATE ──
@@ -1156,25 +1158,28 @@ function _hideLoading(){
   ov.classList.add('hidden');
   setTimeout(function(){if(ov.parentNode)ov.parentNode.removeChild(ov);},500);
 }
-// Safety fallback: force hide after 25s
-var _loadingTimeout=setTimeout(function(){
-  var ltxt=document.getElementById('loading-txt');
-  if(ltxt)ltxt.textContent='หมดเวลาเชื่อมต่อ — กรุณารีเฟรช';
-  setTimeout(_hideLoading,2500);
-}, 25000);
-// Animated loading messages
-(function(){
-  var msgs=['กำลังโหลด BBT Panel...','กำลังเชื่อมต่อเซิร์ฟเวอร์...','Server กำลัง wake up (Render free tier)...','รอสักครู่ อาจใช้เวลา 10-30 วิ...','ใกล้เสร็จแล้ว...'];
-  var i=0;
-  window._loadingMsgInterval=setInterval(function(){
+// Safety fallback + animated messages — only when TOKEN exists
+var _loadingTimeout=null;
+if(TOKEN){
+  _loadingTimeout=setTimeout(function(){
     var ltxt=document.getElementById('loading-txt');
-    if(!ltxt)return clearInterval(window._loadingMsgInterval);
-    i++;
-    if(i<msgs.length)ltxt.textContent=msgs[i];
-  },5000);
-})();
+    if(ltxt)ltxt.textContent='หมดเวลาเชื่อมต่อ — กรุณารีเฟรช';
+    setTimeout(_hideLoading,2500);
+  }, 25000);
+  (function(){
+    var msgs=['กำลังโหลด BBT Panel...','กำลังเชื่อมต่อเซิร์ฟเวอร์...','Server กำลัง wake up (Render free tier)...','รอสักครู่ อาจใช้เวลา 10-30 วิ...','ใกล้เสร็จแล้ว...'];
+    var i=0;
+    window._loadingMsgInterval=setInterval(function(){
+      var ltxt=document.getElementById('loading-txt');
+      if(!ltxt)return clearInterval(window._loadingMsgInterval);
+      i++;
+      if(i<msgs.length)ltxt.textContent=msgs[i];
+    },5000);
+  })();
+}
 
 (async function(){
+  if(!TOKEN)return; // already handled above
   try{
   var ltxt=document.getElementById('loading-txt');if(ltxt)ltxt.textContent='กำลังโหลด BBT Panel...';
   var initData=await api('GET','/api/init',null,18000);
