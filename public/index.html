@@ -385,7 +385,7 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
   <div id="pg-admins" class="page">
     <div class="pg-head">
       <div><div class="pg-title">&#128737; จัดการผู้ดูแล</div><div class="pg-sub">กำหนดว่าใครเข้า BBT Panel ได้บ้าง</div></div>
-      <div class="pg-actions"><button class="btn btn-pk btn-sm" onclick="saveAdmins()">&#128190; บันทึก</button></div>
+      <div class="pg-actions"><button class="btn btn-danger btn-sm" onclick="flushSessions()">&#128682; เตะทุกคนออก</button><button class="btn btn-pk btn-sm" onclick="saveAdmins()">&#128190; บันทึก</button></div>
     </div>
     <!-- DEBUG CARD -->
     <div class="card" id="whoami-card" style="border-color:rgba(88,101,242,.25);display:none">
@@ -1301,6 +1301,12 @@ function addAdminRow(){_adminList.push('');renderAdminList();setTimeout(function
 function removeAdminRow(i){
   if(_adminList[i]&&_adminList[i]===_ownerId){toast('ไม่สามารถลบ Owner ได้','err');return;}
   _adminList.splice(i,1);renderAdminList();
+}
+async function flushSessions(){
+  if(!confirm('เตะทุกคนออกจากระบบ? (รวมถึงตัวคุณเองด้วย)'))return;
+  var res=await api('POST','/api/flush-sessions',{});
+  if(res&&res.ok){toast('เตะออกทั้งหมด '+res.deleted+' session ✅','ok');setTimeout(function(){window.location='/auth/logout'+(TOKEN?'?token='+TOKEN:'');},1500);}
+  else toast('ไม่สำเร็จ','err');
 }
 async function saveAdmins(){
   var clean=_adminList.map(function(s){return s.trim();}).filter(Boolean);
