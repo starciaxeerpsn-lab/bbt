@@ -575,77 +575,14 @@ client.on("interactionCreate", async (interaction) => {
     const gender = interaction.fields.getTextInputValue("gender");
     const vp = getVerifyPreset(cfg);
     setPendingData(interaction.user.id, { name, age, gender, selectedRoles: [], presetId: vp.id });
-
-    const categories = vp.roleCategories || [];
-    if (categories.length === 0) {
-      await completeVerify(interaction, cfg, true);
-      return;
-    }
-
-    const roleMode = vp.roleMode || "multi";
-    const modeHint = roleMode === "single"
-      ? "กดเลือกยศ **1 อัน** แล้วกด ✅ ยืนยัน"
-      : "กดเลือกยศที่ต้องการ (กดได้หลายอัน) แล้วกด ✅ ยืนยัน";
-
-    const rows = buildCategoryRows(vp, new Set());
-    const confirmRow = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId("verify_confirm").setLabel("✅ ยืนยันและเข้าเซิร์ฟเวอร์").setStyle(ButtonStyle.Success)
-    );
-
-    const catList = categories.map((c) => {
-      const modeTag = c.multi ? "(เลือกได้หลายอัน)" : "(เลือกได้อันเดียว)";
-      return `**${c.name}** ${modeTag}\n${(c.roles||[]).map((r) => `${r.emoji || "•"} ${r.label}`).join("  ")}`;
-    }).join("\n\n");
-
-    const embed = new EmbedBuilder()
-      .setColor(hexToInt(vp.embedColor))
-      .setTitle("🎉 ยินดีต้อนรับ " + name + "!")
-      .setDescription(modeHint + "\n\n" + catList);
-
-    await interaction.reply({ embeds: [embed], components: [...rows, confirmRow], ephemeral: true });
+    // ไม่มี role categories แล้ว → ยืนยันเลย
+    await completeVerify(interaction, cfg, true);
     return;
   }
 
-  // Button: toggle role
+  // Button: toggle role (legacy — ไม่ใช้แล้ว แต่เก็บไว้กัน crash)
   if (interaction.isButton() && interaction.customId.startsWith("role_toggle:")) {
-    const [, catId, roleId] = interaction.customId.split(":");
-    const pending = getPendingData(interaction.user.id);
-    if (!pending) {
-      await interaction.reply({ content: "⚠️ Session หมดอายุ กรุณากด Verify ใหม่", ephemeral: true });
-      return;
-    }
-
-    const vp = getVerifyPreset(cfg);
-    const roleMode = vp.roleMode || "multi";          // single = เลือกได้ 1 ทั้งหมด, multi = ไม่จำกัด
-    const cat = (vp.roleCategories || []).find((c) => c.id === catId);
-
-    const selected = new Set(pending.selectedRoles || []);
-    const key = `${catId}:${roleId}`;
-    const alreadySelected = selected.has(key);
-
-    if (roleMode === "single") {
-      // เลือกได้ 1 เท่านั้นทั้งหมด — clear ทุกอย่างก่อน แล้ว toggle
-      selected.clear();
-      if (!alreadySelected) selected.add(key);  // ถ้ากดซ้ำ = deselect (clear แล้วไม่ add)
-    } else {
-      // multi mode — ดู cat.multi เป็น category-level
-      if (cat && !cat.multi) {
-        // category นี้เลือกได้อันเดียว: เอาของ cat นี้ออกก่อน แล้ว toggle
-        for (const s of [...selected]) { if (s.startsWith(catId + ":")) selected.delete(s); }
-        if (!alreadySelected) selected.add(key);  // กดซ้ำ = deselect
-      } else {
-        // category นี้เลือกได้หลายอัน
-        if (alreadySelected) selected.delete(key); else selected.add(key);
-      }
-    }
-
-    setPendingData(interaction.user.id, { ...pending, selectedRoles: [...selected] });
-
-    const rows = buildCategoryRows(vp, selected);
-    const confirmRow = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId("verify_confirm").setLabel("✅ ยืนยันและเข้าเซิร์ฟเวอร์").setStyle(ButtonStyle.Success)
-    );
-    await interaction.update({ components: [...rows, confirmRow] });
+    await interaction.reply({ content: "⚠️ กรุณาใช้ /setup ใหม่เพื่ออัปเดต embed", ephemeral: true });
     return;
   }
 
@@ -670,22 +607,14 @@ async function completeVerify(interaction, cfg, isModal = false) {
     const vp = getVerifyPreset(cfg);
 
     const rolesToAdd = [];
+    const addedRoleNames = [];
+
+    // ยศ Member หลัก
     let memberRole = vp.memberRoleId ? guild.roles.cache.get(vp.memberRoleId) : null;
     if (!memberRole && vp.memberRoleName) memberRole = guild.roles.cache.find((r) => r.name === vp.memberRoleName);
-    if (memberRole) rolesToAdd.push(memberRole);
-
-    const addedRoleNames = [];
-    for (const key of (pending.selectedRoles || [])) {
-      const [catId, roleId] = key.split(":");
-      const cat = (vp.roleCategories || []).find((c) => c.id === catId);
-      const roleInfo = (cat?.roles || []).find((r) => r.id === roleId);
-      if (!roleInfo) continue;
-      let dr = roleInfo.roleId ? guild.roles.cache.get(roleInfo.roleId) : guild.roles.cache.find((r) => r.name === (roleInfo.roleName || roleInfo.label));
-      if (!dr) {
-        dr = await guild.roles.create({ name: roleInfo.roleName || roleInfo.label, color: hexToInt(roleInfo.color || "#99aab5"), reason: "Auto-created by verify bot" });
-      }
-      rolesToAdd.push(dr);
-      addedRoleNames.push(`${roleInfo.emoji || ""} ${roleInfo.label}`.trim());
+    if (memberRole) {
+      rolesToAdd.push(memberRole);
+      addedRoleNames.push(memberRole.name);
     }
 
     if (rolesToAdd.length > 0) await member.roles.add(rolesToAdd).catch(console.error);
