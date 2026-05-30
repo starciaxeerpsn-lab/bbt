@@ -211,6 +211,17 @@ app.get("/api/status", requireAuth, (req, res) => {
   res.json({ online: client.isReady(), tag: client.user?.tag || "Offline", guilds: client.guilds?.cache?.size || 0, user: req.session });
 });
 
+// ── WHOAMI (debug: ดู userId ของตัวเอง vs OWNER_ID) ──
+app.get("/api/whoami", requireAuth, (req, res) => {
+  const ownerEnv = process.env.OWNER_ID || process.env.ADMIN_USER_IDS?.split(",")[0]?.trim() || "";
+  res.json({
+    userId: req.session.userId,
+    username: req.session.username,
+    isOwner: req.session.userId === ownerEnv,
+    ownerIdConfigured: ownerEnv ? ownerEnv.substring(0, 6) + "..." : "(ไม่ได้ตั้งค่า)",
+  });
+});
+
 // ── ALLOWED USERS API (owner only) ──
 app.get("/api/allowed-users", requireAuth, async (req, res) => {
   if (!isOwner(req.session.userId)) return res.status(403).json({ error: "Owner only" });
