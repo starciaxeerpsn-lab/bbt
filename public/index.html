@@ -228,6 +228,9 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
 .role-pick-btn{background:var(--card);border:1px dashed var(--border2);color:var(--text3);border-radius:8px;padding:7px 12px;font-size:12px;cursor:pointer;width:100%;text-align:left;transition:.15s;font-family:inherit}
 .role-pick-btn:hover{border-color:var(--pk3);color:var(--pk3)}
 .role-pick-btn.has-role{border-style:solid;border-color:rgba(34,197,94,.3);color:var(--green);background:rgba(34,197,94,.05)}
+/* SKELETON */
+@keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+.skeleton{background:linear-gradient(90deg,var(--border) 25%,var(--border2) 50%,var(--border) 75%);background-size:800px 100%;animation:shimmer 1.5s infinite;border-radius:8px}
 /* MISC */
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:10px}
 </style>
@@ -599,7 +602,7 @@ function buildWizStep2(type){
   var isV=type==='verify';
   var chKey=type.toUpperCase()+'_CHANNEL_NAME';
   var curCh=cfg[chKey]||'';
-  var chOpts=channels.map(function(ch){return '<option value="'+esc(ch.name)+'"'+(curCh===ch.name?' selected':'')+'>No '+esc(ch.name)+'</option>';}).join('');
+  var chOpts=channels.map(function(ch){return '<option value="'+esc(ch.name)+'"'+(curCh===ch.name?' selected':'')+'>&#35; '+esc(ch.name)+'</option>';}).join('');
 
   var memberRoleHtml='';
   if(isV){
@@ -611,7 +614,7 @@ function buildWizStep2(type){
     <hr class="sep">
     <div class="card-head"><span class="card-head-icon">&#127917;</span> ยศสมาชิก (Member Role)</div>
     <p class="hint" style="margin-bottom:12px">ยศที่สมาชิกจะได้รับโดยอัตโนมัติหลังกดปุ่ม Verify</p>
-    <button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="fetchRolesForVerify()">&#128260; โหลดยศ</button>
+    ${rolesLoaded&&fetchedRoles.length?'':`<button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="fetchRolesForVerify()">&#128260; โหลดยศ</button>`}
     <div class="field">
       <label>ยศที่ได้รับหลัง Verify</label>
       <div class="role-dd-wrap">
@@ -630,7 +633,7 @@ function buildWizStep2(type){
   return `
   <div class="card">
     <div class="card-head"><span class="card-head-icon">&#128226;</span> เลือกห้อง Discord</div>
-    <button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="fetchChannelsStep('${type}')">&#128260; ดึงรายชื่อห้อง</button>
+    ${channels.length?'':`<button class="btn btn-ghost btn-sm" style="margin-bottom:14px" onclick="fetchChannelsStep('${type}')">&#128260; ดึงรายชื่อห้อง</button>`}
     <div class="field">
       <label>ห้องที่จะส่งข้อความ</label>
       <select id="${type}-ch">
@@ -769,22 +772,25 @@ async function saveWiz(type){
 
 // ── CHANNELS ───────────────────────────────────────────────
 async function fetchChannelsStep(type){
-  toast('กำลังโหลดรายชื่อห้อง...','info');
+  if(channelsLoaded&&channels.length){renderWiz(type,2);return;}
+  toast('กำลังโหลดห้อง...','info');
   var data=await api('GET','/api/channels');
   channels=data&&data.channels?data.channels:[];
   channelsLoaded=true;
   renderWiz(type,2);
-  toast('โหลดแล้ว '+channels.length+' ห้อง','ok');
+  toast('โหลด '+channels.length+' ห้อง','ok');
 }
 
 
 // ── VERIFY ROLE DD (legacy simple) ────────────────────────
 async function fetchRolesForVerify(){
+  if(rolesLoaded&&fetchedRoles.length){renderWiz('verify',2);return;}
   toast('กำลังโหลดยศ...','info');
   var data=await api('GET','/api/roles');
   fetchedRoles=data&&data.roles?data.roles:[];
+  rolesLoaded=true;
   renderWiz('verify',2);
-  toast('โหลดแล้ว '+fetchedRoles.filter(function(r){return !r.isAdmin;}).length+' ยศ','ok');
+  toast('โหลด '+fetchedRoles.filter(function(r){return !r.isAdmin;}).length+' ยศ','ok');
 }
 
 function _posDD(menu,trigger){
@@ -983,15 +989,18 @@ document.getElementById('logout-btn').addEventListener('click',function(){
 
 // ── INIT ───────────────────────────────────────────────────
 (async function(){
-  document.getElementById('loading-txt').textContent='กำลังโหลด BBT Panel...';
-  var results=await Promise.all([api('GET','/api/config'),api('GET','/api/status')]);
-  cfg=results[0]||{};
-  var statusData=results[1];
+  var ltxt=document.getElementById('loading-txt');
+  if(ltxt) ltxt.textContent='กำลังโหลด BBT Panel...';
 
-  if(statusData){
+  // ── โหลดทุกอย่างใน call เดียว ──────────────────────────
+  var initData=await api('GET','/api/init');
+
+  if(initData){
+    cfg=initData.config||{};
+    var statusData=initData.status||{};
     var u=statusData.user||{};
-    var guildName=u.guildName||statusData.guildName||'—';
-    var userName=u.username||statusData.user||'Admin';
+    var guildName=u.guildName||'—';
+    var userName=u.username||'Admin';
     document.getElementById('guild-name').textContent=guildName;
     document.getElementById('user-name').textContent=userName;
     document.getElementById('user-avatar').textContent=(userName[0]||'A').toUpperCase();
@@ -1002,6 +1011,30 @@ document.getElementById('logout-btn').addEventListener('click',function(){
     cfg._botTag=statusData.tag||'';
     cfg._guildName=guildName;
     cfg._online=statusData.online||false;
+
+    // ── cache roles + channels จาก init ────────────────────
+    if(initData.roles&&initData.roles.length){
+      fetchedRoles=initData.roles;
+      rolesLoaded=true;
+      _renderRolePool();
+    }
+    if(initData.channels&&initData.channels.length){
+      channels=initData.channels;
+      channelsLoaded=true;
+    }
+  } else {
+    // fallback แบบเดิม (กัน error)
+    var r2=await Promise.all([api('GET','/api/config'),api('GET','/api/status')]);
+    cfg=r2[0]||{};
+    var s2=r2[1]||{};
+    var u2=s2.user||{};
+    document.getElementById('guild-name').textContent=u2.guildName||'—';
+    document.getElementById('user-name').textContent=u2.username||'Admin';
+    document.getElementById('user-avatar').textContent=(u2.username||'A')[0].toUpperCase();
+    var dot2=document.getElementById('bot-dot'),tag2=document.getElementById('bot-tag');
+    if(s2.online){dot2.classList.remove('off');tag2.textContent=s2.tag||'Online';}
+    else{dot2.classList.add('off');tag2.textContent='Offline';}
+    cfg._botTag=s2.tag||'';cfg._guildName=u2.guildName||'—';cfg._online=s2.online||false;
   }
 
   refreshOverview();
