@@ -256,6 +256,27 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
 @keyframes spin{to{transform:rotate(360deg)}}
 .loader-txt{font-size:13px;color:var(--text2);font-family:'DM Mono',monospace;letter-spacing:1px}
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:10px}
+
+/* FORM BUILDER */
+.form-field-item{background:var(--card2);border:1px solid var(--border2);border-radius:12px;padding:14px;margin-bottom:10px;position:relative;transition:.18s}
+.form-field-item:hover{border-color:var(--border2)}
+.form-field-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.form-field-num{width:22px;height:22px;border-radius:50%;background:var(--pk-dim);border:1px solid var(--pk-border);color:var(--pk3);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.form-field-label{font-size:11px;font-weight:700;color:var(--text2);flex:1;text-transform:uppercase;letter-spacing:.6px}
+.form-field-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:6px;transition:.15s}
+.form-field-del:hover{background:rgba(244,63,94,.15);color:var(--red)}
+.form-field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
+.form-field-row.full{grid-template-columns:1fr}
+.form-field-row label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:4px}
+.form-field-row input,.form-field-row select,.form-field-row textarea{width:100%;background:var(--card);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;padding:8px 10px;outline:none;transition:.15s}
+.form-field-row input:focus,.form-field-row select:focus,.form-field-row textarea:focus{border-color:var(--pk);box-shadow:0 0 0 2px var(--pk-glow)}
+.form-field-row textarea{resize:vertical;min-height:60px}
+.form-opts-list{margin-top:6px}
+.form-opt-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.form-opt-row input{flex:1}
+.form-opt-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:2px 5px;border-radius:5px;transition:.15s;flex-shrink:0}
+.form-opt-del:hover{color:var(--red);background:rgba(244,63,94,.12)}
+.form-empty-hint{text-align:center;padding:20px;color:var(--text3);font-size:12px;border:1px dashed var(--border2);border-radius:10px}
 </style>
 </head>
 <body>
@@ -456,7 +477,7 @@ function renderGallery(type){
       +'<div class="preset-card-meta">'
         +(p.channelName?'<span class="preset-meta-chip">&#128226; #'+esc(p.channelName)+'</span>':'<span class="preset-meta-chip" style="color:var(--red)">⚠ ยังไม่เลือกห้อง</span>')
         +(isV&&p.memberRoleName?'<span class="preset-meta-chip">&#127917; '+esc(p.memberRoleName)+'</span>':'')
-        +(isV?'<span class="preset-meta-chip">&#127917; '+(p.selectedRoles&&p.selectedRoles.length?p.selectedRoles.length+' ยศเพิ่ม':p.roleMode&&p.roleMode!=='none'?'ยังไม่เลือกยศ':'ไม่มียศเพิ่ม')+'</span>':'')
+        +(isV?'<span class="preset-meta-chip">&#127917; '+(p.selectedRoles&&p.selectedRoles.length?p.selectedRoles.length+' ยศเพิ่ม':'ยังไม่เลือกยศ')+'</span>':'')
         +(p.embedColor?'<span class="preset-meta-chip"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+esc(p.embedColor)+';vertical-align:middle;margin-right:2px"></span>สี embed</span>':'')
       +'</div>'
       +'<div class="preset-card-actions">'
@@ -498,13 +519,11 @@ function setRoleMode(mode){
   p.roleMode=mode;
   document.querySelectorAll('.role-mode-opt').forEach(function(b){b.classList.remove('active');});
   var btn=document.getElementById('rmode-'+mode);if(btn)btn.classList.add('active');
-  var wrap=document.getElementById('ed-role-pool-wrap');
-  if(wrap)wrap.style.display=(mode==='none')?'none':'block';
 }
 function toggleRoleChip(roleId,roleName,hex,chipEl){
   var p=getActivePreset();if(!p)return;
   if(!p.selectedRoles)p.selectedRoles=[];
-  var mode=p.roleMode||'none';if(mode==='none')return;
+  var mode=p.roleMode||'single';
   var idx=p.selectedRoles.findIndex(function(r){return r.roleId===roleId;});
   if(idx>=0){
     // deselect
@@ -538,6 +557,131 @@ function removeSelectedRole(roleId,chipEl){
 }
 
 
+
+// ── FORM BUILDER ──
+function getFormFields(){
+  var p=getActivePreset();
+  if(!p.formFields)p.formFields=[];
+  return p.formFields;
+}
+
+function renderFormBuilder(){
+  var el=document.getElementById('ed-form-builder');
+  if(!el)return;
+  var fields=getFormFields();
+  if(!fields.length){
+    el.innerHTML='<div class="form-empty-hint">ยังไม่มีคำถาม — กด "+ เพิ่มคำถาม" เพื่อสร้าง</div>';
+    return;
+  }
+  el.innerHTML=fields.map(function(f,i){
+    var optsHtml='';
+    if(f.type==='choice'||f.type==='multi'){
+      var opts=f.options||[];
+      optsHtml='<div class="form-field-row full"><label>ตัวเลือก</label>'
+        +'<div class="form-opts-list" id="fopts-'+i+'">'+opts.map(function(o,oi){
+          return '<div class="form-opt-row">'
+            +'<input type="text" value="'+esc(o)+'" oninput="updateFormOpt('+i+','+oi+',this.value)" placeholder="ตัวเลือก '+(oi+1)+'">'
+            +'<button class="form-opt-del" onclick="removeFormOpt('+i+','+oi+')" title="ลบ">✕</button>'
+          +'</div>';
+        }).join('')+'</div>'
+        +'<button class="btn btn-ghost btn-xs" style="margin-top:4px" onclick="addFormOpt('+i+')">+ เพิ่มตัวเลือก</button>'
+      +'</div>';
+    }
+    return '<div class="form-field-item" id="fitem-'+i+'">'
+      +'<div class="form-field-header">'
+        +'<div class="form-field-num">'+(i+1)+'</div>'
+        +'<div class="form-field-label">คำถามที่ '+(i+1)+'</div>'
+        +(i>0?'<button class="form-field-del" onclick="moveFormField('+i+',-1)" title="ขึ้น">↑</button>':'')
+        +(i<fields.length-1?'<button class="form-field-del" onclick="moveFormField('+i+',1)" title="ลง">↓</button>':'')
+        +'<button class="form-field-del" onclick="deleteFormField('+i+')" title="ลบ">🗑</button>'
+      +'</div>'
+      +'<div class="form-field-row">'
+        +'<div><label>คำถาม / หัวข้อ</label><input type="text" value="'+esc(f.label||'')+'" oninput="updateFormField('+i+','label',this.value)" placeholder="เช่น เพศ, อายุ"></div>'
+        +'<div><label>ประเภท</label><select onchange="updateFormFieldType('+i+',this.value)">'
+          +'<option value="text" '+(f.type==='text'?'selected':'')+'>✏️ ข้อความ</option>'
+          +'<option value="choice" '+(f.type==='choice'?'selected':'')+'>🔘 เลือก 1 ข้อ</option>'
+          +'<option value="multi" '+(f.type==='multi'?'selected':'')+'>☑️ เลือกหลายข้อ</option>'
+        +'</select></div>'
+      +'</div>'
+      +'<div class="form-field-row full"><label>คำอธิบายเพิ่มเติม (ไม่บังคับ)</label>'
+        +'<input type="text" value="'+esc(f.description||'')+'" oninput="updateFormField('+i+','description',this.value)" placeholder="เช่น กรุณาเลือก 1 ข้อ"></div>'
+      +'<div class="form-field-row"><div><label>บังคับตอบ</label>'
+        +'<select onchange="updateFormField('+i+','required',this.value==='yes')">'
+          +'<option value="yes" '+(f.required!==false?'selected':'')+'>✅ บังคับ</option>'
+          +'<option value="no" '+(f.required===false?'selected':'')+'>⬜ ไม่บังคับ</option>'
+        +'</select></div>'
+        +'<div><label>รูปแบบ Discord</label>'
+        +'<select onchange="updateFormField('+i+','style',this.value)">'
+          +'<option value="short" '+(f.style!=='long'?'selected':'')+'>📝 กล่องสั้น</option>'
+          +'<option value="long" '+(f.style==='long'?'selected':'')+'>📄 กล่องยาว</option>'
+        +'</select></div>'
+      +'</div>'
+      +optsHtml
+    +'</div>';
+  }).join('');
+}
+
+function addFormField(){
+  var fields=getFormFields();
+  fields.push({label:'',type:'text',description:'',required:true,style:'short',options:[]});
+  renderFormBuilder();
+  // scroll to new field
+  setTimeout(function(){
+    var items=document.querySelectorAll('.form-field-item');
+    if(items.length)items[items.length-1].scrollIntoView({behavior:'smooth',block:'nearest'});
+  },50);
+}
+
+function updateFormField(idx,key,val){
+  var fields=getFormFields();
+  if(fields[idx])fields[idx][key]=val;
+}
+
+function updateFormFieldType(idx,type){
+  var fields=getFormFields();
+  if(!fields[idx])return;
+  fields[idx].type=type;
+  if((type==='choice'||type==='multi')&&(!fields[idx].options||!fields[idx].options.length)){
+    fields[idx].options=['',''];
+  }
+  renderFormBuilder();
+}
+
+function deleteFormField(idx){
+  var fields=getFormFields();
+  fields.splice(idx,1);
+  renderFormBuilder();
+  toast('ลบคำถามแล้ว','ok');
+}
+
+function moveFormField(idx,dir){
+  var fields=getFormFields();
+  var ni=idx+dir;
+  if(ni<0||ni>=fields.length)return;
+  var tmp=fields[idx];fields[idx]=fields[ni];fields[ni]=tmp;
+  renderFormBuilder();
+}
+
+function addFormOpt(fieldIdx){
+  var fields=getFormFields();
+  if(!fields[fieldIdx].options)fields[fieldIdx].options=[];
+  fields[fieldIdx].options.push('');
+  renderFormBuilder();
+}
+
+function updateFormOpt(fieldIdx,optIdx,val){
+  var fields=getFormFields();
+  if(fields[fieldIdx]&&fields[fieldIdx].options)fields[fieldIdx].options[optIdx]=val;
+}
+
+function removeFormOpt(fieldIdx,optIdx){
+  var fields=getFormFields();
+  if(fields[fieldIdx]&&fields[fieldIdx].options){
+    fields[fieldIdx].options.splice(optIdx,1);
+    renderFormBuilder();
+  }
+}
+
 // ── EDITOR ──
 function openEditor(type,presetId){
   var isV=type==='verify',isW=type==='welcome';
@@ -545,7 +689,7 @@ function openEditor(type,presetId){
   var presets=cfg[key]||[];
   var preset=presetId?presets.find(function(p){return p.id===presetId;}):null;
   var isNew=!preset;
-  if(isNew){preset={id:uid(),name:'',embedTitle:'',embedDesc:'',embedColor:'#ff2d95',embedImage:'',embedThumbnail:'',channelName:'',memberRoleName:'',memberRoleId:'',roleCategories:[],roleMode:'none',selectedRoles:[]};if(isW){preset.mentionUser=true;preset.showAvatar=true;}if(!isW&&!isV){preset.enabled=true;preset.showAvatar=true;}}
+  if(isNew){preset={id:uid(),name:'',embedTitle:'',embedDesc:'',embedColor:'#ff2d95',embedImage:'',embedThumbnail:'',channelName:'',memberRoleName:'',memberRoleId:'',roleCategories:[],roleMode:'single',selectedRoles:[]};if(isW){preset.mentionUser=true;preset.showAvatar=true;}if(!isW&&!isV){preset.enabled=true;preset.showAvatar=true;}}
 
   activeEditorType=type;activeEditorId=preset.id;
 
@@ -643,11 +787,10 @@ function openEditor(type,presetId){
       '<hr class="sep">'
       +'<div class="card-head" style="margin-bottom:14px"><span class="card-head-icon">&#127917;</span> ยศเพิ่มเติม <span style="font-size:11px;font-weight:400;color:var(--text3)">(ให้สมาชิกเลือกหลังกด Verify)</span></div>'
       +'<div class="role-mode-picker" id="ed-role-mode-picker">'
-        +'<button class="role-mode-opt '+((!preset.roleMode||preset.roleMode==="none")?"active":"")+'" onclick="setRoleMode(\'none\')" id="rmode-none"><div class="rmo-icon">🚫</div><div class="rmo-label">ไม่มียศเพิ่ม</div><div class="rmo-desc">ได้รับแค่ยศ Member</div></button>'
-        +'<button class="role-mode-opt '+(preset.roleMode==="single"?"active":"")+'" onclick="setRoleMode(\'single\')" id="rmode-single"><div class="rmo-icon">☝️</div><div class="rmo-label">ยศเดียว</div><div class="rmo-desc">เลือกได้ 1 ยศเท่านั้น</div></button>'
+        +'<button class="role-mode-opt '+((preset.roleMode==="single"||!preset.roleMode||preset.roleMode==="none")?"active":"")+'" onclick="setRoleMode(\'single\')" id="rmode-single"><div class="rmo-icon">☝️</div><div class="rmo-label">ยศเดียว</div><div class="rmo-desc">เลือกได้ 1 ยศเท่านั้น</div></button>'
         +'<button class="role-mode-opt '+(preset.roleMode==="multi"?"active":"")+'" onclick="setRoleMode(\'multi\')" id="rmode-multi"><div class="rmo-icon">🎭</div><div class="rmo-label">หลายยศ</div><div class="rmo-desc">เลือกได้หลายยศพร้อมกัน</div></button>'
       +'</div>'
-      +'<div id="ed-role-pool-wrap" style="display:'+(preset.roleMode&&preset.roleMode!=="none"?"block":"none")+';margin-top:14px">'
+      +'<div id="ed-role-pool-wrap" style="margin-top:14px">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
           +'<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px">คลิกยศเพื่อเพิ่ม / คลิกซ้ำเพื่อเอาออก</div>'
           +(rolesLoaded?'':'<button class="btn btn-ghost btn-xs" onclick="loadRolesForEditor()">&#128260; โหลดยศ</button>')
@@ -656,6 +799,10 @@ function openEditor(type,presetId){
         +'<div style="margin-top:10px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">ยศที่เลือก</div>'
         +'<div class="selected-roles-area" id="ed-selected-roles"></div>'
       +'</div>'
+      +'<hr class="sep">'
+      +'<div class="card-head" style="margin-bottom:14px"><span class="card-head-icon">&#128221;</span> ฟอร์มคำถาม <span style="font-size:11px;font-weight:400;color:var(--text3)">(บอทจะถามสมาชิกก่อนได้รับยศ)</span></div>'
+      +'<div id="ed-form-builder"></div>'
+      +'<button class="btn btn-ghost btn-sm" style="margin-top:8px;width:100%" onclick="addFormField()">+ เพิ่มคำถาม</button>'
       :'')
       +'<hr class="sep">'
       +'<div style="font-size:11px;font-weight:800;color:var(--pk3);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px">&#128065; Preview</div>'
@@ -690,6 +837,7 @@ function openEditor(type,presetId){
     if(poolEl)poolEl.innerHTML=buildPoolChips(preset);
     var selEl=document.getElementById('ed-selected-roles');
     if(selEl)selEl.innerHTML=buildSelectedChips(preset);
+    renderFormBuilder();
   }
   refreshEditorPreview();
 }
