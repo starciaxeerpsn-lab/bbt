@@ -711,7 +711,11 @@ function openEditor(type,presetId){
   var presets=cfg[key]||[];
   var preset=presetId?presets.find(function(p){return p.id===presetId;}):null;
   var isNew=!preset;
-  if(isNew){preset={id:uid(),name:'',embedTitle:'',embedDesc:'',embedColor:'#ff2d95',embedImage:'',embedThumbnail:'',channelName:'',memberRoleName:'',memberRoleId:'',roleCategories:[],roleMode:'single',selectedRoles:[]};if(isW){preset.mentionUser=true;preset.showAvatar=true;}if(!isW&&!isV){preset.enabled=true;preset.showAvatar=true;}}
+  if(isNew){preset={id:uid(),name:'',embedTitle:'',embedDesc:'',embedColor:'#ff2d95',embedImage:'',embedThumbnail:'',channelName:'',memberRoleName:'',memberRoleId:'',roleCategories:[],roleMode:'single',selectedRoles:[]};if(isW){preset.mentionUser=true;preset.showAvatar=true;}if(!isW&&!isV){preset.enabled=true;preset.showAvatar=true;}
+    // Push new preset into cfg so getActivePreset() can find it immediately
+    if(!cfg[key])cfg[key]=[];
+    cfg[key].push(preset);
+  }
 
   activeEditorType=type;activeEditorId=preset.id;
 
@@ -959,8 +963,8 @@ async function savePreset(type,presetId){
     embedThumbnail:thumbVal,
     channelName:chEl?chEl.value:existing.channelName||'',
     roleCategories:existing.roleCategories||[],
-    roleMode:existing.roleMode||'none',
-    selectedRoles:existing.selectedRoles||[],
+    roleMode:(getActivePreset()&&getActivePreset().roleMode)||existing.roleMode||'single',
+    selectedRoles:(getActivePreset()&&getActivePreset().selectedRoles)||existing.selectedRoles||[],
   });
   if(isV){
     updated.embedButtonLabel=g('ed-btn-label')?g('ed-btn-label').value:'ยืนยันตัวตน';
