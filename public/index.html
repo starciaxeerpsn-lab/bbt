@@ -113,7 +113,7 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
 .btn-xs{padding:5px 10px;font-size:11.5px;border-radius:7px}
 .btn-row{display:flex;justify-content:space-between;align-items:center;margin-top:24px;gap:10px;flex-wrap:wrap}
 /* WIZARD */
-.wiz-steps{display:flex;gap:8px;margin-bottom:26px}
+.wiz-steps{display:flex;gap:8px;margin-bottom:26px}.wiz-steps.hidden{display:none}
 .wiz-step{flex:1;height:5px;background:var(--border);border-radius:10px;position:relative;transition:.35s}
 .wiz-step.active{background:var(--pk);box-shadow:0 0 8px var(--pk-glow)}
 .wiz-step.done{background:var(--pk2)}
@@ -459,7 +459,11 @@ function nav(id,el){
   document.querySelectorAll('.sb-link').forEach(function(l){l.classList.remove('on');});
   if(el) el.classList.add('on');
   else document.querySelectorAll('.sb-link').forEach(function(l){if(l.getAttribute('onclick')&&l.getAttribute('onclick').indexOf("'"+id+"'")>=0)l.classList.add('on');});
-  if(['verify','welcome','goodbye'].includes(id)) renderWiz(id,wizStep[id]||1);
+  if(['verify','welcome','goodbye'].includes(id)){
+    var hasSaved=(id==='verify'&&cfg.VERIFY_EMBED_TITLE)||(id==='welcome'&&cfg.WELCOME_TITLE)||(id==='goodbye'&&cfg.GOODBYE_TITLE);
+    if(hasSaved) renderEmbedOverview(id);
+    else renderWiz(id,1);
+  }
   if(id==='roles'){drawCats();if(rolesLoaded)_renderRolePool();}
   if(id==='overview') refreshOverview();
   closeAllDropdowns();
@@ -476,6 +480,103 @@ function refreshOverview(){
   var d=document.getElementById('ov-status-dot');if(d)d.classList.toggle('off',!cfg._online);
 }
 
+
+// ── EMBED OVERVIEW (หน้าหลักก่อน wizard) ────────────────────
+function renderEmbedOverview(type){
+  var isV=type==='verify',isW=type==='welcome',isG=type==='goodbye';
+  var stepsEl=document.querySelector('#wiz-'+type+' .wiz-steps');
+  if(stepsEl) stepsEl.classList.add('hidden');
+  var title=cfg[isV?'VERIFY_EMBED_TITLE':isW?'WELCOME_TITLE':'GOODBYE_TITLE']||'';
+  var desc =cfg[isV?'VERIFY_EMBED_DESC' :isW?'WELCOME_MESSAGE':'GOODBYE_MESSAGE']||'';
+  var color=cfg[isV?'VERIFY_EMBED_COLOR':isW?'WELCOME_COLOR':'GOODBYE_COLOR']||'#ff2d95';
+  var image=cfg[isV?'VERIFY_IMAGE'      :isW?'WELCOME_IMAGE':'GOODBYE_IMAGE']||'';
+  var thumb=cfg[isV?'VERIFY_THUMBNAIL'  :isW?'WELCOME_THUMBNAIL':'GOODBYE_THUMBNAIL']||'';
+  var ch   =cfg[type.toUpperCase()+'_CHANNEL_NAME']||'—';
+  var btnLabel=isV?(cfg.VERIFY_BUTTON_LABEL||'ยืนยันตัวตน'):'';
+  var btnColor=isV?(cfg.VERIFY_BUTTON_COLOR||'Primary'):'';
+  var memberRole=isV?(cfg.MEMBER_ROLE_NAME||'—'):'';
+
+  var thumbSrc='';
+  if(thumb==='[user]')       thumbSrc='https://cdn.discordapp.com/embed/avatars/1.png';
+  else if(thumb==='[server]') thumbSrc='https://cdn.discordapp.com/embed/avatars/0.png';
+  else if(thumb)              thumbSrc=thumb;
+
+  var thumbHtml=thumbSrc?`<div class="dc-thumb" style="display:block"><img src="${esc(thumbSrc)}" onerror="this.parentElement.style.display='none'"></div>`:'';
+  var imgHtml=image?`<div class="dc-img" style="display:block"><img src="${esc(image)}" onerror="this.parentElement.style.display='none'"></div>`:'';
+  var mentionHtml=(isW&&cfg.MENTION_USER)?`<div style="margin-bottom:4px"><span class="dc-mention">@สมาชิกใหม่</span></div>`:'';
+  var btnColorMap={Primary:'primary',Secondary:'secondary',Success:'success',Danger:'danger'};
+  var btnHtml=isV?`<div class="dc-btn-row"><button class="dc-btn-preview dc-btn-${btnColorMap[btnColor]||'primary'}">${esc(btnLabel)}</button></div>`:'';
+
+  var rolesPreview='';
+  if(isV&&cfg.ROLE_CATEGORIES&&cfg.ROLE_CATEGORIES.length){
+    rolesPreview='<div class="card" style="margin-top:0">'
+      +'<div class="card-head"><span class="card-head-icon">&#127917;</span> ยศหมวดหมู่ที่ให้สมาชิกเลือก'
+      +'<button class="btn btn-ghost btn-xs" style="margin-left:auto" onclick="nav('roles',null)">&#9998; แก้ไขยศ</button></div>';
+    cfg.ROLE_CATEGORIES.forEach(function(cat){
+      rolesPreview+='<div style="margin-bottom:12px">'
+        +'<div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">'+esc(cat.name)+(cat.multi?' · เลือกหลายอัน':' · เลือก 1 อัน')+'</div>'
+        +'<div style="display:flex;flex-wrap:wrap;gap:6px">';
+      (cat.roles||[]).forEach(function(r){
+        var hex=r.color||'#5865f2';
+        var hasRole=!!r.roleId||!!r.roleName;
+        rolesPreview+='<div style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;background:'+hex+'22;border:1px solid '+hex+'66;color:'+hex+'">'
+          +(r.emoji?r.emoji+' ':'')+esc(r.label)
+          +(hasRole?'':' <span style="color:var(--red);font-size:10px">⚠ ยังไม่ผูก</span>')
+          +'</div>';
+      });
+      rolesPreview+='</div></div>';
+    });
+    rolesPreview+='</div>';
+  } else if(isV){
+    rolesPreview='<div class="card" style="margin-top:0;border-color:rgba(245,158,11,.2);background:rgba(245,158,11,.04)">'
+      +'<div class="card-head" style="color:var(--yellow)"><span class="card-head-icon">⚠️</span> ยังไม่มียศหมวดหมู่</div>'
+      +'<p style="font-size:12.5px;color:var(--text3)">สมาชิกจะไม่มีปุ่มให้เลือกยศ — <span style="color:var(--pk3);cursor:pointer" onclick="nav('roles',null)">ตั้งค่าที่นี่</span></p>'
+      +'</div>';
+  }
+
+  var metaInfo='';
+  if(isV) metaInfo=`<div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:14px;font-size:12.5px;color:var(--text3)">
+    <div>📢 ห้อง Verify: <span style="color:var(--text);font-weight:700"># ${esc(ch)}</span></div>
+    <div>🎯 Member Role: <span style="color:var(--green);font-weight:700">${esc(memberRole)}</span></div>
+  </div>`;
+  else metaInfo=`<div style="margin-top:14px;font-size:12.5px;color:var(--text3)">📢 ห้อง: <span style="color:var(--text);font-weight:700"># ${esc(ch)}</span></div>`;
+
+  var body=document.getElementById('wiz-body-'+type);
+  body.innerHTML=`
+  <div class="card">
+    <div class="card-head" style="justify-content:space-between;flex-wrap:wrap;gap:8px">
+      <span><span class="card-head-icon">&#128065;</span> Embed ปัจจุบัน</span>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm" onclick="startEditWiz('${type}')">&#9998; แก้ไข Embed</button>
+        <button class="btn btn-ghost btn-sm" onclick="startEditWiz('${type}',2)">&#128226; เปลี่ยนห้อง/ยศ</button>
+      </div>
+    </div>
+    <div class="dc-wrap">
+      <div class="dc-row">
+        <div class="dc-av">BBT</div>
+        <div class="dc-body">
+          <div class="dc-name">BBT Bot <span style="font-size:10px;color:#888;font-weight:400">— วันนี้</span></div>
+          ${mentionHtml}
+          <div class="dc-embed" style="border-left-color:${color}">
+            ${thumbHtml}
+            <div class="dc-etitle">${esc(title)}</div>
+            <div class="dc-edesc" style="white-space:pre-wrap">${esc(desc).replace(/\{user\}/g,'@สมาชิกใหม่')}</div>
+            ${imgHtml}
+          </div>
+          ${btnHtml}
+        </div>
+      </div>
+    </div>
+    ${metaInfo}
+  </div>
+  ${rolesPreview}`;
+}
+
+function startEditWiz(type,step){
+  var stepsEl=document.querySelector('#wiz-'+type+' .wiz-steps');
+  if(stepsEl) stepsEl.classList.remove('hidden');
+  renderWiz(type,step||1);
+}
 
 // ── WIZARD ENGINE ──────────────────────────────────────────
 function renderWiz(type,step){
@@ -817,8 +918,9 @@ async function saveWiz(type){
   if(res&&res.ok){
     toast('บันทึกสำเร็จ! ✅','ok');
     refreshOverview();
-    // stay on confirm step — re-render เพื่อ refresh preview
-    renderWiz(type,3);
+    renderEmbedOverview(type);
+    var stepsEl=document.querySelector('#wiz-'+type+' .wiz-steps');
+    if(stepsEl) stepsEl.classList.add('hidden');
   } else {
     toast('บันทึกไม่สำเร็จ'+(res&&res.error?' — '+res.error:''),'err');
   }
@@ -1100,9 +1202,11 @@ document.getElementById('logout-btn').addEventListener('click',function(){
   }
 
   refreshOverview();
-  renderWiz('verify',1);
-  renderWiz('welcome',1);
-  renderWiz('goodbye',1);
+  ['verify','welcome','goodbye'].forEach(function(t){
+    var has=(t==='verify'&&cfg.VERIFY_EMBED_TITLE)||(t==='welcome'&&cfg.WELCOME_TITLE)||(t==='goodbye'&&cfg.GOODBYE_TITLE);
+    if(has){ renderEmbedOverview(t); var s=document.querySelector('#wiz-'+t+' .wiz-steps');if(s)s.classList.add('hidden'); }
+    else renderWiz(t,1);
+  });
 
   var ov=document.getElementById('loading-overlay');
   ov.classList.add('hidden');
