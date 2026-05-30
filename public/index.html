@@ -491,7 +491,7 @@ function nav(id,el){
   else document.querySelectorAll('.sb-link').forEach(function(l){if(l.getAttribute('onclick')&&l.getAttribute('onclick').indexOf("'"+id+"'")>=0)l.classList.add('on');});
   if(id==='verify'||id==='welcome'||id==='goodbye') renderGallery(id);
   if(id==='overview') refreshOverview();
-  if(id==='admins') renderAdminList();
+  if(id==='admins') loadAdmins();
 }
 
 // ── OVERVIEW ──
