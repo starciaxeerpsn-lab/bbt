@@ -653,15 +653,68 @@ function buildWizStep2(type){
 
 // ── WIZARD STEP 3 ──────────────────────────────────────────
 function buildWizConfirm(type){
+  var isV=type==='verify',isW=type==='welcome',isG=type==='goodbye';
+  var title=cfg[isV?'VERIFY_EMBED_TITLE':isW?'WELCOME_TITLE':'GOODBYE_TITLE']||'';
+  var desc =cfg[isV?'VERIFY_EMBED_DESC' :isW?'WELCOME_MESSAGE':'GOODBYE_MESSAGE']||'';
+  var color=cfg[isV?'VERIFY_EMBED_COLOR':isW?'WELCOME_COLOR':'GOODBYE_COLOR']||'#ff2d95';
+  var image=cfg[isV?'VERIFY_IMAGE'      :isW?'WELCOME_IMAGE':'GOODBYE_IMAGE']||'';
+  var thumb=cfg[isV?'VERIFY_THUMBNAIL'  :isW?'WELCOME_THUMBNAIL':'GOODBYE_THUMBNAIL']||'';
+  var ch   =cfg[type.toUpperCase()+'_CHANNEL_NAME']||'—';
+  var btnLabel=isV?(cfg.VERIFY_BUTTON_LABEL||'ยืนยันตัวตน'):'';
+  var btnColor=isV?(cfg.VERIFY_BUTTON_COLOR||'Primary'):'';
+  var memberRole=isV?(cfg.MEMBER_ROLE_NAME||'—'):'';
+
+  // thumb src
+  var thumbSrc='';
+  if(thumb==='[user]')   thumbSrc='https://cdn.discordapp.com/embed/avatars/1.png';
+  else if(thumb==='[server]') thumbSrc='https://cdn.discordapp.com/embed/avatars/0.png';
+  else if(thumb)         thumbSrc=thumb;
+
+  var thumbHtml=thumbSrc?`<div class="dc-thumb" style="display:block"><img src="${esc(thumbSrc)}" onerror="this.parentElement.style.display='none'"></div>`:'';
+  var imgHtml=image?`<div class="dc-img" style="display:block"><img src="${esc(image)}" onerror="this.parentElement.style.display='none'"></div>`:'';
+  var mentionHtml=(isW&&cfg.MENTION_USER)?`<div style="margin-bottom:4px"><span class="dc-mention">@สมาชิกใหม่</span></div>`:'';
+
+  var btnColorMap={Primary:'primary',Secondary:'secondary',Success:'success',Danger:'danger'};
+  var btnHtml=isV?`<div class="dc-btn-row"><button class="dc-btn-preview dc-btn-${btnColorMap[btnColor]||'primary'}">${esc(btnLabel)}</button></div>`:'';
+
+  var metaRows='';
+  if(isV) metaRows=`
+    <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:14px;font-size:12px;color:var(--text3)">
+      <div>📢 ห้อง <span style="color:var(--text);font-weight:700"># ${esc(ch)}</span></div>
+      <div>🎯 Member Role <span style="color:var(--green);font-weight:700">${esc(memberRole)}</span></div>
+    </div>`;
+  else metaRows=`
+    <div style="margin-top:14px;font-size:12px;color:var(--text3)">
+      📢 ห้อง <span style="color:var(--text);font-weight:700"># ${esc(ch)}</span>
+    </div>`;
+
   return `
-  <div class="card" style="text-align:center;padding:40px 24px">
-    <div style="font-size:52px;margin-bottom:16px">&#10024;</div>
-    <div class="card-head" style="justify-content:center;margin-bottom:10px">พร้อมบันทึก!</div>
-    <p style="color:var(--text2);font-size:13.5px;line-height:1.8">ตรวจสอบข้อมูลครบแล้ว<br><span style="color:var(--pk3)">กด "บันทึก"</span> เพื่อใช้งาน</p>
+  <div class="card">
+    <div class="card-head" style="justify-content:space-between">
+      <span><span class="card-head-icon">&#10024;</span> บันทึกสำเร็จ! — ตัวอย่าง Embed</span>
+      <button class="btn btn-ghost btn-sm" onclick="renderWiz('${type}',1)">&#9998; แก้ไขอีกครั้ง</button>
+    </div>
+    <div class="dc-wrap">
+      <div class="dc-row">
+        <div class="dc-av">BBT</div>
+        <div class="dc-body">
+          <div class="dc-name">BBT Bot <span style="font-size:10px;color:#888;font-weight:400">— วันนี้</span></div>
+          ${mentionHtml}
+          <div class="dc-embed" style="border-left-color:${color}">
+            ${thumbHtml}
+            <div class="dc-etitle">${esc(title)}</div>
+            <div class="dc-edesc">${esc(desc).replace(/\{user\}/g,'@สมาชิกใหม่')}</div>
+            ${imgHtml}
+          </div>
+          ${btnHtml}
+        </div>
+      </div>
+    </div>
+    ${metaRows}
   </div>
   <div class="btn-row">
-    <button class="btn btn-ghost" onclick="renderWiz('${type}',2)">&#8592; ย้อนกลับ</button>
-    <button class="btn btn-pk"    onclick="saveWiz('${type}')">&#128190; บันทึก</button>
+    <button class="btn btn-ghost" onclick="renderWiz('${type}',2)">&#8592; ย้อนกลับ step 2</button>
+    <button class="btn btn-pk"    onclick="saveWiz('${type}')">&#128190; บันทึกอีกครั้ง</button>
   </div>`;
 }
 
@@ -762,10 +815,10 @@ async function saveWiz(type){
   toast('กำลังบันทึก...','info');
   var res=await api('POST','/api/config',cfg);
   if(res&&res.ok){
-    toast('บันทึกสำเร็จ!','ok');
-    wizStep[type]=1;
+    toast('บันทึกสำเร็จ! ✅','ok');
     refreshOverview();
-    nav('overview',null);
+    // stay on confirm step — re-render เพื่อ refresh preview
+    renderWiz(type,3);
   } else {
     toast('บันทึกไม่สำเร็จ'+(res&&res.error?' — '+res.error:''),'err');
   }
