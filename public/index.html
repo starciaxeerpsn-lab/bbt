@@ -491,7 +491,7 @@ function nav(id,el){
   else document.querySelectorAll('.sb-link').forEach(function(l){if(l.getAttribute('onclick')&&l.getAttribute('onclick').indexOf("'"+id+"'")>=0)l.classList.add('on');});
   if(id==='verify'||id==='welcome'||id==='goodbye') renderGallery(id);
   if(id==='overview') refreshOverview();
-  if(id==='admins') loadAdmins();
+  if(id==='admins') renderAdminList();
 }
 
 // ── OVERVIEW ──
@@ -1287,7 +1287,7 @@ function renderAdminList(){
     var isOwnerRow=(id&&id===_ownerId)||i===0;
     return '<div style="display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid '+(isOwnerRow?'var(--pk-border)':'var(--border2)')+';border-radius:10px;padding:10px 14px">'
       +'<span style="font-size:13px">'+(isOwnerRow?'👑':'👤')+'</span>'
-      +'<input type="text" value="'+esc(id)+'" data-idx="'+i+'" oninput="_adminInput(this)" onchange="_adminInput(this)" onblur="_adminInput(this)" placeholder="Discord User ID"'+(isOwnerRow?' readonly':'')
+      +'<input type="text" value="'+esc(id)+'" data-idx="'+i+'" oninput="_adminInput(this)" placeholder="Discord User ID"'+(isOwnerRow?' readonly':'')
       +' style="flex:1;background:transparent;border:none;outline:none;color:'+(isOwnerRow?'var(--pk3)':'var(--text)')+';font-family:\'DM Mono\',monospace;font-size:13px;cursor:'+(isOwnerRow?'default':'text')+'">'
       +(isOwnerRow
         ?'<span style="font-size:10px;font-weight:800;color:var(--pk3);padding:2px 8px;background:var(--pk-dim);border:1px solid var(--pk-border);border-radius:6px">OWNER</span>'
@@ -1296,22 +1296,11 @@ function renderAdminList(){
     +'</div>';
   }).join('');
 }
-function _adminInput(el){
-  var idx=+el.dataset.idx;
-  _adminList[idx]=el.value.trim();
-}
-function addAdminRow(){
-  _adminList.push('');
-  renderAdminList();
-  setTimeout(function(){
-    var inputs=document.querySelectorAll('#admin-list input:not([readonly])');
-    if(inputs.length){inputs[inputs.length-1].focus();}
-  },50);
-}
+function _adminInput(el){_adminList[+el.dataset.idx]=el.value.trim();}
+function addAdminRow(){_adminList.push('');renderAdminList();setTimeout(function(){var inputs=document.querySelectorAll('#admin-list input:not([readonly])');if(inputs.length)inputs[inputs.length-1].focus();},50);}
 function removeAdminRow(i){
   if(_adminList[i]&&_adminList[i]===_ownerId){toast('ไม่สามารถลบ Owner ได้','err');return;}
-  _adminList.splice(i,1);
-  renderAdminList();
+  _adminList.splice(i,1);renderAdminList();
 }
 async function flushSessions(){
   if(!confirm('เตะทุกคนออกจากระบบ? (รวมถึงตัวคุณเองด้วย)'))return;
@@ -1320,18 +1309,11 @@ async function flushSessions(){
   else toast('ไม่สำเร็จ','err');
 }
 async function saveAdmins(){
-  // sync ค่าจาก DOM ก่อน save (กรณี oninput ไม่ trigger)
-  document.querySelectorAll('#admin-list input[data-idx]').forEach(function(inp){
-    var idx=+inp.dataset.idx;
-    if(!inp.readOnly) _adminList[idx]=inp.value.trim();
-  });
-  var clean=_adminList.map(function(s){return (s||'').trim();}).filter(Boolean);
-  console.log('[saveAdmins] list=',clean);
+  var clean=_adminList.map(function(s){return s.trim();}).filter(Boolean);
   if(!clean.length){toast('ต้องมีอย่างน้อย 1 รายการ','err');return;}
   var res=await api('POST','/api/allowed-users',{users:clean});
-  console.log('[saveAdmins] res=',res);
   if(res&&res.ok){toast('บันทึกรายชื่อแล้ว ✅','ok');_adminList=res.users;renderAdminList();}
-  else toast('บันทึกไม่สำเร็จ — เปิด DevTools ดู Console','err');
+  else toast('บันทึกไม่สำเร็จ','err');
 }
 
 // ── INIT ──
