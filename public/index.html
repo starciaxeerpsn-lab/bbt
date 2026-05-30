@@ -552,7 +552,9 @@ function renderGallery(type){
 
 // ── ROLE MODE (in design tab) ──
 function buildPoolChips(preset){
+  // กรอง admin roles ออก แต่ถ้ากรองแล้วว่างหมด (เช่น initData ไม่มี field isAdmin) ให้ใช้ทั้งหมด
   var pool=fetchedRoles.filter(function(r){return !r.isAdmin;});
+  if(!pool.length&&fetchedRoles.length)pool=fetchedRoles.slice(); // fallback: โชว์ทุกตัว
   var sel=(preset&&preset.selectedRoles)||[];
   if(!pool.length)return '<span class="roles-empty">กด "โหลดยศ" ก่อน</span>';
   return pool.map(function(r){
@@ -614,7 +616,17 @@ async function setRoleMode(mode){
   if(wrap)wrap.style.display=mode==='multi'?'block':'none';
   // โหลดยศแล้ว rebuild pool ทันที
   if(mode==='multi'){
-    if(!rolesLoaded||!fetchedRoles.length){
+    // ถ้า rolesLoaded แต่ roles มาจาก initData (ไม่มี isAdmin field หรือทุกตัวเป็น admin)
+    // pool จะว่าง — ให้ force reload จาก /api/roles
+    var needReload=!rolesLoaded||!fetchedRoles.length;
+    if(!needReload){
+      var nonAdmin=fetchedRoles.filter(function(r){return !r.isAdmin;});
+      // ถ้ากรองแล้วไม่เหลือเลย และทุกตัว isAdmin===undefined (มาจาก init) ให้ reload
+      if(!nonAdmin.length&&fetchedRoles.every(function(r){return r.isAdmin===undefined;})){
+        rolesLoaded=false;fetchedRoles=[];needReload=true;
+      }
+    }
+    if(needReload){
       await loadRolesForEditor();
     } else {
       rebuildEditorRolePool();
