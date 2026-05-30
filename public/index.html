@@ -627,6 +627,7 @@ async function setRoleMode(mode){
     var pp=getActivePreset();
     var selEl=document.getElementById('ed-selected-roles');
     if(selEl)selEl.innerHTML=buildSelectedChips(pp);
+    drawEditorCats(pp?pp.roleCategories||[]:[]);
   } else {
     // single mode — โหลด roles เข้า <select> ถ้ายังไม่ได้โหลด
     if(!rolesLoaded||!fetchedRoles.length){
@@ -950,6 +951,9 @@ function openEditor(type,presetId){
           +'<div class="roles-pool" id="ed-role-pool"></div>'
           +'<div style="margin-top:10px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">ยศที่เลือก</div>'
           +'<div class="selected-roles-area" id="ed-selected-roles"></div>'
+          +'<hr style="border:none;border-top:1px solid var(--border);margin:18px 0">'
+          +'<div class="card-head" style="margin-bottom:14px"><span class="card-head-icon">🗂️</span> หมวดหมู่ยศ (Role Categories)</div>'
+          +'<div id="ed-cat-list"></div>'
         +'</div>'
       :'')
     +'</div>';
@@ -967,6 +971,8 @@ function openEditor(type,presetId){
         // auto-load roles ถ้าเปิด editor ใน multi mode แต่ยังไม่ได้โหลด
         loadRolesForEditor();
       }
+      // render role categories
+      drawEditorCats(preset.roleCategories||[]);
     } else {
       // single mode — populate <select> ถ้า roles โหลดแล้ว
       if(rolesLoaded&&fetchedRoles.length){
