@@ -25,8 +25,38 @@ const { Redis } = require("@upstash/redis");
 require("dotenv").config();
 
 const CONFIG_PATH = path.join(__dirname, "config.json");
-function loadConfig() { return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8")); }
-function saveConfig(data) { fs.writeFileSync(CONFIG_PATH, JSON.stringify(data, null, 2)); }
+const CONFIG_REDIS_KEY = "bbt:config";
+
+// ─ config cache ─
+let _cfgCache = null;
+let _cfgCacheTime = 0;
+const CFG_TTL = 10000; // 10s cache
+
+async function loadConfig() {
+  const now = Date.now();
+  if (_cfgCache && now - _cfgCacheTime < CFG_TTL) return _cfgCache;
+  try {
+    const raw = await redis.get(CONFIG_REDIS_KEY);
+    if (raw) {
+      _cfgCache = typeof raw === "string" ? JSON.parse(raw) : raw;
+      _cfgCacheTime = now;
+      return _cfgCache;
+    }
+  } catch (e) { console.warn("Redis loadConfig failed, using file:", e.message); }
+  // fallback: local file
+  try {
+    _cfgCache = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
+    _cfgCacheTime = now;
+    return _cfgCache;
+  } catch { return {}; }
+}
+
+async function saveConfig(data) {
+  _cfgCache = data;
+  _cfgCacheTime = Date.now();
+  try { await redis.set(CONFIG_REDIS_KEY, JSON.stringify(data)); } catch (e) { console.warn("Redis saveConfig failed:", e.message); }
+  try { fs.writeFileSync(CONFIG_PATH, JSON.stringify(data, null, 2)); } catch {}
+}
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL,
@@ -126,11 +156,33 @@ app.get("/auth/logout", async (req, res) => {
 app.get("/api/status", requireAuth, (req, res) => {
   res.json({ online: client.isReady(), tag: client.user?.tag || "Offline", guilds: client.guilds?.cache?.size || 0, user: req.session });
 });
-app.get("/api/config", requireAuth, (req, res) => {
-  try { res.json(loadConfig()); } catch (e) { res.status(500).json({ error: e.message }); }
+
+// รวม config + status + roles + channels เป็น call เดียว
+app.get("/api/init", requireAuth, async (req, res) => {
+  try {
+    const cfg = await loadConfig();
+    const guild = client.guilds.cache.get(req.session.guildId);
+    const roles = guild ? guild.roles.cache
+      .filter((r) => r.name !== "@everyone" && !r.managed)
+      .sort((a, b) => b.position - a.position)
+      .map((r) => ({ id: r.id, name: r.name, color: r.color, isAdmin: (BigInt(r.permissions.bitfield) & BigInt(0x8)) !== BigInt(0) })) : [];
+    const channels = guild ? guild.channels.cache
+      .filter((c) => c.type === 0)
+      .sort((a, b) => a.rawPosition - b.rawPosition)
+      .map((c) => ({ id: c.id, name: c.name })) : [];
+    res.json({
+      config: cfg,
+      status: { online: client.isReady(), tag: client.user?.tag || "Offline", user: req.session },
+      roles,
+      channels
+    });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
-app.post("/api/config", requireAuth, (req, res) => {
-  try { saveConfig(req.body); res.json({ ok: true }); } catch (e) { res.json({ ok: false, error: e.message }); }
+app.get("/api/config", requireAuth, async (req, res) => {
+  try { res.json(await loadConfig()); } catch (e) { res.status(500).json({ error: e.message }); }
+});
+app.post("/api/config", requireAuth, async (req, res) => {
+  try { await saveConfig(req.body); res.json({ ok: true }); } catch (e) { res.json({ ok: false, error: e.message }); }
 });
 app.get("/api/roles", requireAuth, (req, res) => {
   const guild = client.guilds.cache.get(req.session.guildId);
@@ -235,7 +287,7 @@ client.once("clientReady", async () => {
 
 client.on("guildMemberAdd", async (member) => {
   try {
-    const cfg = loadConfig();
+    const cfg = await loadConfig();
     const ch = member.guild.channels.cache.find((c) => c.name === cfg.VERIFY_CHANNEL_NAME);
     if (!ch) return;
     const embed = new EmbedBuilder()
@@ -255,7 +307,7 @@ client.on("guildMemberAdd", async (member) => {
 
 client.on("guildMemberRemove", async (member) => {
   try {
-    const cfg = loadConfig();
+    const cfg = await loadConfig();
     if (!cfg.GOODBYE_ENABLED) return;
     const ch = member.guild.channels.cache.find((c) => c.name === cfg.GOODBYE_CHANNEL_NAME);
     if (!ch) return;
@@ -270,7 +322,7 @@ client.on("guildMemberRemove", async (member) => {
 });
 
 client.on("interactionCreate", async (interaction) => {
-  const cfg = loadConfig();
+  const cfg = await loadConfig();
 
   // /setup
   if (interaction.isChatInputCommand() && interaction.commandName === "setup") {
@@ -400,7 +452,9 @@ async function completeVerify(interaction, cfg, isModal = false) {
       if (!roleInfo) continue;
       let dr = roleInfo.roleId ? guild.roles.cache.get(roleInfo.roleId) : guild.roles.cache.find((r) => r.name === (roleInfo.roleName || roleInfo.label));
       if (!dr) {
-        dr = await guild.roles.create({ name: roleInfo.roleName || roleInfo.label, color: hexToInt(roleInfo.color), reason: "Auto-created by verify bot" });
+        // roleId ไม่ตรง/ว่าง — ข้าม (ไม่สร้าง role อัตโนมัติ ป้องกัน role ขยะ)
+        console.warn("[VERIFY] role not found: " + roleInfo.roleId + " / " + roleInfo.roleName);
+        continue;
       }
       rolesToAdd.push(dr);
       addedRoleNames.push(`${roleInfo.emoji || ""} ${roleInfo.label}`.trim());
