@@ -287,6 +287,9 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
   <div style="font-size:11px;color:var(--text3);margin-top:-8px;text-align:center;max-width:260px;line-height:1.6" id="loading-sub">Render free tier อาจใช้เวลา 20-30 วินาทีในการ wake up</div>
 </div>
 
+<!-- Sync bar: shows while background API loads -->
+<div id="sync-bar" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9997;background:rgba(255,45,149,.12);border-bottom:1px solid rgba(255,45,149,.3);padding:7px 18px;font-size:12px;font-weight:600;color:#ff7eb3;align-items:center;gap:8px;backdrop-filter:blur(4px)"></div>
+
 <aside class="sidebar">
   <div class="sb-head">
     <div class="sb-brand">
@@ -402,12 +405,10 @@ var TOKEN=new URLSearchParams(window.location.search).get('token')
   ||(document.cookie.match(/session_token=([^;]+)/)||[])[1]
   ||localStorage.getItem('session_token')||'';
 if(!TOKEN){
-  // Script is at end of body — DOM already ready, no need for DOMContentLoaded
-  (function(){
-    var ov=document.getElementById('loading-overlay');
-    if(ov)ov.style.display='none';
+  document.addEventListener('DOMContentLoaded',function(){
+    document.getElementById('loading-overlay').style.display='none';
     document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#050507"><div style="text-align:center;font-family:monospace;color:#f0f0f0"><div style="font-size:52px;margin-bottom:16px">🔒</div><p style="margin-bottom:22px;color:#555;font-size:13px">SESSION EXPIRED</p><a href="/auth/login" style="background:linear-gradient(135deg,#ff2d95,#c91870);color:#fff;padding:11px 26px;border-radius:9px;text-decoration:none;font-weight:700">เข้าสู่ระบบด้วย Discord</a></div></div>';
-  })();
+  });
 }
 
 // ── STATE ──
@@ -1154,82 +1155,74 @@ document.getElementById('logout-btn').addEventListener('click',function(){
 function _hideLoading(){
   var ov=document.getElementById('loading-overlay');
   if(!ov)return;
-  if(window._loadingMsgInterval)clearInterval(window._loadingMsgInterval);
   ov.classList.add('hidden');
   setTimeout(function(){if(ov.parentNode)ov.parentNode.removeChild(ov);},500);
 }
-// Safety fallback + animated messages — only when TOKEN exists
-var _loadingTimeout=null;
-if(TOKEN){
-  _loadingTimeout=setTimeout(function(){
-    var ltxt=document.getElementById('loading-txt');
-    if(ltxt)ltxt.textContent='หมดเวลาเชื่อมต่อ — กรุณารีเฟรช';
-    setTimeout(_hideLoading,2500);
-  }, 25000);
-  (function(){
-    var msgs=['กำลังโหลด BBT Panel...','กำลังเชื่อมต่อเซิร์ฟเวอร์...','Server กำลัง wake up (Render free tier)...','รอสักครู่ อาจใช้เวลา 10-30 วิ...','ใกล้เสร็จแล้ว...'];
-    var i=0;
-    window._loadingMsgInterval=setInterval(function(){
-      var ltxt=document.getElementById('loading-txt');
-      if(!ltxt)return clearInterval(window._loadingMsgInterval);
-      i++;
-      if(i<msgs.length)ltxt.textContent=msgs[i];
-    },5000);
-  })();
+
+function _showSyncBar(msg){
+  var bar=document.getElementById('sync-bar');
+  if(bar){bar.textContent=msg;bar.style.display='flex';}
+}
+function _hideSyncBar(){
+  var bar=document.getElementById('sync-bar');
+  if(bar)bar.style.display='none';
 }
 
-(async function(){
-  if(!TOKEN)return; // already handled above
-  try{
-  var ltxt=document.getElementById('loading-txt');if(ltxt)ltxt.textContent='กำลังโหลด BBT Panel...';
-  var initData=await api('GET','/api/init',null,18000);
-  if(!initData){
-    if(ltxt)ltxt.textContent='ลองใหม่อีกครั้ง...';
-    await new Promise(function(r){setTimeout(r,2000);});
-    initData=await api('GET','/api/init',null,18000);
-  }
-  if(initData){
-    cfg=initData.config||{};
-    var statusData=initData.status||{};var u=statusData.user||{};
-    document.getElementById('guild-name').textContent=u.guildName||'—';
-    document.getElementById('user-name').textContent=u.username||'Admin';
-    document.getElementById('user-avatar').textContent=((u.username||'A')[0]||'A').toUpperCase();
-    var dot=document.getElementById('bot-dot'),tag=document.getElementById('bot-tag');
-    if(statusData.online){dot.classList.remove('off');tag.textContent=statusData.tag||'Online';}
-    else{dot.classList.add('off');tag.textContent='Offline';}
-    cfg._botTag=statusData.tag||'';cfg._guildName=u.guildName||'';cfg._online=statusData.online||false;
-    if(initData.roles&&initData.roles.length){fetchedRoles=initData.roles;rolesLoaded=true;}
-    if(initData.channels&&initData.channels.length){channels=initData.channels;channelsLoaded=true;}
-  } else {
-    if(ltxt)ltxt.textContent='เชื่อมต่อแบบเก่า...';
-    var r2=await Promise.all([api('GET','/api/config'),api('GET','/api/status')]);
-    cfg=r2[0]||{};var s2=r2[1]||{};var u2=s2.user||{};
-    document.getElementById('guild-name').textContent=u2.guildName||'—';
-    document.getElementById('user-name').textContent=u2.username||'Admin';
-    document.getElementById('user-avatar').textContent=((u2.username||'A')[0]||'A').toUpperCase();
-    var dot2=document.getElementById('bot-dot'),tag2=document.getElementById('bot-tag');
-    if(s2.online){dot2.classList.remove('off');tag2.textContent=s2.tag||'Online';}else{dot2.classList.add('off');tag2.textContent='Offline';}
-    cfg._botTag=s2.tag||'';cfg._guildName=u2.guildName||'';cfg._online=s2.online||false;
-  }
-
-  // Migrate old cfg → presets format (backward compat)
-  if(!cfg.VERIFY_PRESETS&&cfg.VERIFY_EMBED_TITLE){
-    cfg.VERIFY_PRESETS=[{id:uid(),name:'verify',embedTitle:cfg.VERIFY_EMBED_TITLE,embedDesc:cfg.VERIFY_EMBED_DESC||'',embedColor:cfg.VERIFY_EMBED_COLOR||'#ff2d95',embedImage:cfg.VERIFY_IMAGE||'',embedThumbnail:cfg.VERIFY_THUMBNAIL||'',embedButtonLabel:cfg.VERIFY_BUTTON_LABEL||'ยืนยันตัวตน',embedButtonColor:cfg.VERIFY_BUTTON_COLOR||'Primary',channelName:cfg.VERIFY_CHANNEL_NAME||'',memberRoleId:cfg.MEMBER_ROLE_ID||'',memberRoleName:cfg.MEMBER_ROLE_NAME||'',roleCategories:cfg.ROLE_CATEGORIES||[]}];
-  }
-  if(!cfg.WELCOME_PRESETS&&cfg.WELCOME_TITLE){
-    cfg.WELCOME_PRESETS=[{id:uid(),name:'welcome',embedTitle:cfg.WELCOME_TITLE,embedDesc:cfg.WELCOME_MESSAGE||'',embedColor:cfg.WELCOME_COLOR||'#ff2d95',embedImage:cfg.WELCOME_IMAGE||'',embedThumbnail:cfg.WELCOME_THUMBNAIL||'',channelName:cfg.WELCOME_CHANNEL_NAME||'',mentionUser:cfg.MENTION_USER!==false,showAvatar:cfg.WELCOME_SHOW_AVATAR!==false}];
-  }
-  if(!cfg.GOODBYE_PRESETS&&cfg.GOODBYE_TITLE){
-    cfg.GOODBYE_PRESETS=[{id:uid(),name:'goodbye',embedTitle:cfg.GOODBYE_TITLE,embedDesc:cfg.GOODBYE_MESSAGE||'',embedColor:cfg.GOODBYE_COLOR||'#ff2d95',embedImage:cfg.GOODBYE_IMAGE||'',embedThumbnail:cfg.GOODBYE_THUMBNAIL||'',channelName:cfg.GOODBYE_CHANNEL_NAME||'',enabled:cfg.GOODBYE_ENABLED!==false,showAvatar:cfg.GOODBYE_SHOW_AVATAR!==false}];
-  }
-
+function _applyInitData(initData){
+  cfg=initData.config||{};
+  var statusData=initData.status||{};var u=statusData.user||{};
+  document.getElementById('guild-name').textContent=u.guildName||'—';
+  document.getElementById('user-name').textContent=u.username||'Admin';
+  document.getElementById('user-avatar').textContent=((u.username||'A')[0]||'A').toUpperCase();
+  var dot=document.getElementById('bot-dot'),tag=document.getElementById('bot-tag');
+  if(statusData.online){dot.classList.remove('off');tag.textContent=statusData.tag||'Online';}
+  else{dot.classList.add('off');tag.textContent='Offline';}
+  cfg._botTag=statusData.tag||'';cfg._guildName=u.guildName||'';cfg._online=statusData.online||false;
+  if(initData.roles&&initData.roles.length){fetchedRoles=initData.roles;rolesLoaded=true;}
+  if(initData.channels&&initData.channels.length){channels=initData.channels;channelsLoaded=true;}
+  // Migrate old cfg
+  if(!cfg.VERIFY_PRESETS&&cfg.VERIFY_EMBED_TITLE){cfg.VERIFY_PRESETS=[{id:uid(),name:'verify',embedTitle:cfg.VERIFY_EMBED_TITLE,embedDesc:cfg.VERIFY_EMBED_DESC||'',embedColor:cfg.VERIFY_EMBED_COLOR||'#ff2d95',embedImage:cfg.VERIFY_IMAGE||'',embedThumbnail:cfg.VERIFY_THUMBNAIL||'',embedButtonLabel:cfg.VERIFY_BUTTON_LABEL||'ยืนยันตัวตน',embedButtonColor:cfg.VERIFY_BUTTON_COLOR||'Primary',channelName:cfg.VERIFY_CHANNEL_NAME||'',memberRoleId:cfg.MEMBER_ROLE_ID||'',memberRoleName:cfg.MEMBER_ROLE_NAME||'',roleCategories:cfg.ROLE_CATEGORIES||[]}];}
+  if(!cfg.WELCOME_PRESETS&&cfg.WELCOME_TITLE){cfg.WELCOME_PRESETS=[{id:uid(),name:'welcome',embedTitle:cfg.WELCOME_TITLE,embedDesc:cfg.WELCOME_MESSAGE||'',embedColor:cfg.WELCOME_COLOR||'#ff2d95',embedImage:cfg.WELCOME_IMAGE||'',embedThumbnail:cfg.WELCOME_THUMBNAIL||'',channelName:cfg.WELCOME_CHANNEL_NAME||'',mentionUser:cfg.MENTION_USER!==false,showAvatar:cfg.WELCOME_SHOW_AVATAR!==false}];}
+  if(!cfg.GOODBYE_PRESETS&&cfg.GOODBYE_TITLE){cfg.GOODBYE_PRESETS=[{id:uid(),name:'goodbye',embedTitle:cfg.GOODBYE_TITLE,embedDesc:cfg.GOODBYE_MESSAGE||'',embedColor:cfg.GOODBYE_COLOR||'#ff2d95',embedImage:cfg.GOODBYE_IMAGE||'',embedThumbnail:cfg.GOODBYE_THUMBNAIL||'',channelName:cfg.GOODBYE_CHANNEL_NAME||'',enabled:cfg.GOODBYE_ENABLED!==false,showAvatar:cfg.GOODBYE_SHOW_AVATAR!==false}];}
   refreshOverview();
+}
+
+// ── เปิดหน้าทันที แล้วโหลด data ทีหลัง ──
+_hideLoading(); // ซ่อน overlay ทันที ไม่รอ API
+
+(async function(){
+  if(!TOKEN)return;
+  _showSyncBar('⏳ กำลังเชื่อมต่อ server...');
+  try{
+    var initData=await api('GET','/api/init',null,20000);
+    if(!initData){
+      _showSyncBar('🔄 ลองใหม่...');
+      await new Promise(function(r){setTimeout(r,3000);});
+      initData=await api('GET','/api/init',null,20000);
+    }
+    if(initData){
+      _applyInitData(initData);
+      _hideSyncBar();
+    } else {
+      // fallback
+      _showSyncBar('⚠️ เชื่อมต่อไม่ได้ — กด Refresh เพื่อลองใหม่');
+      var r2=await Promise.all([api('GET','/api/config',null,15000),api('GET','/api/status',null,15000)]);
+      if(r2[0]||r2[1]){
+        cfg=r2[0]||{};var s2=r2[1]||{};var u2=(s2&&s2.user)||{};
+        document.getElementById('guild-name').textContent=u2.guildName||'—';
+        document.getElementById('user-name').textContent=u2.username||'Admin';
+        document.getElementById('user-avatar').textContent=((u2.username||'A')[0]||'A').toUpperCase();
+        var dot2=document.getElementById('bot-dot'),tag2=document.getElementById('bot-tag');
+        if(s2&&s2.online){dot2.classList.remove('off');tag2.textContent=s2.tag||'Online';}
+        else{dot2.classList.add('off');tag2.textContent='Offline';}
+        cfg._botTag=(s2&&s2.tag)||'';cfg._guildName=u2.guildName||'';cfg._online=(s2&&s2.online)||false;
+        refreshOverview();
+        _hideSyncBar();
+      }
+    }
   }catch(err){
-    console.error('BBT Panel init error:',err);
-    toast('โหลดข้อมูลล้มเหลว — กรุณารีเฟรช','err');
-  }finally{
-    clearTimeout(_loadingTimeout);
-    _hideLoading();
+    console.error('BBT Panel sync error:',err);
+    _showSyncBar('⚠️ โหลดข้อมูลล้มเหลว — กด Refresh เพื่อลองใหม่');
   }
 })();
 </script>
