@@ -535,8 +535,7 @@ function renderGallery(type){
         +(p.embedColor?'<span class="preset-meta-chip"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+esc(p.embedColor)+';vertical-align:middle;margin-right:2px"></span>สี embed</span>':'')
       +'</div>'
       +'<div class="preset-card-actions">'
-        +'<button class="btn btn-ghost btn-sm" style="flex:1" data-etype="'+type+'" data-eid="'+p.id+'" onclick="_galOpen(event,this)">&#9998; แก้ไข</button>'
-        +'<button class="btn btn-danger btn-sm" data-etype="'+type+'" data-eid="'+p.id+'" data-ename="'+esc(p.name||'preset')+'" onclick="_galDel(event,this)">&#128465;</button>'
+        +(type==='verify'?'<button class="btn btn-gr btn-sm" id="send-embed-btn-'+p.id+'" onclick="event.stopPropagation();sendEmbed(''+p.id+'')" title="ส่ง Embed ไปยังห้องที่ตั้งค่าไว้">🚀 ส่ง</button>':'')        +'<button class="btn btn-ghost btn-sm" style="flex:1" data-etype="'+type+'" data-eid="'+p.id+'" onclick="_galOpen(event,this)">&#9998; แก้ไข</button>'        +'<button class="btn btn-danger btn-sm" data-etype="'+type+'" data-eid="'+p.id+'" data-ename="'+esc(p.name||'preset')+'" onclick="_galDel(event,this)">&#128465;</button>'
       +'</div>';
     card.onclick=function(){openEditor(type,p.id);};
     galleryEl.appendChild(card);
@@ -601,6 +600,17 @@ function removeSelectedRole(roleId){
 }
 function _edClose(el){closeEditor(el.dataset.etype);}
 function _edSave(el){savePreset(el.dataset.etype,el.dataset.eid);}
+async function sendEmbed(presetId){
+  var btn=document.getElementById('send-embed-btn-'+presetId);
+  if(btn){btn.disabled=true;btn.textContent='⏳ กำลังส่ง...';}
+  var res=await api('POST','/api/send-embed',{presetId:presetId});
+  if(res&&res.ok){
+    toast('✅ ส่ง Embed ไปยัง #'+res.channel+' แล้ว!','ok');
+  } else {
+    toast('❌ '+(res&&res.error?res.error:'ส่งไม่สำเร็จ'),'err');
+  }
+  if(btn){btn.disabled=false;btn.textContent='🚀 ส่ง Embed';}
+}
 function _galOpen(ev,el){openEditor(el.dataset.etype,el.dataset.eid);ev.stopPropagation();}
 function _galDel(ev,el){confirmDelete(el.dataset.etype,el.dataset.eid,el.dataset.ename);ev.stopPropagation();}
 async function setRoleMode(mode){
@@ -872,6 +882,7 @@ function openEditor(type,presetId){
       +'</div>'
       +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
         +'<button class="btn btn-ghost btn-sm" data-etype="'+type+'" onclick="_edClose(this)">&#10005; ปิด</button>'
+        +(isV?'<button class="btn btn-gr btn-sm" id="send-embed-btn-'+preset.id+'" onclick="sendEmbed(\''+preset.id+'\')" title="ส่ง Embed ไปยังห้อง">🚀 ส่ง Embed</button>':'')
         +'<button class="btn btn-pk btn-sm" data-etype="'+type+'" data-eid="'+preset.id+'" onclick="_edSave(this)">&#128190; บันทึก</button>'
       +'</div>'
     +'</div>'
