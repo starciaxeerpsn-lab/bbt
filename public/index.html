@@ -172,6 +172,8 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
 .cat-tab-btn{background:var(--card2);border:1px solid var(--border2);color:var(--text2);border-radius:20px;padding:6px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s;white-space:nowrap}
 .cat-tab-btn:hover{border-color:var(--pk3);color:var(--pk3)}
 .cat-tab-btn.active{background:var(--pk-dim);border-color:var(--pk-border);color:var(--pk3)}
+.cat-tab-add-btn{background:transparent;border:1px dashed var(--border2);color:var(--text3);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s;white-space:nowrap}
+.cat-tab-add-btn:hover{border-color:var(--pk3);color:var(--pk3);border-style:solid}
 /* Active group panel */
 .cat-panel{background:var(--card2);border:1px solid var(--border2);border-radius:14px;padding:16px 18px;position:relative;margin-bottom:14px}
 .cat-panel::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--pk),transparent 80%);border-radius:14px 0 0 14px}
@@ -193,8 +195,7 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
 .rbc-color{width:28px;height:28px;border:1px solid var(--border2);border-radius:6px;cursor:pointer;background:transparent;padding:2px;flex-shrink:0}
 .rbc-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:13px;padding:2px 4px;border-radius:4px;transition:.1s;flex-shrink:0;line-height:1}
 .rbc-del:hover{color:var(--red);background:rgba(244,63,94,.12)}
-.add-cat-row{display:flex;gap:10px;margin-top:14px;align-items:flex-end;flex-wrap:wrap;padding-top:14px;border-top:1px solid var(--border)}
-.add-cat-row .field{margin-bottom:0;flex:1}
+/* add-cat-row removed */
 /* SEARCHABLE DROPDOWN */
 .role-dd-wrap{position:relative;z-index:auto}
 .role-dd-trigger{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--border2);border-radius:11px;padding:9px 12px;cursor:pointer;min-height:42px;transition:.18s;gap:6px;user-select:none}
@@ -548,10 +549,7 @@ function openEditor(type,presetId){
     rolePoolHtml='<div class="card-head" style="margin-bottom:8px"><span class="card-head-icon">&#128203;</span> ยศจาก Discord <span style="font-size:11px;font-weight:400;color:var(--text3);margin-left:6px">— คลิกยศเพื่อเพิ่มลงหมวดหมู่ที่เลือกอยู่</span></div>'
       +(rolesLoaded&&pool.length?'':'<button class="btn btn-ghost btn-sm" style="margin-bottom:12px" onclick="loadRolesForEditor()">&#128260; โหลดยศก่อน</button>')
       +'<div class="roles-pool" id="ed-role-pool">'+(poolChips||'<span class="roles-empty">กด "โหลดยศ" ก่อน</span>')+'</div><hr class="sep">'
-      +'<div id="ed-cat-list" class="cat-list"></div>'
-      +'<div class="add-cat-row"><div class="field"><label>ชื่อหมวดหมู่</label><input type="text" id="ed-new-cat-name" placeholder="เช่น 🎮 เกมที่เล่น"></div>'
-      +'<div class="field" style="flex:0 0 170px"><label>โหมด</label><select id="ed-new-cat-multi"><option value="true">เลือกได้หลาย</option><option value="false">เลือกได้อัน​เดียว</option></select></div>'
-      +'<div style="padding-bottom:16px"><button class="btn btn-gr btn-sm" onclick="addEditorCat()">+ เพิ่มหมวดหมู่</button></div></div>';
+      +'<div id="ed-cat-list" class="cat-list"></div>';
   }
 
   editorEl.innerHTML=
@@ -811,7 +809,12 @@ function updateCatTabLabel(ci,val){var tabs=document.querySelectorAll('.cat-tab-
 function drawEditorCats(cats){
   var list=document.getElementById('ed-cat-list');if(!list)return;
   cats=cats||[];
-  if(!cats.length){list.innerHTML='<p style="color:var(--text3);font-size:13px;margin-bottom:8px">ยังไม่มีหมวดหมู่ — กด "+ เพิ่มหมวดหมู่" ด้านล่าง</p>';activeGroupIdx=0;return;}
+  if(!cats.length){
+    list.innerHTML='';
+    var emptyWrap=document.createElement('div');emptyWrap.style.cssText='display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin-bottom:14px';
+    emptyWrap.innerHTML='<p style="color:var(--text3);font-size:13px">ยังไม่มีหมวดหมู่ — สร้างกลุ่มแรกได้เลย</p><button class="btn btn-gr btn-sm" onclick="addEditorCat()">+ กลุ่มใหม่</button>';
+    list.appendChild(emptyWrap);activeGroupIdx=0;return;
+  }
   if(activeGroupIdx>=cats.length)activeGroupIdx=cats.length-1;
   list.innerHTML='';
   // Group selector tabs
@@ -823,6 +826,12 @@ function drawEditorCats(cats){
     t.onclick=function(){activeGroupIdx=ci;drawEditorCats(getActivePreset().roleCategories);};
     tabBar.appendChild(t);
   });
+  // inline '+ กลุ่มใหม่' button in tab bar
+  var addGroupBtn=document.createElement('button');
+  addGroupBtn.className='cat-tab-add-btn';
+  addGroupBtn.textContent='+ กลุ่มใหม่';
+  addGroupBtn.onclick=function(){addEditorCat();};
+  tabBar.appendChild(addGroupBtn);
   list.appendChild(tabBar);
   // Active group panel
   var cat=cats[activeGroupIdx],ci=activeGroupIdx;
@@ -870,14 +879,14 @@ function renderEdRoleRows(ci){
 }
 function updateEdRole(ci,ri,key,val){var p=getActivePreset();if(p&&p.roleCategories[ci]&&p.roleCategories[ci].roles[ri])p.roleCategories[ci].roles[ri][key]=val;}
 function addEditorCat(){
-  var name=document.getElementById('ed-new-cat-name')?document.getElementById('ed-new-cat-name').value.trim():'';
-  var multi=document.getElementById('ed-new-cat-multi')?document.getElementById('ed-new-cat-multi').value==='true':true;
-  if(!name){toast('กรุณากรอกชื่อหมวดหมู่','err');return;}
   var p=getActivePreset();if(!p)return;
   if(!p.roleCategories)p.roleCategories=[];
-  p.roleCategories.push({id:'cat_'+Math.random().toString(36).slice(2,7),name:name,multi:multi,roles:[]});
-  if(document.getElementById('ed-new-cat-name'))document.getElementById('ed-new-cat-name').value='';
-  activeGroupIdx=p.roleCategories.length-1;drawEditorCats(p.roleCategories);toast('เพิ่มหมวดหมู่ "'+name+'" แล้ว','ok');
+  var n=p.roleCategories.length+1;
+  p.roleCategories.push({id:'cat_'+Math.random().toString(36).slice(2,7),name:'กลุ่ม '+n,multi:true,roles:[]});
+  activeGroupIdx=p.roleCategories.length-1;
+  drawEditorCats(p.roleCategories);
+  toast('เพิ่มกลุ่มใหม่แล้ว — พิมพ์ชื่อกลุ่มได้เลย','ok');
+  setTimeout(function(){var inp=document.querySelector('.cat-name-inp');if(inp){inp.focus();inp.select();}},80);
 }
 function pickRoleChip(roleId,roleName,hex,chipEl){
   var p=getActivePreset();if(!p)return;
