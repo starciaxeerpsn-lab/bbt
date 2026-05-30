@@ -309,6 +309,8 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
     <div class="sb-sec">Automation</div>
     <a class="sb-link" onclick="nav('welcome',this)"><span class="sb-link-ico">&#128075;</span> Welcome Presets</a>
     <a class="sb-link" onclick="nav('goodbye',this)"><span class="sb-link-ico">&#128682;</span> Goodbye Presets</a>
+    <div class="sb-sec" id="sb-sec-owner" style="display:none">Owner</div>
+    <a class="sb-link" id="sb-link-admins" style="display:none" onclick="nav('admins',this)"><span class="sb-link-ico">&#128737;</span> จัดการผู้ดูแล</a>
   </nav>
   <div class="sb-foot">
     <div class="sb-user">
@@ -376,6 +378,28 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
     </div>
     <div id="goodbye-editor" class="editor-panel"></div>
     <div id="goodbye-gallery" class="preset-gallery"></div>
+  </div>
+
+  <!-- ADMIN MANAGER (owner only) -->
+  <div id="pg-admins" class="page">
+    <div class="pg-head">
+      <div><div class="pg-title">&#128737; จัดการผู้ดูแล</div><div class="pg-sub">กำหนดว่าใครเข้า BBT Panel ได้บ้าง</div></div>
+      <div class="pg-actions"><button class="btn btn-pk btn-sm" onclick="saveAdmins()">&#128190; บันทึก</button></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><span class="card-head-icon">&#128737;</span> รายชื่อผู้ดูแลที่เข้าได้</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:18px;line-height:1.7">เฉพาะ Discord User ID ที่อยู่ในรายการนี้เท่านั้นที่จะเข้า Panel ได้ คุณ (Owner) จะถูกเพิ่มอัตโนมัติเสมอ</p>
+      <div id="admin-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px"></div>
+      <button class="btn btn-ghost btn-sm" onclick="addAdminRow()">+ เพิ่ม User ID</button>
+    </div>
+    <div class="card" style="border-color:rgba(245,158,11,.2)">
+      <div class="card-head" style="color:var(--yellow)"><span class="card-head-icon">&#9888;</span> วิธีหา Discord User ID</div>
+      <p style="font-size:13px;color:var(--text2);line-height:2">
+        1. เปิด Discord → <strong style="color:var(--text)">Settings</strong> → <strong style="color:var(--text)">Advanced</strong><br>
+        2. เปิด <strong style="color:var(--text)">Developer Mode</strong><br>
+        3. คลิกขวาที่ชื่อคนที่ต้องการในเซิร์ฟเวอร์ → <strong style="color:var(--pk3)">Copy User ID</strong>
+      </p>
+    </div>
   </div>
 
 </main>
@@ -461,6 +485,7 @@ function nav(id,el){
   else document.querySelectorAll('.sb-link').forEach(function(l){if(l.getAttribute('onclick')&&l.getAttribute('onclick').indexOf("'"+id+"'")>=0)l.classList.add('on');});
   if(id==='verify'||id==='welcome'||id==='goodbye') renderGallery(id);
   if(id==='overview') refreshOverview();
+  if(id==='admins') renderAdminList();
 }
 
 // ── OVERVIEW ──
@@ -1211,6 +1236,40 @@ document.getElementById('logout-btn').addEventListener('click',function(){
   window.location='/auth/logout'+(TOKEN?'?token='+TOKEN:'');
 });
 
+// ── ADMIN MANAGER ──
+var _adminList=[];
+async function loadAdmins(){
+  var data=await api('GET','/api/allowed-users');
+  if(!data)return;
+  _adminList=data.users||[];
+  renderAdminList();
+  // แสดงเมนูให้ owner เท่านั้น
+  if(data.isOwner){
+    document.getElementById('sb-sec-owner').style.display='';
+    document.getElementById('sb-link-admins').style.display='';
+  }
+}
+function renderAdminList(){
+  var el=document.getElementById('admin-list');if(!el)return;
+  if(!_adminList.length){el.innerHTML='<p style="color:var(--text3);font-size:13px">ยังไม่มีรายการ</p>';return;}
+  el.innerHTML=_adminList.map(function(id,i){
+    return '<div style="display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--border2);border-radius:10px;padding:10px 14px">'
+      +'<span style="font-size:13px">👤</span>'
+      +'<input type="text" value="'+esc(id)+'" data-idx="'+i+'" oninput="_adminInput(this)" placeholder="Discord User ID" style="flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:\'DM Mono\',monospace;font-size:13px">'
+      +(i===0?'<span style="font-size:10px;font-weight:800;color:var(--pk3);padding:2px 8px;background:var(--pk-dim);border:1px solid var(--pk-border);border-radius:6px">OWNER</span>':'<button onclick="removeAdminRow('+i+')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:4px" onmouseover="this.style.color=\'var(--red)\'" onmouseout="this.style.color=\'var(--text3)\'">✕</button>')
+    +'</div>';
+  }).join('');
+}
+function _adminInput(el){_adminList[+el.dataset.idx]=el.value.trim();}
+function addAdminRow(){_adminList.push('');renderAdminList();setTimeout(function(){var inputs=document.querySelectorAll('#admin-list input');if(inputs.length)inputs[inputs.length-1].focus();},50);}
+function removeAdminRow(i){_adminList.splice(i,1);renderAdminList();}
+async function saveAdmins(){
+  var clean=_adminList.map(function(s){return s.trim();}).filter(Boolean);
+  var res=await api('POST','/api/allowed-users',{users:clean});
+  if(res&&res.ok){toast('บันทึกรายชื่อแล้ว ✅','ok');_adminList=res.users;renderAdminList();}
+  else toast('บันทึกไม่สำเร็จ','err');
+}
+
 // ── INIT ──
 function _hideLoading(){
   var ov=document.getElementById('loading-overlay');
@@ -1260,6 +1319,7 @@ _hideLoading();
     if(initData){
       _applyInitData(initData);
       _hideSyncBar();
+      loadAdmins();
     } else {
       _showSyncBar('⚠️ เชื่อมต่อไม่ได้ — กด Refresh เพื่อลองใหม่');
       var r2=await Promise.all([api('GET','/api/config',null,15000),api('GET','/api/status',null,15000)]);
