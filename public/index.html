@@ -924,17 +924,11 @@ function openEditor(type,presetId){
         +'<div id="ed-single-role-wrap" style="margin-top:18px;display:'+(preset.roleMode!=="multi"?"block":"none")+'">'
           +'<div class="field">'
             +'<label>ยศที่จะได้รับ <span style="color:var(--red)">*</span></label>'
-            +(rolesLoaded?'':'<button class="btn btn-ghost btn-xs" style="margin-bottom:8px;width:fit-content" id="ed-single-load-btn" onclick="loadSingleRoles()">&#128260; โหลดรายชื่อยศ</button>')
-            +'<div class="role-dd-wrap">'
-              +'<div class="role-dd-trigger" id="ed-role-trigger" onclick="toggleEdRoleMenu(this)">'
-                +'<div class="role-dd-tags" id="ed-role-display">'+(preset.memberRoleName?'<div class="role-tag">'+esc(preset.memberRoleName)+'</div>':'<span class="role-dd-placeholder">— เลือกยศ —</span>')+'</div>'
-                +'<span class="role-dd-arrow">▼</span>'
-              +'</div>'
-              +'<div class="role-dd-menu" id="ed-role-menu">'
-                +'<input class="role-dd-search" placeholder="ค้นหายศ..." oninput="filterEdRoleMenu(this)">'
-                +'<div id="ed-role-menu-opts">'+(rolesLoaded&&fetchedRoles.length?fetchedRoles.map(function(r,i){return '<div class="role-dd-opt" data-idx="'+i+'" onclick="pickEditorMemberRole(event,this)"><span class="r-dot" style="background:#'+(r.color||0).toString(16).padStart(6,'0')+'"></span>'+esc(r.name)+'</div>';}).join(''):'<div class="dd-empty">กด "โหลดรายชื่อยศ" ก่อน</div>')+'</div>'
-              +'</div>'
-            +'</div>'
+            +((!rolesLoaded||!fetchedRoles.length)?'<button class="btn btn-ghost btn-xs" style="margin-bottom:8px;width:fit-content" id="ed-single-load-btn" onclick="loadSingleRoles()">&#128260; โหลดรายชื่อยศ</button>':'')
+            +'<select id="ed-member-role-select" onchange="pickMemberRoleSelect(this)" style="width:100%">'
+            +'<option value="">— เลือกยศ —</option>'
+            +(rolesLoaded&&fetchedRoles.length?fetchedRoles.map(function(r){return '<option value="'+esc(r.id)+'" data-name="'+esc(r.name)+'"'+(preset.memberRoleId===r.id?' selected':'')+'>'+esc(r.name)+'</option>';}).join(''):'')
+            +'</select>'
             +'<div class="hint">ยศที่สมาชิกจะได้รับทันทีหลังยืนยันตัวตน</div>'
           +'</div>'
         +'</div>'
@@ -1170,6 +1164,15 @@ function rebuildEditorRolePool(){
   // show load button in header if needed
   var wrap=document.getElementById('ed-role-pool-wrap');
   if(wrap){var loadBtn=wrap.querySelector('.btn-ghost.btn-xs');if(loadBtn)loadBtn.remove();}
+}
+function pickMemberRoleSelect(sel){
+  var roleId=sel.value;
+  var opt=sel.options[sel.selectedIndex];
+  var roleName=opt?opt.dataset.name||opt.text:'';
+  var key=activeEditorType==='verify'?'VERIFY_PRESETS':activeEditorType==='welcome'?'WELCOME_PRESETS':'GOODBYE_PRESETS';
+  var preset=(cfg[key]||[]).find(function(p){return p.id===activeEditorId;});
+  if(preset){preset.memberRoleId=roleId;preset.memberRoleName=roleName;}
+  if(roleId)toast('เลือกยศ: '+roleName,'ok');
 }
 function pickEditorMemberRole(ev,el){
   ev.stopPropagation();
