@@ -613,7 +613,9 @@ async function setRoleMode(mode){
   if(m)m.classList.toggle('active',mode==='multi');
   // show/hide role pool
   var wrap=document.getElementById('ed-role-pool-wrap');
+  var singleWrap=document.getElementById('ed-single-role-wrap');
   if(wrap)wrap.style.display=mode==='multi'?'block':'none';
+  if(singleWrap)singleWrap.style.display=mode!=='multi'?'block':'none';
   // โหลดยศแล้ว rebuild pool ทันที
   if(mode==='multi'){
     // ถ้า rolesLoaded แต่ roles มาจาก initData (ไม่มี isAdmin field หรือทุกตัวเป็น admin)
@@ -637,6 +639,15 @@ async function setRoleMode(mode){
     var pp=getActivePreset();
     var selEl=document.getElementById('ed-selected-roles');
     if(selEl)selEl.innerHTML=buildSelectedChips(pp);
+  } else {
+    // single mode — โหลด roles เข้า dropdown ถ้ายังไม่ได้โหลด
+    if(!rolesLoaded||!fetchedRoles.length){
+      loadSingleRoles();
+    } else {
+      // populate dropdown opts
+      var opts=fetchedRoles.map(function(r,i){return '<div class="role-dd-opt" data-idx="'+i+'" onclick="pickEditorMemberRole(event,this)"><span class="r-dot" style="background:#'+(r.color||0).toString(16).padStart(6,'0')+'"></span>'+esc(r.name)+'</div>';}).join('');
+      var optsEl=document.getElementById('ed-role-menu-opts');if(optsEl)optsEl.innerHTML=opts;
+    }
   }
 }
 
@@ -902,13 +913,30 @@ function openEditor(type,presetId){
           +'<button class="role-mode-opt '+((preset.roleMode!=="multi")?"active":"")+'" onclick="setRoleMode(\'single\')" id="rmode-single">'
             +'<div class="rmo-icon">☝️</div>'
             +'<div class="rmo-label">ยศเดียว</div>'
-            +'<div class="rmo-desc">รับยศ Member อัตโนมัติ</div>'
+            +'<div class="rmo-desc">กำหนดยศที่จะได้รับ 1 ยศ</div>'
           +'</button>'
           +'<button class="role-mode-opt '+(preset.roleMode==="multi"?"active":"")+'" onclick="setRoleMode(\'multi\')" id="rmode-multi">'
             +'<div class="rmo-icon">🎭</div>'
             +'<div class="rmo-label">หลายยศ</div>'
             +'<div class="rmo-desc">เลือกได้หลายยศพร้อมกัน</div>'
           +'</button>'
+        +'</div>'
+        +'<div id="ed-single-role-wrap" style="margin-top:18px;display:'+(preset.roleMode!=="multi"?"block":"none")+'">'
+          +'<div class="field">'
+            +'<label>ยศที่จะได้รับ <span style="color:var(--red)">*</span></label>'
+            +(rolesLoaded?'':'<button class="btn btn-ghost btn-xs" style="margin-bottom:8px;width:fit-content" id="ed-single-load-btn" onclick="loadSingleRoles()">&#128260; โหลดรายชื่อยศ</button>')
+            +'<div class="role-dd-wrap">'
+              +'<div class="role-dd-trigger" id="ed-role-trigger" onclick="toggleEdRoleMenu(this)">'
+                +'<div class="role-dd-tags" id="ed-role-display">'+(preset.memberRoleName?'<div class="role-tag">'+esc(preset.memberRoleName)+'</div>':'<span class="role-dd-placeholder">— เลือกยศ —</span>')+'</div>'
+                +'<span class="role-dd-arrow">▼</span>'
+              +'</div>'
+              +'<div class="role-dd-menu" id="ed-role-menu">'
+                +'<input class="role-dd-search" placeholder="ค้นหายศ..." oninput="filterEdRoleMenu(this)">'
+                +'<div id="ed-role-menu-opts">'+(rolesLoaded&&fetchedRoles.length?fetchedRoles.map(function(r,i){return '<div class="role-dd-opt" data-idx="'+i+'" onclick="pickEditorMemberRole(event,this)"><span class="r-dot" style="background:#'+(r.color||0).toString(16).padStart(6,'0')+'"></span>'+esc(r.name)+'</div>';}).join(''):'<div class="dd-empty">กด "โหลดรายชื่อยศ" ก่อน</div>')+'</div>'
+              +'</div>'
+            +'</div>'
+            +'<div class="hint">ยศที่สมาชิกจะได้รับทันทีหลังยืนยันตัวตน</div>'
+          +'</div>'
         +'</div>'
         +'<div id="ed-role-pool-wrap" style="margin-top:18px;display:'+(preset.roleMode==="multi"?"block":"none")+'">'
           +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
@@ -1142,11 +1170,61 @@ function pickEditorMemberRole(ev,el){
   var key=activeEditorType==='verify'?'VERIFY_PRESETS':activeEditorType==='welcome'?'WELCOME_PRESETS':'GOODBYE_PRESETS';
   var preset=(cfg[key]||[]).find(function(p){return p.id===activeEditorId;});
   if(preset){preset.memberRoleId=r.id;preset.memberRoleName=r.name;}
-  var disp=document.getElementById('ed-role-display');if(disp)disp.innerHTML='<div class="role-tag">'+esc(r.name)+'</div>';
+  var hex='#'+(r.color||0).toString(16).padStart(6,'0');
+  var disp=document.getElementById('ed-role-display');
+  if(disp)disp.innerHTML='<div class="role-tag" style="background:'+hex+'22;border-color:'+hex+'66;color:'+hex+'">'+esc(r.name)+'</div>';
   var menu=document.getElementById('ed-role-menu');if(menu)menu.classList.remove('open');
-  var tr=menu?menu.previousElementSibling:null;if(tr)tr.classList.remove('open');
+  var tr=document.getElementById('ed-role-trigger');if(tr)tr.classList.remove('open');
   toast('เลือกยศ: '+r.name,'ok');
 }
+function toggleEdRoleMenu(triggerEl){
+  var menu=document.getElementById('ed-role-menu');if(!menu)return;
+  var isOpen=menu.classList.contains('open');
+  // close all other menus first
+  document.querySelectorAll('.role-dd-menu.open').forEach(function(m){m.classList.remove('open');});
+  document.querySelectorAll('.role-dd-trigger.open').forEach(function(t){t.classList.remove('open');});
+  if(!isOpen){
+    // position menu
+    var rect=triggerEl.getBoundingClientRect();
+    menu.style.top=(rect.bottom+4)+'px';
+    menu.style.left=rect.left+'px';
+    menu.style.width=rect.width+'px';
+    menu.classList.add('open');
+    triggerEl.classList.add('open');
+    var s=menu.querySelector('.role-dd-search');if(s){s.value='';s.focus();}
+    // filter reset
+    menu.querySelectorAll('.role-dd-opt').forEach(function(o){o.style.display='';});
+  }
+}
+function filterEdRoleMenu(inp){
+  var q=inp.value.toLowerCase();
+  var menu=document.getElementById('ed-role-menu');if(!menu)return;
+  menu.querySelectorAll('.role-dd-opt').forEach(function(o){
+    o.style.display=o.textContent.toLowerCase().includes(q)?'':'none';
+  });
+}
+async function loadSingleRoles(){
+  if(rolesLoaded&&fetchedRoles.length){
+    var opts=fetchedRoles.map(function(r,i){return '<div class="role-dd-opt" data-idx="'+i+'" onclick="pickEditorMemberRole(event,this)"><span class="r-dot" style="background:#'+(r.color||0).toString(16).padStart(6,'0')+'"></span>'+esc(r.name)+'</div>';}).join('');
+    var optsEl=document.getElementById('ed-role-menu-opts');if(optsEl)optsEl.innerHTML=opts;
+    var lb=document.getElementById('ed-single-load-btn');if(lb)lb.remove();
+    return;
+  }
+  toast('กำลังโหลดยศ...','info');
+  var data=await api('GET','/api/roles');
+  fetchedRoles=data&&data.roles?data.roles:[];rolesLoaded=true;
+  var opts=fetchedRoles.map(function(r,i){return '<div class="role-dd-opt" data-idx="'+i+'" onclick="pickEditorMemberRole(event,this)"><span class="r-dot" style="background:#'+(r.color||0).toString(16).padStart(6,'0')+'"></span>'+esc(r.name)+'</div>';}).join('');
+  var optsEl=document.getElementById('ed-role-menu-opts');if(optsEl)optsEl.innerHTML=opts||'<div class="dd-empty">ไม่มียศ</div>';
+  var lb=document.getElementById('ed-single-load-btn');if(lb)lb.remove();
+  toast('โหลด '+fetchedRoles.length+' ยศ ✅','ok');
+}
+// close dropdown when clicking outside
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.role-dd-wrap')){
+    document.querySelectorAll('.role-dd-menu.open').forEach(function(m){m.classList.remove('open');});
+    document.querySelectorAll('.role-dd-trigger.open').forEach(function(t){t.classList.remove('open');});
+  }
+});
 
 // ── ROLE CATEGORIES (in editor) ──
 function getActivePreset(){
