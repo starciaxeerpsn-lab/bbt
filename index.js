@@ -406,9 +406,11 @@ function resolveButtonStyle(color = "Primary") {
 }
 function hexToInt(hex) { return parseInt((hex || "#ff6eb4").replace("#", ""), 16); }
 
-function buildCategoryRows(cfg, selected = new Set()) {
+function buildCategoryRows(vpOrCfg, selected = new Set()) {
   const rows = [];
-  for (const cat of (cfg.ROLE_CATEGORIES || [])) {
+  // รองรับทั้ง preset object (roleCategories) และ cfg เก่า (ROLE_CATEGORIES)
+  const categories = vpOrCfg.roleCategories || vpOrCfg.ROLE_CATEGORIES || [];
+  for (const cat of categories) {
     if (!cat.roles?.length) continue;
     for (let i = 0; i < cat.roles.length; i += 5) {
       const chunk = cat.roles.slice(i, i + 5);
@@ -449,18 +451,19 @@ client.once("clientReady", async () => {
 client.on("guildMemberAdd", async (member) => {
   try {
     const cfg = loadConfig();
-    const ch = member.guild.channels.cache.find((c) => c.name === cfg.VERIFY_CHANNEL_NAME);
+    const vp = getVerifyPreset(cfg);
+    const ch = member.guild.channels.cache.find((c) => c.name === (vp.channelName || cfg.VERIFY_CHANNEL_NAME));
     if (!ch) return;
     const embed = new EmbedBuilder()
-      .setColor(hexToInt(cfg.VERIFY_EMBED_COLOR))
-      .setTitle(cfg.VERIFY_EMBED_TITLE || "🌸 ยืนยันตัวตน")
-      .setDescription(`สวัสดี ${member}!\n${cfg.VERIFY_EMBED_DESC || "กดปุ่มด้านล่างเพื่อยืนยันตัวตน"}`);
-    if (cfg.VERIFY_THUMBNAIL === "[user]") embed.setThumbnail(member.user.displayAvatarURL());
-    else if (cfg.VERIFY_THUMBNAIL === "[server]" && member.guild.iconURL()) embed.setThumbnail(member.guild.iconURL());
-    else if (cfg.VERIFY_THUMBNAIL) embed.setThumbnail(cfg.VERIFY_THUMBNAIL);
-    if (cfg.VERIFY_IMAGE) embed.setImage(cfg.VERIFY_IMAGE);
+      .setColor(hexToInt(vp.embedColor))
+      .setTitle(vp.embedTitle || "🌸 ยืนยันตัวตน")
+      .setDescription(`สวัสดี ${member}!\n${vp.embedDesc || "กดปุ่มด้านล่างเพื่อยืนยันตัวตน"}`);
+    if (vp.embedThumbnail === "[user]") embed.setThumbnail(member.user.displayAvatarURL());
+    else if (vp.embedThumbnail === "[server]" && member.guild.iconURL()) embed.setThumbnail(member.guild.iconURL());
+    else if (vp.embedThumbnail) embed.setThumbnail(vp.embedThumbnail);
+    if (vp.embedImage) embed.setImage(vp.embedImage);
     const btn = new ActionRowBuilder().addComponents(
-      new ButtonBuilder().setCustomId("open_verify_modal").setLabel(cfg.VERIFY_BUTTON_LABEL || "✅ ยืนยันตัวตน").setStyle(resolveButtonStyle(cfg.VERIFY_BUTTON_COLOR))
+      new ButtonBuilder().setCustomId("open_verify_modal").setLabel(vp.embedButtonLabel || "✅ ยืนยันตัวตน").setStyle(resolveButtonStyle(vp.embedButtonColor))
     );
     await ch.send({ embeds: [embed], components: [btn] });
   } catch (err) { console.error("❌ guildMemberAdd:", err); }
@@ -482,6 +485,42 @@ client.on("guildMemberRemove", async (member) => {
   } catch (err) { console.error("❌ guildMemberRemove:", err); }
 });
 
+// ── PRESET HELPERS ──
+// ดึง preset แรกใน VERIFY_PRESETS หรือ fallback ไป legacy fields
+function getVerifyPreset(cfg) {
+  const presets = cfg.VERIFY_PRESETS;
+  if (presets && presets.length > 0) return presets[0];
+  // legacy fallback
+  return {
+    embedTitle: cfg.VERIFY_EMBED_TITLE || "🌸 ยืนยันตัวตน",
+    embedDesc: cfg.VERIFY_EMBED_DESC || "กดปุ่มด้านล่างเพื่อกรอกข้อมูลและรับยศของคุณ!",
+    embedColor: cfg.VERIFY_EMBED_COLOR || "#ff6eb4",
+    embedImage: cfg.VERIFY_IMAGE || "",
+    embedThumbnail: cfg.VERIFY_THUMBNAIL || "",
+    embedButtonLabel: cfg.VERIFY_BUTTON_LABEL || "✅ ยืนยันตัวตน",
+    embedButtonColor: cfg.VERIFY_BUTTON_COLOR || "Primary",
+    channelName: cfg.VERIFY_CHANNEL_NAME || "verify",
+    memberRoleId: cfg.MEMBER_ROLE_ID || "",
+    memberRoleName: cfg.MEMBER_ROLE_NAME || "",
+    roleCategories: cfg.ROLE_CATEGORIES || [],
+    roleMode: "multi",
+  };
+}
+
+// ดึง welcome/goodbye preset
+function getWelcomePreset(cfg) {
+  if (cfg.WELCOME_PRESETS && cfg.WELCOME_PRESETS.length > 0) return cfg.WELCOME_PRESETS[0];
+  return {
+    channelName: cfg.WELCOME_CHANNEL_NAME || "",
+    embedTitle: cfg.WELCOME_TITLE || "ยินดีต้อนรับ!",
+    embedDesc: cfg.WELCOME_MESSAGE || "ยินดีต้อนรับ {user}!",
+    embedColor: cfg.WELCOME_COLOR || "#ff6eb4",
+    showAvatar: cfg.WELCOME_SHOW_AVATAR !== false,
+    embedImage: cfg.WELCOME_IMAGE || "",
+    mentionUser: cfg.MENTION_USER || false,
+  };
+}
+
 client.on("interactionCreate", async (interaction) => {
   const cfg = loadConfig();
 
@@ -489,15 +528,16 @@ client.on("interactionCreate", async (interaction) => {
   if (interaction.isChatInputCommand() && interaction.commandName === "setup") {
     await interaction.deferReply({ ephemeral: true });
     try {
+      const vp = getVerifyPreset(cfg);
       const embed = new EmbedBuilder()
-        .setColor(hexToInt(cfg.VERIFY_EMBED_COLOR))
-        .setTitle(cfg.VERIFY_EMBED_TITLE || "🌸 ยืนยันตัวตน")
-        .setDescription(cfg.VERIFY_EMBED_DESC || "กดปุ่มด้านล่างเพื่อกรอกข้อมูลและรับยศของคุณ!");
-      if (cfg.VERIFY_THUMBNAIL === "[server]" && interaction.guild.iconURL()) embed.setThumbnail(interaction.guild.iconURL());
-      else if (cfg.VERIFY_THUMBNAIL && cfg.VERIFY_THUMBNAIL !== "[user]") embed.setThumbnail(cfg.VERIFY_THUMBNAIL);
-      if (cfg.VERIFY_IMAGE) embed.setImage(cfg.VERIFY_IMAGE);
+        .setColor(hexToInt(vp.embedColor))
+        .setTitle(vp.embedTitle || "🌸 ยืนยันตัวตน")
+        .setDescription(vp.embedDesc || "กดปุ่มด้านล่างเพื่อกรอกข้อมูลและรับยศของคุณ!");
+      if (vp.embedThumbnail === "[server]" && interaction.guild.iconURL()) embed.setThumbnail(interaction.guild.iconURL());
+      else if (vp.embedThumbnail && vp.embedThumbnail !== "[user]") embed.setThumbnail(vp.embedThumbnail);
+      if (vp.embedImage) embed.setImage(vp.embedImage);
       const btn = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId("open_verify_modal").setLabel(cfg.VERIFY_BUTTON_LABEL || "✅ ยืนยันตัวตน").setStyle(resolveButtonStyle(cfg.VERIFY_BUTTON_COLOR))
+        new ButtonBuilder().setCustomId("open_verify_modal").setLabel(vp.embedButtonLabel || "✅ ยืนยันตัวตน").setStyle(resolveButtonStyle(vp.embedButtonColor))
       );
       await interaction.channel.send({ embeds: [embed], components: [btn] });
       await interaction.editReply({ content: "✅ ส่ง Verify embed แล้ว!" });
@@ -533,25 +573,34 @@ client.on("interactionCreate", async (interaction) => {
     const name = interaction.fields.getTextInputValue("name");
     const age = interaction.fields.getTextInputValue("age");
     const gender = interaction.fields.getTextInputValue("gender");
-    setPendingData(interaction.user.id, { name, age, gender, selectedRoles: [] });
+    const vp = getVerifyPreset(cfg);
+    setPendingData(interaction.user.id, { name, age, gender, selectedRoles: [], presetId: vp.id });
 
-    const categories = cfg.ROLE_CATEGORIES || [];
+    const categories = vp.roleCategories || [];
     if (categories.length === 0) {
       await completeVerify(interaction, cfg, true);
       return;
     }
 
-    const rows = buildCategoryRows(cfg, new Set());
+    const roleMode = vp.roleMode || "multi";
+    const modeHint = roleMode === "single"
+      ? "กดเลือกยศ **1 อัน** แล้วกด ✅ ยืนยัน"
+      : "กดเลือกยศที่ต้องการ (กดได้หลายอัน) แล้วกด ✅ ยืนยัน";
+
+    const rows = buildCategoryRows(vp, new Set());
     const confirmRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId("verify_confirm").setLabel("✅ ยืนยันและเข้าเซิร์ฟเวอร์").setStyle(ButtonStyle.Success)
     );
 
-    // สร้าง embed แสดงหมวดหมู่
-    const catList = categories.map((c) => `**${c.name}**\n${(c.roles||[]).map((r) => `${r.emoji || "•"} ${r.label}`).join("  ")}`).join("\n\n");
+    const catList = categories.map((c) => {
+      const modeTag = c.multi ? "(เลือกได้หลายอัน)" : "(เลือกได้อันเดียว)";
+      return `**${c.name}** ${modeTag}\n${(c.roles||[]).map((r) => `${r.emoji || "•"} ${r.label}`).join("  ")}`;
+    }).join("\n\n");
+
     const embed = new EmbedBuilder()
-      .setColor(hexToInt(cfg.VERIFY_EMBED_COLOR))
+      .setColor(hexToInt(vp.embedColor))
       .setTitle("🎉 ยินดีต้อนรับ " + name + "!")
-      .setDescription("กดปุ่มเพื่อเลือกยศที่ต้องการ (กดได้หลายอัน)\nแล้วกด **✅ ยืนยัน** เพื่อเข้าสู่เซิร์ฟเวอร์\n\n" + catList);
+      .setDescription(modeHint + "\n\n" + catList);
 
     await interaction.reply({ embeds: [embed], components: [...rows, confirmRow], ephemeral: true });
     return;
@@ -565,16 +614,34 @@ client.on("interactionCreate", async (interaction) => {
       await interaction.reply({ content: "⚠️ Session หมดอายุ กรุณากด Verify ใหม่", ephemeral: true });
       return;
     }
+
+    const vp = getVerifyPreset(cfg);
+    const roleMode = vp.roleMode || "multi";          // single = เลือกได้ 1 ทั้งหมด, multi = ไม่จำกัด
+    const cat = (vp.roleCategories || []).find((c) => c.id === catId);
+
     const selected = new Set(pending.selectedRoles || []);
     const key = `${catId}:${roleId}`;
-    const cat = (cfg.ROLE_CATEGORIES || []).find((c) => c.id === catId);
-    if (cat && !cat.multi) {
-      for (const s of [...selected]) { if (s.startsWith(catId + ":")) selected.delete(s); }
+    const alreadySelected = selected.has(key);
+
+    if (roleMode === "single") {
+      // เลือกได้ 1 เท่านั้นทั้งหมด — clear ทุกอย่างก่อน แล้ว toggle
+      selected.clear();
+      if (!alreadySelected) selected.add(key);  // ถ้ากดซ้ำ = deselect (clear แล้วไม่ add)
+    } else {
+      // multi mode — ดู cat.multi เป็น category-level
+      if (cat && !cat.multi) {
+        // category นี้เลือกได้อันเดียว: เอาของ cat นี้ออกก่อน แล้ว toggle
+        for (const s of [...selected]) { if (s.startsWith(catId + ":")) selected.delete(s); }
+        if (!alreadySelected) selected.add(key);  // กดซ้ำ = deselect
+      } else {
+        // category นี้เลือกได้หลายอัน
+        if (alreadySelected) selected.delete(key); else selected.add(key);
+      }
     }
-    if (selected.has(key)) selected.delete(key); else selected.add(key);
+
     setPendingData(interaction.user.id, { ...pending, selectedRoles: [...selected] });
 
-    const rows = buildCategoryRows(cfg, selected);
+    const rows = buildCategoryRows(vp, selected);
     const confirmRow = new ActionRowBuilder().addComponents(
       new ButtonBuilder().setCustomId("verify_confirm").setLabel("✅ ยืนยันและเข้าเซิร์ฟเวอร์").setStyle(ButtonStyle.Success)
     );
@@ -600,20 +667,22 @@ async function completeVerify(interaction, cfg, isModal = false) {
       return;
     }
 
+    const vp = getVerifyPreset(cfg);
+
     const rolesToAdd = [];
-    let memberRole = cfg.MEMBER_ROLE_ID ? guild.roles.cache.get(cfg.MEMBER_ROLE_ID) : null;
-    if (!memberRole && cfg.MEMBER_ROLE_NAME) memberRole = guild.roles.cache.find((r) => r.name === cfg.MEMBER_ROLE_NAME);
+    let memberRole = vp.memberRoleId ? guild.roles.cache.get(vp.memberRoleId) : null;
+    if (!memberRole && vp.memberRoleName) memberRole = guild.roles.cache.find((r) => r.name === vp.memberRoleName);
     if (memberRole) rolesToAdd.push(memberRole);
 
     const addedRoleNames = [];
     for (const key of (pending.selectedRoles || [])) {
       const [catId, roleId] = key.split(":");
-      const cat = (cfg.ROLE_CATEGORIES || []).find((c) => c.id === catId);
+      const cat = (vp.roleCategories || []).find((c) => c.id === catId);
       const roleInfo = (cat?.roles || []).find((r) => r.id === roleId);
       if (!roleInfo) continue;
       let dr = roleInfo.roleId ? guild.roles.cache.get(roleInfo.roleId) : guild.roles.cache.find((r) => r.name === (roleInfo.roleName || roleInfo.label));
       if (!dr) {
-        dr = await guild.roles.create({ name: roleInfo.roleName || roleInfo.label, color: hexToInt(roleInfo.color), reason: "Auto-created by verify bot" });
+        dr = await guild.roles.create({ name: roleInfo.roleName || roleInfo.label, color: hexToInt(roleInfo.color || "#99aab5"), reason: "Auto-created by verify bot" });
       }
       rolesToAdd.push(dr);
       addedRoleNames.push(`${roleInfo.emoji || ""} ${roleInfo.label}`.trim());
@@ -627,12 +696,13 @@ async function completeVerify(interaction, cfg, isModal = false) {
     isModal ? await interaction.reply({ ...doneMsg, ephemeral: true }) : await interaction.update(doneMsg);
 
     // Welcome embed
-    const wch = guild.channels.cache.find((c) => c.name === cfg.WELCOME_CHANNEL_NAME);
+    const wp = getWelcomePreset(cfg);
+    const wch = guild.channels.cache.find((c) => c.name === wp.channelName);
     if (wch) {
       const we = new EmbedBuilder()
-        .setColor(hexToInt(cfg.WELCOME_COLOR))
-        .setTitle(cfg.WELCOME_TITLE || "ยินดีต้อนรับ!")
-        .setDescription(formatMsg(cfg.WELCOME_MESSAGE || "ยินดีต้อนรับ {user}!", member))
+        .setColor(hexToInt(wp.embedColor))
+        .setTitle(wp.embedTitle || "ยินดีต้อนรับ!")
+        .setDescription(formatMsg(wp.embedDesc || "ยินดีต้อนรับ {user}!", member))
         .addFields(
           { name: "ชื่อ", value: pending.name || "-", inline: true },
           { name: "อายุ", value: pending.age || "-", inline: true },
@@ -640,9 +710,9 @@ async function completeVerify(interaction, cfg, isModal = false) {
         )
         .setTimestamp();
       if (addedRoleNames.length > 0) we.addFields({ name: "ยศ", value: addedRoleNames.join(", "), inline: false });
-      if (cfg.WELCOME_SHOW_AVATAR) we.setThumbnail(interaction.user.displayAvatarURL());
-      if (cfg.WELCOME_IMAGE) we.setImage(cfg.WELCOME_IMAGE);
-      await wch.send({ content: cfg.MENTION_USER ? `${member}` : undefined, embeds: [we] });
+      if (wp.showAvatar !== false) we.setThumbnail(interaction.user.displayAvatarURL());
+      if (wp.embedImage) we.setImage(wp.embedImage);
+      await wch.send({ content: wp.mentionUser ? `${member}` : undefined, embeds: [we] });
     }
   } catch (err) {
     console.error("❌ completeVerify:", err);
