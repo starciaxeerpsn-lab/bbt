@@ -242,6 +242,28 @@ app.get("/api/whoami", requireAuth, (req, res) => {
   });
 });
 
+// ── FLUSH ALL SESSIONS (owner only) ──
+app.post("/api/flush-sessions", requireAuth, async (req, res) => {
+  if (!isOwner(req.session.userId)) return res.status(403).json({ error: "Owner only" });
+  try {
+    // scan all session:* keys and delete them
+    let cursor = 0;
+    let deleted = 0;
+    do {
+      const result = await redis.scan(cursor, { match: "session:*", count: 100 });
+      cursor = result[0];
+      const keys = result[1];
+      if (keys && keys.length > 0) {
+        await Promise.all(keys.map(k => redis.del(k)));
+        deleted += keys.length;
+      }
+    } while (cursor !== 0);
+    res.json({ ok: true, deleted });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
 // ── ALLOWED USERS API (owner only) ──
 app.get("/api/allowed-users", requireAuth, async (req, res) => {
   if (!isOwner(req.session.userId)) return res.status(403).json({ error: "Owner only" });
