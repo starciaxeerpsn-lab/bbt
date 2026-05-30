@@ -164,14 +164,14 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
 .role-cell-input{background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:7px 10px;font-family:inherit;font-size:13px;outline:none;width:100%;transition:.15s}
 .role-cell-input:focus{border-color:var(--pk);box-shadow:0 0 0 2px var(--pk-glow)}
 /* SEARCHABLE DROPDOWN */
-.role-dd-wrap{position:relative}
+.role-dd-wrap{position:relative;z-index:auto}
 .role-dd-trigger{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--border2);border-radius:11px;padding:9px 12px;cursor:pointer;min-height:42px;transition:.18s;gap:6px;user-select:none}
 .role-dd-trigger:hover,.role-dd-trigger.open{border-color:var(--pk);box-shadow:0 0 0 3px var(--pk-glow)}
 .role-dd-tags{display:flex;flex-wrap:wrap;gap:4px;flex:1}
 .role-dd-placeholder{color:var(--text3);font-size:12.5px}
 .role-dd-arrow{flex-shrink:0;color:var(--pk);font-size:10px;transition:transform .18s}
 .role-dd-trigger.open .role-dd-arrow{transform:rotate(180deg)}
-.role-dd-menu{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:300;background:var(--card2);border:1px solid var(--pk-border);border-radius:12px;padding:8px;box-shadow:0 16px 40px rgba(0,0,0,.7);max-height:220px;overflow-y:auto;display:none}
+.role-dd-menu{position:fixed;z-index:9000;background:var(--card2);border:1px solid var(--pk-border);border-radius:12px;padding:8px;box-shadow:0 16px 40px rgba(0,0,0,.8);max-height:220px;overflow-y:auto;display:none;min-width:200px}
 .role-dd-menu.open{display:block;animation:ddIn .12s ease}
 @keyframes ddIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 .role-dd-search{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:8px 12px;font-family:inherit;font-size:12.5px;outline:none;margin-bottom:6px;transition:.15s}
@@ -196,16 +196,7 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
 /* ADD CAT ROW */
 .add-cat-row{display:flex;gap:10px;margin-top:14px;align-items:flex-end;flex-wrap:wrap;padding-top:14px;border-top:1px solid var(--border)}
 .add-cat-row .field{margin-bottom:0;flex:1}
-/* CHANNEL ROUTING */
-.routing-cat-block{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;position:relative}
-.routing-cat-block::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--pk),transparent 80%);border-radius:10px 0 0 10px}
-.ch-label{font-size:9px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px}
-/* ROUTING MAP TABLE */
-.rt-table{width:100%;border-collapse:collapse;font-size:12.5px}
-.rt-table th{text-align:left;padding:8px 10px;color:var(--text3);font-size:10px;text-transform:uppercase;border-bottom:1px solid var(--border2)}
-.rt-table td{padding:8px 10px;border-bottom:1px solid var(--border)}
-.ch-badge{background:var(--pk-dim);border:1px solid var(--pk-border);border-radius:5px;padding:2px 8px;font-size:11px;color:var(--pk3);font-family:'DM Mono',monospace;white-space:nowrap}
-.ch-badge-inherit{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;white-space:nowrap}
+
 /* TOAST */
 .toast{position:fixed;bottom:24px;right:24px;z-index:9999;padding:12px 22px;border-radius:12px;font-weight:700;font-size:13px;transform:translateY(80px) scale(.95);transition:.3s cubic-bezier(.34,1.56,.64,1);background:var(--surface);border:1px solid var(--pk);color:var(--pk3);box-shadow:0 8px 30px rgba(0,0,0,.5);pointer-events:none}
 .toast.on{transform:translateY(0) scale(1)}
@@ -218,6 +209,25 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
 .loader-ring{width:42px;height:42px;border:3px solid var(--border);border-top-color:var(--pk);border-radius:50%;animation:spin .8s linear infinite;box-shadow:0 0 20px var(--pk-glow)}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loader-txt{font-size:13px;color:var(--text2);font-family:'DM Mono',monospace;letter-spacing:1px}
+
+/* CMD CARDS */
+.cmd-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cmd-card{background:var(--card2);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;transition:.18s}
+.cmd-card:hover{border-color:var(--pk-border)}
+.cmd-icon{width:36px;height:36px;border-radius:10px;background:var(--pk-dim);border:1px solid var(--pk-border);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.cmd-name{font-family:'DM Mono',monospace;font-size:13.5px;font-weight:700;color:var(--pk3)}
+.cmd-desc{font-size:12px;color:var(--text3);margin-top:3px;line-height:1.5}
+/* EMBED INFO */
+.embed-info{background:var(--card2);border:1px solid var(--border2);border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start}
+.embed-info:last-child{margin-bottom:0}
+.embed-info-bar{width:4px;border-radius:4px;flex-shrink:0;align-self:stretch}
+.embed-info-body{flex:1;min-width:0}
+.embed-info-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
+.embed-info-desc{font-size:12px;color:var(--text3);line-height:1.6}
+/* ROLE PICK BTN */
+.role-pick-btn{background:var(--card);border:1px dashed var(--border2);color:var(--text3);border-radius:8px;padding:7px 12px;font-size:12px;cursor:pointer;width:100%;text-align:left;transition:.15s;font-family:inherit}
+.role-pick-btn:hover{border-color:var(--pk3);color:var(--pk3)}
+.role-pick-btn.has-role{border-style:solid;border-color:rgba(34,197,94,.3);color:var(--green);background:rgba(34,197,94,.05)}
 /* MISC */
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:10px}
 </style>
@@ -251,7 +261,7 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
     <div class="sb-sec">Verification</div>
     <a class="sb-link" onclick="nav('verify',this)"><span class="sb-link-ico">&#9989;</span> ระบบ Verify</a>
     <a class="sb-link" onclick="nav('roles',this)"><span class="sb-link-ico">&#127917;</span> ยศหมวดหมู่</a>
-    <a class="sb-link" onclick="nav('routing',this)"><span class="sb-link-ico">&#128506;</span> Channel Routing<span class="sb-badge">!</span></a>
+
     <div class="sb-sec">Automation</div>
     <a class="sb-link" onclick="nav('welcome',this)"><span class="sb-link-ico">&#128075;</span> Welcome</a>
     <a class="sb-link" onclick="nav('goodbye',this)"><span class="sb-link-ico">&#128682;</span> Goodbye</a>
@@ -288,18 +298,14 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
         <div><div style="font-size:11px;color:var(--text3);margin-bottom:4px">SERVER</div><div style="font-family:'DM Mono',monospace;font-size:14px" id="ov-guilds">—</div></div>
       </div>
     </div>
-    <div class="card">
-      <div class="card-head"><span class="card-head-icon">&#128506;</span> Channel Routing Summary</div>
-      <div id="ov-routing-body" style="font-size:12.5px;color:var(--text3)">ยังไม่มีข้อมูล — ตั้งค่าที่ <b style="color:var(--pk3);cursor:pointer" onclick="nav('routing',null)">Channel Routing</b></div>
-    </div>
+
     <div class="card">
       <div class="card-head"><span class="card-head-icon">&#8505;&#65039;</span> วิธีใช้งาน</div>
-      <p style="color:var(--text2);line-height:2;font-size:13.5px">
-        1. ตั้งค่า <strong style="color:var(--pk3)">ระบบ Verify</strong> เพื่อออกแบบ embed และปุ่มยืนยัน<br>
-        2. ตั้งค่า <strong style="color:var(--pk3)">ยศหมวดหมู่</strong> ให้สมาชิกเลือกยศตอน Verify<br>
-        3. ตั้งค่า <strong style="color:var(--pk3)">Channel Routing</strong> เพื่อกำหนดห้องแยกตามหมวดหมู่<br>
-        4. ตั้งค่า <strong style="color:var(--pk3)">Welcome / Goodbye</strong> สำหรับข้อความต้อนรับ<br>
-        5. ใช้คำสั่ง <code>/setup</code> ใน Discord เพื่อส่ง Verify embed ไปที่ห้อง
+      <p style="color:var(--text2);line-height:2.2;font-size:13.5px">
+        1. ตั้งค่า <strong style="color:var(--pk3)">ระบบ Verify</strong> → ออกแบบ embed, เลือกห้อง และยศ Member<br>
+        2. ตั้งค่า <strong style="color:var(--pk3)">ยศหมวดหมู่</strong> → กำหนดปุ่มให้สมาชิกเลือกยศ<br>
+        3. ตั้งค่า <strong style="color:var(--pk3)">Welcome / Goodbye</strong> → ข้อความต้อนรับและลาจาก<br>
+        4. พิมพ์ <code>/setup</code> ในห้อง Verify เพื่อส่ง embed
       </p>
     </div>
   </div>
@@ -322,8 +328,7 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
     <div class="pg-head">
       <div><div class="pg-title">&#127917; ยศหมวดหมู่</div><div class="pg-sub">กำหนดกลุ่มยศให้สมาชิกเลือกตอน Verify</div></div>
       <div class="pg-actions">
-        <button class="btn btn-cy btn-sm" onclick="nav('routing',null)">&#128506; ตั้งห้อง</button>
-        <button class="btn btn-ghost btn-sm" onclick="loadAllRoles()" id="reload-roles-btn">&#128260; โหลดยศใหม่</button>
+        <button class="btn btn-ghost btn-sm" onclick="loadAllRoles(true)" id="reload-roles-btn">&#128260; โหลดยศใหม่</button>
       </div>
     </div>
     <div class="card">
@@ -362,38 +367,6 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
     <div class="btn-row">
       <div></div>
       <button class="btn btn-pk" onclick="saveRoles()">&#128190; บันทึกยศ</button>
-    </div>
-  </div>
-
-  <!-- CHANNEL ROUTING -->
-  <div id="pg-routing" class="page">
-    <div class="pg-head">
-      <div><div class="pg-title">&#128506; Channel Routing</div><div class="pg-sub">กำหนดห้อง Verify / Welcome / Goodbye สำหรับแต่ละหมวดหมู่</div></div>
-      <div class="pg-actions">
-        <button class="btn btn-cy btn-sm" onclick="loadChannelsForRouting()">&#128260; โหลดห้องใหม่</button>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-head"><span class="card-head-icon">&#127758;</span> ห้องเริ่มต้น (Global)</div>
-      <p style="font-size:12.5px;color:var(--text3);margin-bottom:16px">ใช้เมื่อหมวดหมู่ไม่ได้กำหนดห้องของตัวเอง</p>
-      <div class="g3">
-        <div class="field"><div class="ch-label">ห้อง Verify</div><select id="c-verify" onchange="updateRoutingMap()"><option value="">— เลือกห้อง —</option></select><div class="hint"><code>/setup</code> จะส่ง Embed ไปที่นี่</div></div>
-        <div class="field"><div class="ch-label">ห้อง Welcome</div><select id="c-welcome" onchange="updateRoutingMap()"><option value="">— เลือกห้อง —</option></select></div>
-        <div class="field"><div class="ch-label">ห้อง Goodbye</div><select id="c-goodbye" onchange="updateRoutingMap()"><option value="">— เลือกห้อง —</option></select></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-head"><span class="card-head-icon">&#128194;</span> ห้องแยกตามหมวดหมู่</div>
-      <p style="font-size:12.5px;color:var(--text3);margin-bottom:14px">ถ้าเว้นว่างจะใช้ห้อง Global ด้านบน</p>
-      <div id="routing-cats-list"><div style="font-size:12.5px;color:var(--text3);padding:14px 0;text-align:center">ยังไม่มีหมวดหมู่ — สร้างที่ <b style="color:var(--pk3);cursor:pointer" onclick="nav('roles',null)">ยศหมวดหมู่</b></div></div>
-    </div>
-    <div class="card" id="routing-map-card" style="display:none">
-      <div class="card-head"><span class="card-head-icon">&#128202;</span> Routing Map</div>
-      <div id="routing-map-body"></div>
-    </div>
-    <div class="btn-row">
-      <div></div>
-      <button class="btn btn-pk" onclick="saveRouting()">&#128190; บันทึก Routing</button>
     </div>
   </div>
 
@@ -449,6 +422,7 @@ var channels=[];
 var activePicker=null;
 var wizStep={verify:1,welcome:1,goodbye:1};
 var channelsLoaded=false;
+var rolesLoaded=false;
 
 // ── UTILS ──────────────────────────────────────────────────
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
@@ -483,9 +457,8 @@ function nav(id,el){
   if(el) el.classList.add('on');
   else document.querySelectorAll('.sb-link').forEach(function(l){if(l.getAttribute('onclick')&&l.getAttribute('onclick').indexOf("'"+id+"'")>=0)l.classList.add('on');});
   if(['verify','welcome','goodbye'].includes(id)) renderWiz(id,wizStep[id]||1);
-  if(id==='roles') drawCats();
-  if(id==='routing') renderRoutingPage();
-  if(id==='overview'){refreshOverview();renderRoutingSummary();}
+  if(id==='roles'){drawCats();if(rolesLoaded)_renderRolePool();}
+  if(id==='overview') refreshOverview();
   closeAllDropdowns();
 }
 
@@ -500,23 +473,6 @@ function refreshOverview(){
   var d=document.getElementById('ov-status-dot');if(d)d.classList.toggle('off',!cfg._online);
 }
 
-function renderRoutingSummary(){
-  var el=document.getElementById('ov-routing-body');if(!el)return;
-  var cats=cfg.ROLE_CATEGORIES||[];
-  if(!cats.length){el.innerHTML='ยังไม่มีข้อมูล — ตั้งค่าที่ <b style="color:var(--pk3);cursor:pointer" onclick="nav(\'routing\',null)">Channel Routing</b>';return;}
-  var gV=cfg.VERIFY_CHANNEL_NAME||'–',gW=cfg.WELCOME_CHANNEL_NAME||'–',gG=cfg.GOODBYE_CHANNEL_NAME||'–';
-  var html='<div style="font-size:11.5px;color:var(--text3);margin-bottom:10px">Global — 📌 <b style="color:var(--text)">'+esc(gV)+'</b>  👋 <b style="color:var(--text)">'+esc(gW)+'</b>  🚪 <b style="color:var(--text)">'+esc(gG)+'</b></div>';
-  var hasDiff=false;
-  cats.forEach(function(cat){
-    var v=cat.verifyChannel,w=cat.welcomeChannel,g=cat.goodbyeChannel;
-    if(v||w||g){
-      hasDiff=true;
-      html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;font-size:11.5px"><span style="font-weight:700;color:var(--text)">'+esc(cat.name)+':</span>'+(v?'<span style="color:var(--text3)">📌 <span style="color:var(--pk3)">'+esc(v)+'</span></span>':'')+(w?'<span style="color:var(--text3)">👋 <span style="color:var(--pk3)">'+esc(w)+'</span></span>':'')+(g?'<span style="color:var(--text3)">🚪 <span style="color:var(--pk3)">'+esc(g)+'</span></span>':'')+'</div>';
-    }
-  });
-  if(!hasDiff) html+='<div style="font-size:11.5px;color:var(--text3)">ทุกหมวดใช้ Global — <span style="color:var(--pk3);cursor:pointer" onclick="nav(\'routing\',null)">กำหนดแยก →</span></div>';
-  el.innerHTML=html;
-}
 
 // ── WIZARD ENGINE ──────────────────────────────────────────
 function renderWiz(type,step){
@@ -805,7 +761,6 @@ async function saveWiz(type){
     toast('บันทึกสำเร็จ!','ok');
     wizStep[type]=1;
     refreshOverview();
-    renderRoutingSummary();
     nav('overview',null);
   } else {
     toast('บันทึกไม่สำเร็จ'+(res&&res.error?' — '+res.error:''),'err');
@@ -822,14 +777,6 @@ async function fetchChannelsStep(type){
   toast('โหลดแล้ว '+channels.length+' ห้อง','ok');
 }
 
-async function loadChannelsForRouting(){
-  toast('กำลังโหลดห้อง...','info');
-  var data=await api('GET','/api/channels');
-  channels=data&&data.channels?data.channels:[];
-  channelsLoaded=true;
-  renderRoutingPage();
-  toast('โหลด '+channels.length+' ห้องแล้ว','ok');
-}
 
 // ── VERIFY ROLE DD (legacy simple) ────────────────────────
 async function fetchRolesForVerify(){
@@ -840,14 +787,25 @@ async function fetchRolesForVerify(){
   toast('โหลดแล้ว '+fetchedRoles.filter(function(r){return !r.isAdmin;}).length+' ยศ','ok');
 }
 
+function _posDD(menu,trigger){
+  var r=trigger.getBoundingClientRect();
+  menu.style.left=r.left+'px';
+  menu.style.width=r.width+'px';
+  var below=window.innerHeight-r.bottom;
+  if(below>180){menu.style.top=(r.bottom+4)+'px';menu.style.bottom='auto';}
+  else{menu.style.bottom=(window.innerHeight-r.top+4)+'px';menu.style.top='auto';}
+}
 function toggleLegacyDD(id,ev){
   if(ev) ev.stopPropagation();
   var el=document.getElementById(id);
-  document.querySelectorAll('.role-dd-menu.open').forEach(function(m){if(m.id!==id)m.classList.remove('open');});
+  document.querySelectorAll('.role-dd-menu.open').forEach(function(m){if(m.id!==id){m.classList.remove('open');var t=m.previousElementSibling;if(t)t.classList.remove('open');}});
+  var wasOpen=el.classList.contains('open');
   el.classList.toggle('open');
   var trigger=el.previousElementSibling;if(trigger)trigger.classList.toggle('open',el.classList.contains('open'));
+  if(!wasOpen&&trigger){_posDD(el,trigger);}
   if(el.classList.contains('open')){var s=el.querySelector('.role-dd-search');if(s)setTimeout(function(){s.focus();},80);}
 }
+window.addEventListener('resize',function(){document.querySelectorAll('.role-dd-menu.open').forEach(function(m){var t=m.previousElementSibling;if(t)_posDD(m,t);});});
 
 function filterLegacyDD(menuId,q){
   var opts=document.getElementById(menuId+'-opts');if(!opts)return;
@@ -868,7 +826,33 @@ function pickVerifyRole(ev,el){
 }
 
 // ── ROLE CATEGORIES ────────────────────────────────────────
-async function loadAllRoles(){
+function _renderRolePool(){
+  var pool=fetchedRoles.filter(function(r){return !r.isAdmin;});
+  var area=document.getElementById('roles-chips-area');
+  if(!area)return;
+  area.innerHTML='';
+  if(!pool.length){area.innerHTML='<span class="roles-empty">ไม่มียศที่ใช้ได้</span>';return;}
+  pool.forEach(function(r){
+    var hex=r.color?'#'+r.color.toString(16).padStart(6,'0'):'#5865f2';
+    var chip=document.createElement('span');
+    chip.className='role-chip';chip.textContent=r.name;
+    chip.style.background=hex+'22';chip.style.borderColor=hex+'66';chip.style.color=hex;
+    chip.onclick=function(){
+      if(!activePicker){toast('กดปุ่ม "คลิกเพื่อเลือกยศ" ในตารางก่อน','err');return;}
+      var ci=activePicker.ci,ri=activePicker.ri;
+      cfg.ROLE_CATEGORIES[ci].roles[ri].roleId=r.id;
+      cfg.ROLE_CATEGORIES[ci].roles[ri].roleName=r.name;
+      if(!cfg.ROLE_CATEGORIES[ci].roles[ri].color&&r.color)cfg.ROLE_CATEGORIES[ci].roles[ri].color=hex;
+      activePicker=null;hideBanner();renderRoleRows(ci);
+      toast('ผูก "'+r.name+'" แล้ว','ok');
+      area.querySelectorAll('.role-chip').forEach(function(c){c.classList.remove('picked');});
+      chip.classList.add('picked');
+    };
+    area.appendChild(chip);
+  });
+}
+async function loadAllRoles(force){
+  if(rolesLoaded&&!force){toast('โหลดยศแล้ว (cache)','info');_renderRolePool();return;}
   var btn=document.getElementById('reload-roles-btn');
   if(btn){btn.disabled=true;btn.textContent='กำลังโหลด...';}
   toast('กำลังโหลดยศ...','info');
@@ -876,35 +860,8 @@ async function loadAllRoles(){
   if(!data){toast('โหลดยศไม่สำเร็จ','err');}
   else{
     fetchedRoles=data.roles||[];
-    var pool=fetchedRoles.filter(function(r){return !r.isAdmin;});
-    var area=document.getElementById('roles-chips-area');
-    if(area){
-      area.innerHTML='';
-      if(!pool.length){area.innerHTML='<span class="roles-empty">ไม่มียศที่ใช้ได้</span>';}
-      else{
-        pool.forEach(function(r){
-          var hex=r.color?'#'+r.color.toString(16).padStart(6,'0'):'#5865f2';
-          var chip=document.createElement('span');
-          chip.className='role-chip';
-          chip.textContent=r.name;
-          chip.style.background=hex+'22';
-          chip.style.borderColor=hex+'66';
-          chip.style.color=hex;
-          chip.onclick=function(){
-            if(!activePicker){toast('กดปุ่ม "คลิกเพื่อเลือกยศ" ในตารางก่อน','err');return;}
-            var ci=activePicker.ci,ri=activePicker.ri;
-            cfg.ROLE_CATEGORIES[ci].roles[ri].roleId  =r.id;
-            cfg.ROLE_CATEGORIES[ci].roles[ri].roleName=r.name;
-            if(!cfg.ROLE_CATEGORIES[ci].roles[ri].color&&r.color) cfg.ROLE_CATEGORIES[ci].roles[ri].color=hex;
-            activePicker=null;hideBanner();renderRoleRows(ci);
-            toast('ผูก "'+r.name+'" แล้ว','ok');
-            area.querySelectorAll('.role-chip').forEach(function(c){c.classList.remove('picked');});
-            chip.classList.add('picked');
-          };
-          area.appendChild(chip);
-        });
-      }
-    }
+    rolesLoaded=true;
+      _renderRolePool();
     toast('โหลดแล้ว '+pool.length+' ยศ','ok');
   }
   if(btn){btn.disabled=false;btn.textContent='&#128260; โหลดยศใหม่';}
@@ -956,7 +913,7 @@ function addCategory(){
   var multi=document.getElementById('new-cat-multi').value==='true';
   if(!name){toast('กรุณากรอกชื่อหมวดหมู่','err');return;}
   if(!cfg.ROLE_CATEGORIES) cfg.ROLE_CATEGORIES=[];
-  cfg.ROLE_CATEGORIES.push({id:uid(),name:name,multi:multi,roles:[],verifyChannel:'',welcomeChannel:'',goodbyeChannel:''});
+  cfg.ROLE_CATEGORIES.push({id:uid(),name:name,multi:multi,roles:[]});
   document.getElementById('new-cat-name').value='';
   drawCats();
   toast('เพิ่มหมวดหมู่ "'+name+'" แล้ว','ok');
@@ -1001,99 +958,10 @@ function hideBanner(){var b=document.getElementById('pick-banner');if(b)b.classL
 async function saveRoles(){
   toast('กำลังบันทึก...','info');
   var res=await api('POST','/api/config',cfg);
-  if(res&&res.ok){toast('บันทึกยศสำเร็จ!','ok');refreshOverview();renderRoutingSummary();}
+  if(res&&res.ok){toast('บันทึกยศสำเร็จ!','ok');refreshOverview();}
   else toast('บันทึกไม่สำเร็จ','err');
 }
 
-// ── CHANNEL ROUTING ────────────────────────────────────────
-function renderRoutingPage(){
-  var cats=cfg.ROLE_CATEGORIES||[];
-  // fill global selects
-  ['c-verify','c-welcome','c-goodbye'].forEach(function(id,i){
-    var sel=document.getElementById(id);if(!sel)return;
-    var cfgKeys=['VERIFY_CHANNEL_NAME','WELCOME_CHANNEL_NAME','GOODBYE_CHANNEL_NAME'];
-    var prev=cfg[cfgKeys[i]]||sel.value||'';
-    sel.innerHTML='<option value="">— เลือกห้อง —</option>';
-    channels.forEach(function(ch){var o=document.createElement('option');o.value=ch.name;o.textContent='# '+ch.name;if(ch.name===prev)o.selected=true;sel.appendChild(o);});
-  });
-
-  var container=document.getElementById('routing-cats-list');if(!container)return;
-  if(!cats.length){
-    container.innerHTML='<div style="font-size:12.5px;color:var(--text3);padding:14px 0;text-align:center">ยังไม่มีหมวดหมู่ — สร้างที่ <b style="color:var(--pk3);cursor:pointer" onclick="nav(\'roles\',null)">ยศหมวดหมู่</b></div>';
-    var mc=document.getElementById('routing-map-card');if(mc)mc.style.display='none';
-    return;
-  }
-  container.innerHTML='';
-  cats.forEach(function(cat,ci){
-    var block=document.createElement('div');block.className='routing-cat-block';
-    function mkSel(field,cur,icon,label){
-      var opts='<option value="">— ใช้ Global —</option>';
-      channels.forEach(function(ch){opts+='<option value="'+esc(ch.name)+'"'+(ch.name===cur?' selected':'')+'>No '+esc(ch.name)+'</option>';});
-      return '<div class="field"><div class="ch-label">'+icon+' '+label+'</div><select class="inp" id="rt-'+ci+'-'+field+'" onchange="updateCatRouting('+ci+',\''+field+'\')">'+opts+'</select></div>';
-    }
-    block.innerHTML=
-      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">'
-      +'<span style="font-size:14px;font-weight:700;color:var(--text)">'+esc(cat.name)+'</span>'
-      +'<span style="font-size:11px;color:var(--text3);font-family:monospace">'+(cat.roles?cat.roles.length:0)+' ยศ</span>'
-      +'</div>'
-      +'<div class="g3">'
-      +mkSel('verify',cat.verifyChannel||'','📌','ห้อง Verify')
-      +mkSel('welcome',cat.welcomeChannel||'','👋','ห้อง Welcome')
-      +mkSel('goodbye',cat.goodbyeChannel||'','🚪','ห้อง Goodbye')
-      +'</div>';
-    container.appendChild(block);
-  });
-
-  var mc=document.getElementById('routing-map-card');if(mc)mc.style.display='block';
-  updateRoutingMap();
-}
-
-function updateCatRouting(ci,field){
-  if(!cfg.ROLE_CATEGORIES||!cfg.ROLE_CATEGORIES[ci])return;
-  var el=document.getElementById('rt-'+ci+'-'+field);var val=el?el.value:'';
-  if(field==='verify')  cfg.ROLE_CATEGORIES[ci].verifyChannel=val;
-  if(field==='welcome') cfg.ROLE_CATEGORIES[ci].welcomeChannel=val;
-  if(field==='goodbye') cfg.ROLE_CATEGORIES[ci].goodbyeChannel=val;
-  updateRoutingMap();renderRoutingSummary();
-}
-
-function updateRoutingMap(){
-  var el=document.getElementById('routing-map-body');if(!el)return;
-  var cats=cfg.ROLE_CATEGORIES||[];
-  function gsel(id,cfgKey){var e=document.getElementById(id);return(e&&e.value)||cfg[cfgKey]||'';}
-  var gV=gsel('c-verify','VERIFY_CHANNEL_NAME');
-  var gW=gsel('c-welcome','WELCOME_CHANNEL_NAME');
-  var gG=gsel('c-goodbye','GOODBYE_CHANNEL_NAME');
-
-  function badge(val,fallback){
-    if(val) return '<span class="ch-badge"># '+esc(val)+'</span>';
-    if(fallback) return '<span class="ch-badge-inherit">Global: # '+esc(fallback)+'</span>';
-    return '<span style="color:var(--text3);font-size:11px">—</span>';
-  }
-
-  var html='<div style="overflow-x:auto"><table class="rt-table"><thead><tr><th>หมวดหมู่</th><th>Verify</th><th>Welcome</th><th>Goodbye</th></tr></thead><tbody>';
-  html+='<tr style="background:var(--pk-dim)"><td style="font-weight:700;color:var(--pk3);font-family:monospace;font-size:11px">Global</td><td>'+badge(gV,'')+'</td><td>'+badge(gW,'')+'</td><td>'+badge(gG,'')+'</td></tr>';
-  cats.forEach(function(cat){
-    var v=cat.verifyChannel||'',w=cat.welcomeChannel||'',g=cat.goodbyeChannel||'';
-    html+='<tr><td style="font-weight:600">'+esc(cat.name)+'</td><td>'+badge(v,gV)+'</td><td>'+badge(w,gW)+'</td><td>'+badge(g,gG)+'</td></tr>';
-  });
-  html+='</tbody></table></div>';
-  el.innerHTML=html;
-}
-
-async function saveRouting(){
-  var gV=document.getElementById('c-verify')?document.getElementById('c-verify').value:'';
-  var gW=document.getElementById('c-welcome')?document.getElementById('c-welcome').value:'';
-  var gG=document.getElementById('c-goodbye')?document.getElementById('c-goodbye').value:'';
-  cfg.VERIFY_CHANNEL_NAME =gV;
-  cfg.WELCOME_CHANNEL_NAME=gW;
-  cfg.GOODBYE_CHANNEL_NAME=gG;
-  // cat channels already updated via updateCatRouting()
-  toast('กำลังบันทึก...','info');
-  var res=await api('POST','/api/config',cfg);
-  if(res&&res.ok){toast('บันทึก Routing สำเร็จ!','ok');refreshOverview();renderRoutingSummary();}
-  else toast('บันทึกไม่สำเร็จ','err');
-}
 
 // ── CLOSE DROPDOWNS ────────────────────────────────────────
 function closeAllDropdowns(){
@@ -1136,17 +1004,7 @@ document.getElementById('logout-btn').addEventListener('click',function(){
     cfg._online=statusData.online||false;
   }
 
-  // ensure ROLE_CATEGORIES have routing fields
-  if(cfg.ROLE_CATEGORIES){
-    cfg.ROLE_CATEGORIES.forEach(function(cat){
-      if(!cat.verifyChannel)  cat.verifyChannel='';
-      if(!cat.welcomeChannel) cat.welcomeChannel='';
-      if(!cat.goodbyeChannel) cat.goodbyeChannel='';
-    });
-  }
-
   refreshOverview();
-  renderRoutingSummary();
   renderWiz('verify',1);
   renderWiz('welcome',1);
   renderWiz('goodbye',1);
