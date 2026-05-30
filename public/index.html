@@ -287,7 +287,6 @@ code{background:var(--card2);padding:1px 6px;border-radius:5px;font-family:'DM M
   <div style="font-size:11px;color:var(--text3);margin-top:-8px;text-align:center;max-width:260px;line-height:1.6" id="loading-sub">Render free tier อาจใช้เวลา 20-30 วินาทีในการ wake up</div>
 </div>
 
-<!-- Sync bar: shows while background API loads -->
 <div id="sync-bar" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9997;background:rgba(255,45,149,.12);border-bottom:1px solid rgba(255,45,149,.3);padding:7px 18px;font-size:12px;font-weight:600;color:#ff7eb3;align-items:center;gap:8px;backdrop-filter:blur(4px)"></div>
 
 <aside class="sidebar">
@@ -588,7 +587,7 @@ function renderFormBuilder(){
       optsHtml='<div class="form-field-row full"><label>ตัวเลือก</label>'
         +'<div class="form-opts-list" id="fopts-'+i+'">'+opts.map(function(o,oi){
           return '<div class="form-opt-row">'
-            +'<input type="text" value="'+esc(o)+'" oninput="updateFormOpt('+i+','+oi+',this.value)" placeholder="ตัวเลือก '+(oi+1)+'">'
+            +'<input type="text" value="'+esc(o)+'" data-fi="'+i+'" data-oi="'+oi+'" oninput="_fbOptInput(this)" placeholder="ตัวเลือก '+(oi+1)+'">'
             +'<button class="form-opt-del" onclick="removeFormOpt('+i+','+oi+')" title="ลบ">✕</button>'
           +'</div>';
         }).join('')+'</div>'
@@ -604,22 +603,22 @@ function renderFormBuilder(){
         +'<button class="form-field-del" onclick="deleteFormField('+i+')" title="ลบ">🗑</button>'
       +'</div>'
       +'<div class="form-field-row">'
-        +'<div><label>คำถาม / หัวข้อ</label><input type="text" value="'+esc(f.label||'')+'" oninput="updateFormField('+i+','label',this.value)" placeholder="เช่น เพศ, อายุ"></div>'
-        +'<div><label>ประเภท</label><select onchange="updateFormFieldType('+i+',this.value)">'
+        +'<div><label>คำถาม / หัวข้อ</label><input type="text" value="'+esc(f.label||'')+'" data-fi="'+i+'" data-key="label" oninput="_fbInput(this)" placeholder="เช่น เพศ, อายุ"></div>'
+        +'<div><label>ประเภท</label><select data-fi="'+i+'" onchange="updateFormFieldType('+i+',this.value)">'
           +'<option value="text" '+(f.type==='text'?'selected':'')+'>✏️ ข้อความ</option>'
           +'<option value="choice" '+(f.type==='choice'?'selected':'')+'>🔘 เลือก 1 ข้อ</option>'
           +'<option value="multi" '+(f.type==='multi'?'selected':'')+'>☑️ เลือกหลายข้อ</option>'
         +'</select></div>'
       +'</div>'
       +'<div class="form-field-row full"><label>คำอธิบายเพิ่มเติม (ไม่บังคับ)</label>'
-        +'<input type="text" value="'+esc(f.description||'')+'" oninput="updateFormField('+i+','description',this.value)" placeholder="เช่น กรุณาเลือก 1 ข้อ"></div>'
+        +'<input type="text" value="'+esc(f.description||'')+'" data-fi="'+i+'" data-key="description" oninput="_fbInput(this)" placeholder="เช่น กรุณาเลือก 1 ข้อ"></div>'
       +'<div class="form-field-row"><div><label>บังคับตอบ</label>'
-        +'<select onchange="updateFormField('+i+','required',this.value==='yes')">'
+        +'<select data-fi="'+i+'" data-key="required" onchange="_fbSelectReq(this)">'
           +'<option value="yes" '+(f.required!==false?'selected':'')+'>✅ บังคับ</option>'
           +'<option value="no" '+(f.required===false?'selected':'')+'>⬜ ไม่บังคับ</option>'
         +'</select></div>'
         +'<div><label>รูปแบบ Discord</label>'
-        +'<select onchange="updateFormField('+i+','style',this.value)">'
+        +'<select data-fi="'+i+'" data-key="style" onchange="_fbSelect(this)">'
           +'<option value="short" '+(f.style!=='long'?'selected':'')+'>📝 กล่องสั้น</option>'
           +'<option value="long" '+(f.style==='long'?'selected':'')+'>📄 กล่องยาว</option>'
         +'</select></div>'
@@ -762,7 +761,7 @@ function openEditor(type,presetId){
       +'<div class="role-dd-trigger" onclick="toggleDD(\'ed-role-menu\',event)">'
       +'<div class="role-dd-tags" id="ed-role-display">'+(curRoleName?'<div class="role-tag">'+esc(curRoleName)+'</div>':'<span class="role-dd-placeholder">— เลือกยศ —</span>')+'</div>'
       +'<span class="role-dd-arrow">▼</span></div>'
-      +'<div class="role-dd-menu" id="ed-role-menu"><input class="role-dd-search" type="text" placeholder="ค้นหายศ" oninput="filterDD(\'ed-role-menu\',this.value)"><div id="ed-role-menu-opts">'+(roleOpts||'<div class="dd-empty">กด "โหลดยศ" ก่อน</div>')+'</div></div>'
+      +'<div class="role-dd-menu" id="ed-role-menu"><input class="role-dd-search" type="text" placeholder="ค้นหายศ" oninput="filterDD('ed-role-menu',this.value)"><div id="ed-role-menu-opts">'+(roleOpts||'<div class="dd-empty">กด "โหลดยศ" ก่อน</div>')+'</div></div>'
       +'</div></div>';
   }
 
@@ -1104,12 +1103,12 @@ function renderEdRoleRows(ci){
       var chip=document.createElement('div');chip.className='role-btn-chip';
       chip.style.cssText='border-color:'+hex+'55;background:'+hex+'18';
       chip.innerHTML=
-        '<div class="rbc-emoji-wrap"><input class="rbc-emoji" type="text" value="'+esc(r.emoji||'')+'" maxlength="4" placeholder="🎮" oninput="updateEdRole('+ci+','+ri+',\'emoji\',this.value)"></div>'
+        '<div class="rbc-emoji-wrap"><input class="rbc-emoji" type="text" value="'+esc(r.emoji||'')+'" maxlength="4" placeholder="🎮" data-ci="'+ci+'" data-ri="'+ri+'" data-key="emoji" oninput="_erInput(this)"></div>'
         +'<div class="rbc-mid">'
-          +'<input class="rbc-label" type="text" value="'+esc(r.label||r.roleName||'')+'" placeholder="ชื่อปุ่ม" oninput="updateEdRole('+ci+','+ri+',\'label\',this.value)">'
+          +'<input class="rbc-label" type="text" value="'+esc(r.label||r.roleName||'')+'" placeholder="ชื่อปุ่ม" data-ci="'+ci+'" data-ri="'+ri+'" data-key="label" oninput="_erInput(this)">'
           +'<span class="rbc-role-name" style="color:'+hex+'">'+(r.roleName?'@'+esc(r.roleName):'— ยังไม่ผูกยศ —')+'</span>'
         +'</div>'
-        +'<input type="color" class="rbc-color" value="'+hex+'" title="สีปุ่ม" oninput="updateEdRole('+ci+','+ri+',\'color\',this.value);this.closest(\'.role-btn-chip\').style.borderColor=this.value+\'55\';this.closest(\'.role-btn-chip\').style.background=this.value+\'18\';this.closest(\'.role-btn-chip\').querySelector(\'.rbc-role-name\').style.color=this.value">'
+        +'<input type="color" class="rbc-color" value="'+hex+'" title="สีปุ่ม" data-ci="'+ci+'" data-ri="'+ri+'" data-key="color" oninput="_erColor(this)">'
         +'<button class="rbc-del" onclick="removeEdRole('+ci+','+ri+')" title="ลบ">✕</button>';
       el.appendChild(chip);
     });
@@ -1118,6 +1117,12 @@ function renderEdRoleRows(ci){
   el.appendChild(addBtn);
 }
 function updateEdRole(ci,ri,key,val){var p=getActivePreset();if(p&&p.roleCategories[ci]&&p.roleCategories[ci].roles[ri])p.roleCategories[ci].roles[ri][key]=val;}
+function _erInput(el){updateEdRole(+el.dataset.ci,+el.dataset.ri,el.dataset.key,el.value);}
+function _erColor(el){
+  updateEdRole(+el.dataset.ci,+el.dataset.ri,'color',el.value);
+  var chip=el.closest('.role-btn-chip');
+  if(chip){chip.style.borderColor=el.value+'55';chip.style.background=el.value+'18';var nm=chip.querySelector('.rbc-role-name');if(nm)nm.style.color=el.value;}
+}
 function addEditorCat(){
   var p=getActivePreset();if(!p)return;
   if(!p.roleCategories)p.roleCategories=[];
@@ -1158,7 +1163,6 @@ function _hideLoading(){
   ov.classList.add('hidden');
   setTimeout(function(){if(ov.parentNode)ov.parentNode.removeChild(ov);},500);
 }
-
 function _showSyncBar(msg){
   var bar=document.getElementById('sync-bar');
   if(bar){bar.textContent=msg;bar.style.display='flex';}
@@ -1167,7 +1171,6 @@ function _hideSyncBar(){
   var bar=document.getElementById('sync-bar');
   if(bar)bar.style.display='none';
 }
-
 function _applyInitData(initData){
   cfg=initData.config||{};
   var statusData=initData.status||{};var u=statusData.user||{};
@@ -1180,15 +1183,14 @@ function _applyInitData(initData){
   cfg._botTag=statusData.tag||'';cfg._guildName=u.guildName||'';cfg._online=statusData.online||false;
   if(initData.roles&&initData.roles.length){fetchedRoles=initData.roles;rolesLoaded=true;}
   if(initData.channels&&initData.channels.length){channels=initData.channels;channelsLoaded=true;}
-  // Migrate old cfg
   if(!cfg.VERIFY_PRESETS&&cfg.VERIFY_EMBED_TITLE){cfg.VERIFY_PRESETS=[{id:uid(),name:'verify',embedTitle:cfg.VERIFY_EMBED_TITLE,embedDesc:cfg.VERIFY_EMBED_DESC||'',embedColor:cfg.VERIFY_EMBED_COLOR||'#ff2d95',embedImage:cfg.VERIFY_IMAGE||'',embedThumbnail:cfg.VERIFY_THUMBNAIL||'',embedButtonLabel:cfg.VERIFY_BUTTON_LABEL||'ยืนยันตัวตน',embedButtonColor:cfg.VERIFY_BUTTON_COLOR||'Primary',channelName:cfg.VERIFY_CHANNEL_NAME||'',memberRoleId:cfg.MEMBER_ROLE_ID||'',memberRoleName:cfg.MEMBER_ROLE_NAME||'',roleCategories:cfg.ROLE_CATEGORIES||[]}];}
   if(!cfg.WELCOME_PRESETS&&cfg.WELCOME_TITLE){cfg.WELCOME_PRESETS=[{id:uid(),name:'welcome',embedTitle:cfg.WELCOME_TITLE,embedDesc:cfg.WELCOME_MESSAGE||'',embedColor:cfg.WELCOME_COLOR||'#ff2d95',embedImage:cfg.WELCOME_IMAGE||'',embedThumbnail:cfg.WELCOME_THUMBNAIL||'',channelName:cfg.WELCOME_CHANNEL_NAME||'',mentionUser:cfg.MENTION_USER!==false,showAvatar:cfg.WELCOME_SHOW_AVATAR!==false}];}
   if(!cfg.GOODBYE_PRESETS&&cfg.GOODBYE_TITLE){cfg.GOODBYE_PRESETS=[{id:uid(),name:'goodbye',embedTitle:cfg.GOODBYE_TITLE,embedDesc:cfg.GOODBYE_MESSAGE||'',embedColor:cfg.GOODBYE_COLOR||'#ff2d95',embedImage:cfg.GOODBYE_IMAGE||'',embedThumbnail:cfg.GOODBYE_THUMBNAIL||'',channelName:cfg.GOODBYE_CHANNEL_NAME||'',enabled:cfg.GOODBYE_ENABLED!==false,showAvatar:cfg.GOODBYE_SHOW_AVATAR!==false}];}
   refreshOverview();
 }
 
-// ── เปิดหน้าทันที แล้วโหลด data ทีหลัง ──
-_hideLoading(); // ซ่อน overlay ทันที ไม่รอ API
+// เปิดหน้าทันที ไม่รอ API
+_hideLoading();
 
 (async function(){
   if(!TOKEN)return;
@@ -1204,7 +1206,6 @@ _hideLoading(); // ซ่อน overlay ทันที ไม่รอ API
       _applyInitData(initData);
       _hideSyncBar();
     } else {
-      // fallback
       _showSyncBar('⚠️ เชื่อมต่อไม่ได้ — กด Refresh เพื่อลองใหม่');
       var r2=await Promise.all([api('GET','/api/config',null,15000),api('GET','/api/status',null,15000)]);
       if(r2[0]||r2[1]){
