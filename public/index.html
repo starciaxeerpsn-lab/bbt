@@ -1525,19 +1525,31 @@ _hideLoading();
 (async function(){
   if(!TOKEN)return;
   _showSyncBar('⏳ กำลังเชื่อมต่อ server...');
-  try{
-    var initData=await api('GET','/api/init',null,20000);
-    if(!initData){
-      _showSyncBar('🔄 ลองใหม่...');
-      await new Promise(function(r){setTimeout(r,3000);});
-      initData=await api('GET','/api/init',null,20000);
+  var syncBar=document.getElementById('sync-bar');
+
+  // retry loop — Render free tier อาจต้อง wake up นานถึง 60s
+  var initData=null;
+  var attempts=0;
+  var maxAttempts=4;
+  var delays=[0,5000,10000,15000];
+  while(attempts<maxAttempts&&!initData){
+    if(delays[attempts]>0){
+      var secs=delays[attempts]/1000;
+      _showSyncBar('⏳ Server กำลัง wake up... ลองใหม่ใน '+secs+'s ('+( attempts)+'/'+maxAttempts+')');
+      await new Promise(function(r){setTimeout(r,delays[attempts]);});
     }
-    if(initData){
-      _applyInitData(initData);
-      _hideSyncBar();
-      loadAdmins();
-    } else {
-      _showSyncBar('⚠️ เชื่อมต่อไม่ได้ — กด Refresh เพื่อลองใหม่');
+    try{initData=await api('GET','/api/init',null,25000);}catch(e){}
+    attempts++;
+  }
+
+  if(initData){
+    _applyInitData(initData);
+    _hideSyncBar();
+    loadAdmins();
+  } else {
+    // fallback: ลอง /api/config + /api/status แยกกัน
+    _showSyncBar('🔄 ลอง fallback...');
+    try{
       var r2=await Promise.all([api('GET','/api/config',null,15000),api('GET','/api/status',null,15000)]);
       if(r2[0]||r2[1]){
         cfg=r2[0]||{};var s2=r2[1]||{};var u2=(s2&&s2.user)||{};
@@ -1550,11 +1562,23 @@ _hideLoading();
         cfg._botTag=(s2&&s2.tag)||'';cfg._guildName=u2.guildName||'';cfg._online=(s2&&s2.online)||false;
         refreshOverview();
         _hideSyncBar();
+        loadAdmins();
+      } else {
+        // แสดงปุ่ม Refresh แทน spinning ค้าง
+        if(syncBar){
+          syncBar.style.display='flex';
+          syncBar.innerHTML='⚠️ เชื่อมต่อ server ไม่ได้ &nbsp;'
+            +'<button onclick="location.reload()" style="background:rgba(255,45,149,.2);border:1px solid rgba(255,45,149,.4);color:#ff7eb3;border-radius:7px;padding:3px 12px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:700">🔄 Refresh</button>';
+        }
+      }
+    }catch(err){
+      console.error('BBT Panel fallback error:',err);
+      if(syncBar){
+        syncBar.style.display='flex';
+        syncBar.innerHTML='⚠️ โหลดข้อมูลล้มเหลว &nbsp;'
+          +'<button onclick="location.reload()" style="background:rgba(255,45,149,.2);border:1px solid rgba(255,45,149,.4);color:#ff7eb3;border-radius:7px;padding:3px 12px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:700">🔄 Refresh</button>';
       }
     }
-  }catch(err){
-    console.error('BBT Panel sync error:',err);
-    _showSyncBar('⚠️ โหลดข้อมูลล้มเหลว — กด Refresh เพื่อลองใหม่');
   }
 })();
 </script>
