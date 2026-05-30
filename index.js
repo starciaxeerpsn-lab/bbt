@@ -179,9 +179,14 @@ app.get("/auth/callback", async (req, res) => {
 
     // ตรวจ whitelist — ดูจาก Redis ก่อน ถ้าไม่มีค่อย fallback ไป env
     const redisAllowed = await getAllowedUsers();
-    const envAllowed = process.env.ADMIN_USER_IDS ? process.env.ADMIN_USER_IDS.split(",").map(s => s.trim()) : null;
-    const allowedIds = redisAllowed || envAllowed;
-    if (allowedIds && allowedIds.length > 0 && !allowedIds.includes(user.id)) {
+    const envAllowed = process.env.ADMIN_USER_IDS ? process.env.ADMIN_USER_IDS.split(",").map(s => s.trim()) : [];
+    const ownerIdOnly = process.env.OWNER_ID ? [process.env.OWNER_ID] : [];
+    // priority: Redis list → env ADMIN_USER_IDS → OWNER_ID only
+    // ไม่มีรายการใดเลย = อนุญาตเฉพาะ OWNER_ID ไม่เปิดให้ทุกคน
+    const allowedIds = (redisAllowed && redisAllowed.length > 0)
+      ? redisAllowed
+      : (envAllowed.length > 0 ? envAllowed : ownerIdOnly);
+    if (allowedIds.length > 0 && !allowedIds.includes(user.id)) {
       return res.redirect("/access-denied");
     }
 
@@ -225,9 +230,19 @@ app.get("/api/whoami", requireAuth, (req, res) => {
 // ── ALLOWED USERS API (owner only) ──
 app.get("/api/allowed-users", requireAuth, async (req, res) => {
   if (!isOwner(req.session.userId)) return res.status(403).json({ error: "Owner only" });
-  const redisAllowed = await getAllowedUsers();
+  let redisAllowed = await getAllowedUsers();
   const envAllowed = process.env.ADMIN_USER_IDS ? process.env.ADMIN_USER_IDS.split(",").map(s => s.trim()) : [];
-  res.json({ users: redisAllowed || envAllowed, isOwner: true, ownerId: process.env.OWNER_ID || envAllowed[0] });
+  const ownerId = process.env.OWNER_ID || envAllowed[0] || "";
+  // ถ้า Redis ว่าง ให้ auto-init ด้วย owner + env list แล้ว save ทันที
+  if (!redisAllowed || redisAllowed.length === 0) {
+    const initList = [...new Set([ownerId, ...envAllowed].filter(Boolean))];
+    if (initList.length > 0) {
+      await saveAllowedUsers(initList);
+      redisAllowed = initList;
+    }
+  }
+  const users = redisAllowed || envAllowed;
+  res.json({ users, isOwner: true, ownerId });
 });
 
 app.post("/api/allowed-users", requireAuth, async (req, res) => {
