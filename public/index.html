@@ -1238,10 +1238,12 @@ document.getElementById('logout-btn').addEventListener('click',function(){
 
 // ── ADMIN MANAGER ──
 var _adminList=[];
+var _ownerId='';
 async function loadAdmins(){
   var data=await api('GET','/api/allowed-users');
   if(!data)return;
   _adminList=data.users||[];
+  _ownerId=data.ownerId||'';
   renderAdminList();
   // แสดงเมนูให้ owner เท่านั้น
   if(data.isOwner){
@@ -1253,18 +1255,27 @@ function renderAdminList(){
   var el=document.getElementById('admin-list');if(!el)return;
   if(!_adminList.length){el.innerHTML='<p style="color:var(--text3);font-size:13px">ยังไม่มีรายการ</p>';return;}
   el.innerHTML=_adminList.map(function(id,i){
-    return '<div style="display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--border2);border-radius:10px;padding:10px 14px">'
-      +'<span style="font-size:13px">👤</span>'
-      +'<input type="text" value="'+esc(id)+'" data-idx="'+i+'" oninput="_adminInput(this)" placeholder="Discord User ID" style="flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:\'DM Mono\',monospace;font-size:13px">'
-      +(i===0?'<span style="font-size:10px;font-weight:800;color:var(--pk3);padding:2px 8px;background:var(--pk-dim);border:1px solid var(--pk-border);border-radius:6px">OWNER</span>':'<button onclick="removeAdminRow('+i+')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:4px" onmouseover="this.style.color=\'var(--red)\'" onmouseout="this.style.color=\'var(--text3)\'">✕</button>')
+    var isOwnerRow=(id&&id===_ownerId)||i===0;
+    return '<div style="display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid '+(isOwnerRow?'var(--pk-border)':'var(--border2)')+';border-radius:10px;padding:10px 14px">'
+      +'<span style="font-size:13px">'+(isOwnerRow?'👑':'👤')+'</span>'
+      +'<input type="text" value="'+esc(id)+'" data-idx="'+i+'" oninput="_adminInput(this)" placeholder="Discord User ID"'+(isOwnerRow?' readonly':'')
+      +' style="flex:1;background:transparent;border:none;outline:none;color:'+(isOwnerRow?'var(--pk3)':'var(--text)')+';font-family:\'DM Mono\',monospace;font-size:13px;cursor:'+(isOwnerRow?'default':'text')+'">'
+      +(isOwnerRow
+        ?'<span style="font-size:10px;font-weight:800;color:var(--pk3);padding:2px 8px;background:var(--pk-dim);border:1px solid var(--pk-border);border-radius:6px">OWNER</span>'
+        :'<span style="font-size:10px;font-weight:700;color:var(--text3);padding:2px 7px;background:var(--card);border:1px solid var(--border);border-radius:6px;margin-right:4px">ADMIN</span>'
+         +'<button onclick="removeAdminRow('+i+')" title="ลบ" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:4px" onmouseover="this.style.color=\'var(--red)\'" onmouseout="this.style.color=\'var(--text3)\'">✕</button>')
     +'</div>';
   }).join('');
 }
 function _adminInput(el){_adminList[+el.dataset.idx]=el.value.trim();}
-function addAdminRow(){_adminList.push('');renderAdminList();setTimeout(function(){var inputs=document.querySelectorAll('#admin-list input');if(inputs.length)inputs[inputs.length-1].focus();},50);}
-function removeAdminRow(i){_adminList.splice(i,1);renderAdminList();}
+function addAdminRow(){_adminList.push('');renderAdminList();setTimeout(function(){var inputs=document.querySelectorAll('#admin-list input:not([readonly])');if(inputs.length)inputs[inputs.length-1].focus();},50);}
+function removeAdminRow(i){
+  if(_adminList[i]&&_adminList[i]===_ownerId){toast('ไม่สามารถลบ Owner ได้','err');return;}
+  _adminList.splice(i,1);renderAdminList();
+}
 async function saveAdmins(){
   var clean=_adminList.map(function(s){return s.trim();}).filter(Boolean);
+  if(!clean.length){toast('ต้องมีอย่างน้อย 1 รายการ','err');return;}
   var res=await api('POST','/api/allowed-users',{users:clean});
   if(res&&res.ok){toast('บันทึกรายชื่อแล้ว ✅','ok');_adminList=res.users;renderAdminList();}
   else toast('บันทึกไม่สำเร็จ','err');
