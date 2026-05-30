@@ -25,7 +25,50 @@ const { Redis } = require("@upstash/redis");
 require("dotenv").config();
 
 const CONFIG_PATH = path.join(__dirname, "config.json");
-function loadConfig() { return JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8")); }
+
+const DEFAULT_CONFIG = {
+  VERIFY_EMBED_TITLE: "🌸 ยืนยันตัวตน",
+  VERIFY_EMBED_DESC: "กดปุ่มด้านล่างเพื่อกรอกข้อมูลและรับยศของคุณ!",
+  VERIFY_EMBED_COLOR: "#ff6eb4",
+  VERIFY_BUTTON_LABEL: "✅ ยืนยันตัวตน",
+  VERIFY_BUTTON_COLOR: "Primary",
+  VERIFY_CHANNEL_NAME: "verify",
+  VERIFY_THUMBNAIL: "",
+  VERIFY_IMAGE: "",
+  MEMBER_ROLE_ID: "",
+  MEMBER_ROLE_NAME: "",
+  ROLE_CATEGORIES: [],
+  WELCOME_CHANNEL_NAME: "welcome",
+  WELCOME_TITLE: "ยินดีต้อนรับ!",
+  WELCOME_MESSAGE: "ยินดีต้อนรับ {user}!",
+  WELCOME_COLOR: "#ff6eb4",
+  WELCOME_SHOW_AVATAR: true,
+  WELCOME_IMAGE: "",
+  MENTION_USER: false,
+  GOODBYE_ENABLED: false,
+  GOODBYE_CHANNEL_NAME: "goodbye",
+  GOODBYE_TITLE: "ลาก่อน!",
+  GOODBYE_MESSAGE: "{user} ได้ออกจากเซิร์ฟเวอร์",
+  GOODBYE_COLOR: "#ff6eb4",
+  GOODBYE_SHOW_AVATAR: true,
+  GOODBYE_IMAGE: "",
+};
+
+function loadConfig() {
+  try {
+    if (!fs.existsSync(CONFIG_PATH)) {
+      fs.writeFileSync(CONFIG_PATH, JSON.stringify(DEFAULT_CONFIG, null, 2));
+      console.log("⚙️ สร้าง config.json ใหม่ด้วยค่า default");
+      return { ...DEFAULT_CONFIG };
+    }
+    const raw = JSON.parse(fs.readFileSync(CONFIG_PATH, "utf8"));
+    // merge กับ default เพื่อป้องกัน field หาย
+    return { ...DEFAULT_CONFIG, ...raw };
+  } catch (err) {
+    console.error("❌ loadConfig error:", err);
+    return { ...DEFAULT_CONFIG };
+  }
+}
 function saveConfig(data) { fs.writeFileSync(CONFIG_PATH, JSON.stringify(data, null, 2)); }
 
 const redis = new Redis({
@@ -353,7 +396,10 @@ function deletePendingData(userId) {
   if (entry?._timer) clearTimeout(entry._timer);
   pendingData.delete(userId);
 }
-function formatMsg(template, member) { return template.replace(/\{user\}/g, `${member}`); }
+function formatMsg(template, memberOrName) {
+  const display = typeof memberOrName === "string" ? memberOrName : `${memberOrName}`;
+  return (template || "").replace(/\{user\}/g, display);
+}
 function resolveButtonStyle(color = "Primary") {
   const map = { Primary: ButtonStyle.Primary, primary: ButtonStyle.Primary, Secondary: ButtonStyle.Secondary, secondary: ButtonStyle.Secondary, Success: ButtonStyle.Success, success: ButtonStyle.Success, Danger: ButtonStyle.Danger, danger: ButtonStyle.Danger };
   return map[color] ?? ButtonStyle.Primary;
@@ -407,8 +453,8 @@ client.on("guildMemberAdd", async (member) => {
     if (!ch) return;
     const embed = new EmbedBuilder()
       .setColor(hexToInt(cfg.VERIFY_EMBED_COLOR))
-      .setTitle(cfg.VERIFY_EMBED_TITLE)
-      .setDescription(`สวัสดี ${member}!\n${cfg.VERIFY_EMBED_DESC}`);
+      .setTitle(cfg.VERIFY_EMBED_TITLE || "🌸 ยืนยันตัวตน")
+      .setDescription(`สวัสดี ${member}!\n${cfg.VERIFY_EMBED_DESC || "กดปุ่มด้านล่างเพื่อยืนยันตัวตน"}`);
     if (cfg.VERIFY_THUMBNAIL === "[user]") embed.setThumbnail(member.user.displayAvatarURL());
     else if (cfg.VERIFY_THUMBNAIL === "[server]" && member.guild.iconURL()) embed.setThumbnail(member.guild.iconURL());
     else if (cfg.VERIFY_THUMBNAIL) embed.setThumbnail(cfg.VERIFY_THUMBNAIL);
@@ -429,7 +475,7 @@ client.on("guildMemberRemove", async (member) => {
     const embed = new EmbedBuilder()
       .setColor(hexToInt(cfg.GOODBYE_COLOR))
       .setTitle(cfg.GOODBYE_TITLE)
-      .setDescription(formatMsg(cfg.GOODBYE_MESSAGE, member.user.username));
+      .setDescription(formatMsg(cfg.GOODBYE_MESSAGE || "ลาก่อน {user}!", member));
     if (cfg.GOODBYE_SHOW_AVATAR) embed.setThumbnail(member.user.displayAvatarURL());
     if (cfg.GOODBYE_IMAGE) embed.setImage(cfg.GOODBYE_IMAGE);
     await ch.send({ embeds: [embed] });
