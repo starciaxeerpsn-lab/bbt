@@ -102,10 +102,26 @@ async function requireAuth(req, res, next) {
   const session = await getSession(token);
   if (!session) return res.status(401).json({ error: "Unauthorized" });
 
-  // Owner always bypasses permission checks
+  // Owner always bypasses all checks
   if (isOwner(session.userId)) {
     req.session = session;
     return next();
+  }
+
+  // ตรวจ whitelist — ถ้ามี list ใน Redis หรือ env ต้องอยู่ในนั้นด้วย
+  try {
+    const redisAllowed = await getAllowedUsers();
+    const envAllowed = process.env.ADMIN_USER_IDS ? process.env.ADMIN_USER_IDS.split(",").map(s => s.trim()) : [];
+    const ownerIdOnly = process.env.OWNER_ID ? [process.env.OWNER_ID] : [];
+    const allowedIds = (redisAllowed && redisAllowed.length > 0)
+      ? redisAllowed
+      : (envAllowed.length > 0 ? envAllowed : ownerIdOnly);
+    if (allowedIds.length > 0 && !allowedIds.includes(session.userId)) {
+      await deleteSession(token);
+      return res.status(401).json({ error: "Permission revoked" });
+    }
+  } catch (err) {
+    console.error("[AUTH] whitelist check error:", err);
   }
 
   // Re-verify user still has admin permission in the guild (cached 60s)
@@ -121,7 +137,6 @@ async function requireAuth(req, res, next) {
     }
   } catch (err) {
     console.error("[AUTH] re-verify error:", err);
-    // Discord API ล้มเหลวชั่วคราว — ให้ผ่านไปก่อน
   }
 
   req.session = session;
