@@ -606,7 +606,8 @@ function buildWizStep2(type){
 
   var memberRoleHtml='';
   if(isV){
-    var roleOpts=fetchedRoles.filter(function(r){return !r.isAdmin;}).map(function(r,i){
+    var roleOpts=fetchedRoles.map(function(r,i){
+      if(r.isAdmin) return '';
       return '<div class="role-dd-opt" data-idx="'+i+'" onclick="pickVerifyRole(event,this)"><span class="r-dot" style="background:#'+(r.color||0).toString(16).padStart(6,'0')+'"></span>'+esc(r.name)+'</div>';
     }).join('');
     var curRoleName=cfg.MEMBER_ROLE_NAME||'';
@@ -823,12 +824,20 @@ function filterLegacyDD(menuId,q){
 
 function pickVerifyRole(ev,el){
   ev.stopPropagation();
-  var r=fetchedRoles[+el.dataset.idx];if(!r)return;
+  var idx=+el.dataset.idx;
+  var r=fetchedRoles[idx];
+  if(!r){toast('ไม่พบยศ (idx='+idx+')','err');return;}
   cfg.MEMBER_ROLE_ID  =r.id;
   cfg.MEMBER_ROLE_NAME=r.name;
-  document.getElementById('role-display-verify').innerHTML='<div class="role-tag">'+esc(r.name)+'</div>';
-  var menu=document.getElementById('role-menu-verify');if(menu)menu.classList.remove('open');
-  toast('เลือกยศ: '+r.name,'ok');
+  // อัพเดท display
+  var disp=document.getElementById('role-display-verify');
+  if(disp) disp.innerHTML='<div class="role-tag">'+esc(r.name)+'</div>';
+  // ปิด dropdown + trigger
+  var menu=document.getElementById('role-menu-verify');
+  if(menu){menu.classList.remove('open');}
+  var trigger=menu?menu.previousElementSibling:null;
+  if(trigger) trigger.classList.remove('open');
+  toast('เลือกยศ Member: '+r.name,'ok');
 }
 
 // ── ROLE CATEGORIES ────────────────────────────────────────
