@@ -618,24 +618,12 @@ async function setRoleMode(mode){
   if(singleWrap)singleWrap.style.display=mode!=='multi'?'block':'none';
   // โหลดยศแล้ว rebuild pool ทันที
   if(mode==='multi'){
-    // ถ้า rolesLoaded แต่ roles มาจาก initData (ไม่มี isAdmin field หรือทุกตัวเป็น admin)
-    // pool จะว่าง — ให้ force reload จาก /api/roles
-    var needReload=!rolesLoaded||!fetchedRoles.length;
-    if(!needReload){
-      var nonAdmin=fetchedRoles.filter(function(r){return !r.isAdmin;});
-      // ถ้ากรองแล้วไม่เหลือเลย และทุกตัว isAdmin===undefined (มาจาก init) ให้ reload
-      if(!nonAdmin.length&&fetchedRoles.every(function(r){return r.isAdmin===undefined;})){
-        rolesLoaded=false;fetchedRoles=[];needReload=true;
-      }
-    }
-    if(needReload){
+    if(!rolesLoaded||!fetchedRoles.length){
       await loadRolesForEditor();
     } else {
       rebuildEditorRolePool();
     }
-    // ซ่อน load button ถ้ายังโชว์อยู่หลัง load เสร็จ
     if(wrap){var lb=wrap.querySelector('.btn-ghost.btn-xs');if(lb)lb.remove();}
-    // rebuild selected chips ด้วย
     var pp=getActivePreset();
     var selEl=document.getElementById('ed-selected-roles');
     if(selEl)selEl.innerHTML=buildSelectedChips(pp);
@@ -800,6 +788,30 @@ function openEditor(type,presetId){
   var editorEl=document.getElementById(type+'-editor');
   editorEl.classList.add('open');
   editorEl.scrollIntoView({behavior:'smooth',block:'nearest'});
+
+  // Auto-load roles & channels ทันทีที่เปิด editor (background)
+  if(isV&&(!rolesLoaded||!fetchedRoles.length)){
+    api('GET','/api/roles').then(function(data){
+      if(data&&data.roles){fetchedRoles=data.roles;rolesLoaded=true;
+        _fillSingleRoleSelect(getActivePreset());
+        var slb=document.getElementById('ed-single-load-btn');if(slb)slb.remove();
+        if(getActivePreset()&&getActivePreset().roleMode==='multi'){rebuildEditorRolePool();}
+      }
+    });
+  }
+  if(!channelsLoaded||!channels.length){
+    api('GET','/api/channels').then(function(data){
+      if(data&&data.channels){channels=data.channels;channelsLoaded=true;
+        var sel=document.getElementById('ed-channel');
+        if(sel){
+          var p2=getActivePreset();
+          var opts=channels.map(function(ch){return '<option value="'+esc(ch.name)+'"'+(p2&&p2.channelName===ch.name?' selected':'')+'>&#35; '+esc(ch.name)+'</option>';}).join('');
+          sel.innerHTML='<option value="">— เลือกห้อง —</option>'+opts;
+          var lb=sel.previousElementSibling;if(lb&&lb.tagName==='BUTTON')lb.remove();
+        }
+      }
+    });
+  }
 
   var tabsHtml='<div class="editor-tabs">'
     +'<div class="editor-tab on" onclick="switchEditorTab(this,&quot;design&quot;)">&#127912; ออกแบบ Embed</div>'
