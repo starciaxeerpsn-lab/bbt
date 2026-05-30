@@ -511,15 +511,24 @@ function buildPoolChips(preset){
   return pool.map(function(r){
     var hex=r.color?'#'+r.color.toString(16).padStart(6,'0'):'#5865f2';
     var isPicked=sel.find(function(s){return s.roleId===r.id;});
-    return '<span class="role-chip'+(isPicked?' picked':'')+'" style="background:'+hex+'22;border-color:'+hex+'66;color:'+hex+'" onclick="toggleRoleChip(\''+r.id+'\',\''+esc(r.name)+'\',\''+hex+'\',this)">'+esc(r.name)+'</span>';
+    return '<span class="role-chip'+(isPicked?' picked':'')+'" data-rid="'+r.id+'" data-rname="'+esc(r.name)+'" data-rhex="'+hex+'" style="background:'+hex+'22;border-color:'+hex+'66;color:'+hex+'" onclick="_poolChipClick(this)">'+esc(r.name)+'</span>';
   }).join('');
 }
 function buildSelectedChips(preset){
   var sel=(preset&&preset.selectedRoles)||[];
   if(!sel.length)return '<span class="roles-empty">ยังไม่ได้เลือกยศ</span>';
   return sel.map(function(r){
-    return '<span class="role-chip picked" style="background:'+r.color+'22;border-color:'+r.color+'66;color:'+r.color+'" onclick="removeSelectedRole(\''+r.roleId+'\',this)">'+esc(r.roleName)+' ✕</span>';
+    return '<span class="role-chip picked" style="background:'+r.color+'22;border-color:'+r.color+'66;color:'+r.color+'" data-rid="'+r.roleId+'" onclick="_selChipClick(this)">'+esc(r.roleName)+' ✕</span>';
   }).join('');
+}
+function _poolChipClick(el){
+  var p=getActivePreset();if(!p)return;
+  var roleId=el.dataset.rid,roleName=el.dataset.rname,hex=el.dataset.rhex;
+  toggleRoleChip(roleId,roleName,hex,el);
+}
+function _selChipClick(el){
+  var roleId=el.dataset.rid;
+  removeSelectedRole(roleId,el);
 }
 function setRoleMode(mode){
   var p=getActivePreset();if(!p)return;
@@ -554,7 +563,7 @@ function removeSelectedRole(roleId,chipEl){
   p.selectedRoles=p.selectedRoles.filter(function(r){return r.roleId!==roleId;});
   // un-pick in pool
   document.querySelectorAll('#ed-role-pool .role-chip').forEach(function(c){
-    if(c.onclick&&c.onclick.toString().includes(roleId))c.classList.remove('picked');
+    if(c.dataset.rid===roleId)c.classList.remove('picked');
   });
   var sel=document.getElementById('ed-selected-roles');
   if(sel)sel.innerHTML=buildSelectedChips(p);
